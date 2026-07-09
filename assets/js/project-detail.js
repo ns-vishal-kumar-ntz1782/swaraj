@@ -17,26 +17,8 @@
     return ({ Critical:"pd-b-critical",High:"pd-b-high",Medium:"pd-b-medium",Low:"pd-b-low" })[s] || "pd-b-low";
   }
 
-  // ── Shared topnav ──
-  function initTopnav() {
-    const roleKey = (typeof getCurrentRole === "function" && getCurrentRole()) || "CEO";
-    const role = (typeof roleDirectory !== "undefined" && roleDirectory[roleKey]) || { avatar:"CEO", name:"CEO", email:"ceo@swaraj.mahindra.com" };
-    const av = $("roleAvatar"), nm = $("avatarDropdownName"), em = $("avatarDropdownEmail");
-    if (av) av.textContent = role.avatar;
-    if (nm) nm.textContent = role.name;
-    if (em) em.textContent = role.email;
-    const adminTab = $("adminTab");
-    if (adminTab && typeof accessiblePages === "function") {
-      adminTab.hidden = !accessiblePages(roleKey).some(p => p.key === "admin-users");
-    }
-    const btn = $("roleAvatar"), dd = $("avatarDropdown");
-    if (btn && dd) {
-      btn.addEventListener("click", e => { e.stopPropagation(); dd.hidden = !dd.hidden; btn.setAttribute("aria-expanded", String(!dd.hidden)); });
-      document.addEventListener("click", () => { dd.hidden = true; });
-    }
-    const logoutBtn = $("logoutBtn");
-    if (logoutBtn) logoutBtn.addEventListener("click", () => (typeof logoutAndRedirect === "function" ? logoutAndRedirect() : (sessionStorage.removeItem("snpdRole"), location.href = "login.html")));
-  }
+  // Header is rendered by shared.js's renderTopNav("dashboard") — see the init call below —
+  // so there's no page-local topnav wiring here anymore.
 
   // ── Overview ──
   function renderOverview(d) {
@@ -453,7 +435,7 @@
 
   // ── Boot ──
   function init() {
-    initTopnav();
+    renderTopNav("dashboard");
     const params = new URLSearchParams(location.search);
     const id = params.get("id") || "Tractor 2";
     const d = (typeof getProjectDetail === "function") ? getProjectDetail(id) : null;

@@ -1,0 +1,13 @@
+{
+  "name": "snpd",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Structured New Product Development platform — dashboard, portfolio tracker, project detail, and the RBAC-driven Admin Console. Vanilla HTML/CSS/JS, no build step.",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

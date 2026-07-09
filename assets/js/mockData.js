@@ -40,7 +40,7 @@ const pagesCatalog = [
   { key:"dashboard",         label:"Dashboard",         path:"index.html",                        roles:["CEO","PMO","RD","SA"] },
   { key:"portfolio-tracker", label:"Portfolio Tracker", path:"pages/portfolio-tracker/index.html", roles:["CEO","PMO","RD","SA"] },
   { key:"overall-budget",    label:"Overall Budget",    path:"pages/overall-budget/index.html",    roles:["CEO","PMO","SA"] },
-  { key:"admin-users",       label:"User Management",   path:"pages/admin/users.html",             roles:["SA"] },
+  { key:"admin-console",     label:"Admin Console",     path:"pages/admin/index.html",             roles:["SA"] },
 ];
 
 // ── Mock users — what the Super Admin's User Management page lists/edits. Persisted to

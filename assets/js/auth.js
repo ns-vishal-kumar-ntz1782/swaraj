@@ -6,14 +6,15 @@
 // ==========================================================
 
 // APP_ROOT = the project root URL, computed from auth.js's OWN resolved script URL. Pages at
-// different depths load auth.js via different relative paths (auth.js, ../../auth.js, …), but
-// they all resolve to the same file at the root — so stripping the filename gives a root that
-// works identically under file:// (opening index.html directly) and http(s):// (a web server).
+// different depths load auth.js via different relative paths (assets/js/auth.js,
+// ../../assets/js/auth.js, …), but they all resolve to the same file at assets/js/ — so
+// stripping that fixed "assets/js/auth.js" suffix gives a root that works identically under
+// file:// (opening index.html directly) and http(s):// (a web server).
 // Every cross-page navigation and nav link is built as APP_ROOT + "path/to/page.html".
 const APP_ROOT = (function () {
   const self = document.currentScript
-    || [...document.getElementsByTagName("script")].find(s => /(^|\/)auth\.js(\?|#|$)/.test(s.getAttribute("src") || ""));
-  return self && self.src ? self.src.replace(/auth\.js(\?[^#]*)?(#.*)?$/, "") : "";
+    || [...document.getElementsByTagName("script")].find(s => /(^|\/)assets\/js\/auth\.js(\?|#|$)/.test(s.getAttribute("src") || ""));
+  return self && self.src ? self.src.replace(/assets\/js\/auth\.js(\?[^#]*)?(#.*)?$/, "") : "";
 })();
 
 function appUrl(path) { return APP_ROOT + String(path).replace(/^\//, ""); }
@@ -34,7 +35,7 @@ function accessiblePages(role) {
 }
 
 // Call at the very top of every protected page, before anything else renders:
-//   guardPage("admin-users");
+//   guardPage("admin-console");
 // No role at all -> straight to login. Logged in but not permitted for THIS page -> back to
 // the dashboard (not login — the user IS authenticated, just not authorized for this route).
 function guardPage(pageKey) {

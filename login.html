@@ -8,8 +8,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script>
-    // Already signed in? Skip straight to the dashboard.
-    if (sessionStorage.getItem("snpdRole")) window.location.replace("index.html");
+    // Already signed in? Skip straight to the right home page for the role —
+    // Super Admin goes to the Admin Console, everyone else to the dashboard.
+    (function () {
+      const role = sessionStorage.getItem("snpdRole");
+      if (role) window.location.replace(role === "SA" ? "pages/admin/index.html" : "index.html");
+    })();
   </script>
   <style>
     :root {
@@ -201,7 +205,7 @@
     </div>
   </div>
 
-  <script src="mockData.js"></script>
+  <script src="assets/js/mockData.js"></script>
   <script>
     // roleDirectory (name/email/match) comes from mockData.js — shared with index.html.
     const emailInput    = document.getElementById("emailInput");
@@ -252,7 +256,8 @@
       if (!roleKey) { emailField.classList.add("error"); emailInput.focus(); return; }
 
       sessionStorage.setItem("snpdRole", roleKey);
-      window.location.href = "index.html";
+      // Super Admin's home is the Admin Console; every other role lands on the dashboard.
+      window.location.href = roleKey === "SA" ? "pages/admin/index.html" : "index.html";
     }
 
     document.getElementById("signinBtn").addEventListener("click", attemptSignIn);

@@ -119,30 +119,8 @@ function fitViewport() {
   wrap.style.paddingTop = topPad + "px";
 }
 
-// ==========================================================
-//  ROLE DISPLAY
-// ==========================================================
-// roleDirectory lives in mockData.js
-function applyRole() {
-  const roleKey = sessionStorage.getItem("snpdRole") || "CEO";
-  const role    = roleDirectory[roleKey] || roleDirectory.CEO;
-  const avatarEl = document.getElementById("roleAvatar");
-  const nameEl   = document.getElementById("avatarDropdownName");
-  const emailEl  = document.getElementById("avatarDropdownEmail");
-  if (avatarEl) avatarEl.textContent = role.avatar;
-  if (nameEl)   nameEl.textContent   = role.name;
-  if (emailEl)  emailEl.textContent  = role.email;
-
-  // Admin tab only exists for roles pagesCatalog actually grants "admin-users" to — driven by
-  // the same registry the route guard checks, so nav visibility can never promise access the
-  // guard would then deny.
-  document.getElementById("adminTab")?.toggleAttribute("hidden", !pageAllowsRole("admin-users", roleKey));
-}
-
-function logout() {
-  sessionStorage.removeItem("snpdRole");
-  window.location.href = "login.html";
-}
+// Role display (avatar, name/email, which tabs show) and logout are both handled by
+// shared.js's renderTopNav("dashboard") now — see init() below.
 
 // ==========================================================
 //  HELPERS
@@ -211,7 +189,7 @@ function renderProjectTable(thId, tbId, projects) {
     // Reason and Corrective Action each get their own small inline toggle rather than one
     // whole-row chevron — clicking either reveals just that field's detail, independently.
     return "<tr style='background:" + bg + "'>" +
-      "<td class='col-project'><a class='dd-project-link' href='project-detail.html?id=" + encodeURIComponent(p.projectName) + "'>" + esc(p.projectName) + "</a></td>" +
+      "<td class='col-project'><a class='dd-project-link' href='pages/project-detail/index.html?id=" + encodeURIComponent(p.projectName) + "'>" + esc(p.projectName) + "</a></td>" +
       "<td>" + esc(p.gate) + "</td><td>" + esc(p.type) + "</td><td>" + clsBadge + "</td>" +
       "<td>" + mkBadge(p.riskScore, p.riskScore >= 70 ? "badge-critical" : "badge-high") + "</td>" +
       "<td style='color:" + delColor + ";font-weight:600'>" + p.delayDays + "d</td>" +
@@ -279,7 +257,7 @@ function renderComplianceTable(thId, tbId, type, value) {
     const clsBadge = p.classification === "N-BB" ? mkBadge("N-BB","badge-nbb") : mkBadge("BB","badge-bb");
     const bg       = i % 2 === 1 ? "#f8f9fb" : "#fff";
     return "<tr style='background:" + bg + "'>" +
-      "<td class='col-project'><a class='dd-project-link' href='project-detail.html?id=" + encodeURIComponent(p.projectName) + "'>" + esc(p.projectName) + "</a></td>" +
+      "<td class='col-project'><a class='dd-project-link' href='pages/project-detail/index.html?id=" + encodeURIComponent(p.projectName) + "'>" + esc(p.projectName) + "</a></td>" +
       "<td>" + esc(p.type) + "</td>" +
       "<td>" + clsBadge + "</td>" +
       "<td style='font-weight:600" + (colHighlight === "Planned"    ? ";background:#eff6ff;color:#1d4ed8" : "") + "'>" + p.planned + "</td>" +
@@ -318,7 +296,7 @@ function renderMonthTable(thId, tbId, projects) {
     const pColor   = compPct >= 85 ? "#15803d" : compPct >= 70 ? "#d97706" : "#dc2626";
     const clsBadge = p.classification === "N-BB" ? mkBadge("N-BB","badge-nbb") : mkBadge("BB","badge-bb");
     return "<tr style='background:" + (i % 2 === 1 ? "#f8f9fb" : "#fff") + "'>" +
-      "<td class='col-project'><a class='dd-project-link' href='project-detail.html?id=" + encodeURIComponent(p.projectName) + "'>" + esc(p.projectName) + "</a></td>" +
+      "<td class='col-project'><a class='dd-project-link' href='pages/project-detail/index.html?id=" + encodeURIComponent(p.projectName) + "'>" + esc(p.projectName) + "</a></td>" +
       "<td>" + esc(p.gate) + "</td><td>" + esc(p.type) + "</td><td>" + clsBadge + "</td>" +
       "<td>" + esc(p.month) + "</td><td>" + p.planned + "</td><td>" + p.actual + "</td>" +
       "<td style='color:" + pColor + ";font-weight:700'>" + compPct + "%</td>" +
@@ -922,107 +900,14 @@ function wireEvents() {
     });
   });
 
-  // ── Dashboard / browser fullscreen (top nav) ──
-  const navMax = document.getElementById("navMaxBtn");
-  if (navMax) {
-    navMax.addEventListener("click", () => {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen?.().catch(() => {});
-      } else {
-        document.exitFullscreen?.();
-      }
-    });
-    document.addEventListener("fullscreenchange", () => {
-      navMax.title = document.fullscreenElement ? "Exit fullscreen" : "Toggle fullscreen";
-    });
-  }
+  // Header (logo, tabs, search, FY dropdown, fullscreen, avatar/logout) is rendered and wired
+  // once by shared.js's renderTopNav() — every page uses that same component now, so none of
+  // that wiring lives here anymore.
 
-  // ── Inline search: expands leftward from the icon within the header ──
-  const searchBtn      = document.getElementById("navSearchBtn");
-  const searchInputWrap= document.getElementById("navSearchInputWrap");
-  const searchInput    = document.getElementById("searchInput");
-  const searchClose    = document.getElementById("searchClose");
-
-  function openSearch() {
-    searchInputWrap.classList.add("open");
-    searchBtn.setAttribute("aria-expanded", "true");
-    setTimeout(() => searchInput?.focus(), 250);
-  }
-  function closeSearch() {
-    searchInputWrap.classList.remove("open");
-    searchBtn.setAttribute("aria-expanded", "false");
-    if (searchInput) searchInput.value = "";
-  }
-  if (searchBtn && searchInputWrap) {
-    searchBtn.addEventListener("click", e => {
-      e.stopPropagation();
-      searchInputWrap.classList.contains("open") ? closeSearch() : openSearch();
-    });
-    searchClose?.addEventListener("click", e => { e.stopPropagation(); closeSearch(); });
-    document.addEventListener("click", e => {
-      if (searchInputWrap.classList.contains("open") && !searchInputWrap.contains(e.target) && e.target !== searchBtn)
-        closeSearch();
-    });
-  }
-
-  // ── FY / as-on-date dropdown ──
-  const fyBtn      = document.getElementById("fyBtn");
-  const fyDropdown = document.getElementById("fyDropdown");
-  const fyLabel    = document.getElementById("fyLabel");
-  const asOfDateEl = document.querySelector(".as-of-date-inline");
-
-  function closeFyDropdown() {
-    fyDropdown.hidden = true;
-    fyBtn.setAttribute("aria-expanded", "false");
-  }
-  if (fyBtn && fyDropdown) {
-    fyBtn.addEventListener("click", e => {
-      e.stopPropagation();
-      const willOpen = fyDropdown.hidden;
-      closeAvatarDropdown();
-      fyDropdown.hidden = !willOpen;
-      fyBtn.setAttribute("aria-expanded", String(willOpen));
-    });
-    fyDropdown.querySelectorAll(".fy-option").forEach(opt => {
-      opt.addEventListener("click", () => {
-        fyDropdown.querySelectorAll(".fy-option").forEach(o => o.classList.remove("fy-option-active"));
-        opt.classList.add("fy-option-active");
-        fyLabel.textContent = opt.dataset.fy ? "FY: " + opt.dataset.fy : opt.textContent;
-        if (asOfDateEl) asOfDateEl.textContent = "As on " + opt.dataset.date;
-        closeFyDropdown();
-      });
-    });
-  }
-
-  // ── Avatar dropdown (role info + logout) ──
-  const avatarBtn      = document.getElementById("roleAvatar");
-  const avatarDropdown = document.getElementById("avatarDropdown");
-
-  function closeAvatarDropdown() {
-    avatarDropdown.hidden = true;
-    avatarBtn.setAttribute("aria-expanded", "false");
-  }
-  if (avatarBtn && avatarDropdown) {
-    avatarBtn.addEventListener("click", e => {
-      e.stopPropagation();
-      const willOpen = avatarDropdown.hidden;
-      closeFyDropdown();
-      avatarDropdown.hidden = !willOpen;
-      avatarBtn.setAttribute("aria-expanded", String(willOpen));
-    });
-  }
-  document.getElementById("logoutBtn")?.addEventListener("click", logout);
-
-  // ── Close dropdowns on outside click ──
-  document.addEventListener("click", () => { closeFyDropdown(); closeAvatarDropdown(); });
-
-  // ── Escape: close dropdowns, drill-downs or fullscreen ──
+  // ── Escape: close drill-downs or exit widget fullscreen ──
   window.addEventListener("keydown", e => {
     if (e.key === "Escape") {
       if (fsWidgetId) closeWidgetFullscreen();
-      else if (!fyDropdown.hidden) closeFyDropdown();
-      else if (!avatarDropdown.hidden) closeAvatarDropdown();
-      else if (searchInputWrap.classList.contains("open")) closeSearch();
       else closeAllDrillDowns();
     }
   });
@@ -1032,7 +917,7 @@ function wireEvents() {
 //  INIT
 // ==========================================================
 function init() {
-  applyRole();
+  renderTopNav("dashboard");
   buildOverallHealthChart();
   buildMiniTypeChart("typeM2Chart","M2");
   buildMiniTypeChart("typeM4Chart","M4");
