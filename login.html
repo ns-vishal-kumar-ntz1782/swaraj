@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SNPD — Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    // Already signed in? Skip straight to the dashboard.
+    if (sessionStorage.getItem("snpdRole")) window.location.replace("index.html");
+  </script>
+  <style>
+    :root {
+      --navy: #0f2c5a; --teal: #14b8a6; --green: #22c55e;
+      --brand-blue: #003b88; --border: #e2e8f0; --muted: #64748b; --title: #1f2937;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body { font-family: "Inter", sans-serif; color: var(--title); background: #fff; }
+
+    .login-shell { display: flex; min-height: 100vh; }
+
+    /* ── LEFT: brand / hero panel ── */
+    .hero {
+      position: relative; flex: 1 1 52%; min-width: 420px;
+      background:
+        linear-gradient(135deg, rgba(15,44,90,.92) 0%, rgba(30,58,95,.85) 45%, rgba(6,78,59,.9) 100%),
+        radial-gradient(circle at 20% 15%, rgba(20,184,166,.35), transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(245,158,11,.28), transparent 50%),
+        linear-gradient(180deg, #123a2c 0%, #0c2818 100%);
+      color: #fff; padding: 48px 56px; display: flex; flex-direction: column;
+      justify-content: space-between; overflow: hidden;
+    }
+    .hero::after {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background: repeating-linear-gradient(115deg, rgba(255,255,255,.035) 0px, rgba(255,255,255,.035) 1px, transparent 1px, transparent 26px);
+    }
+    .hero-top, .hero-mid, .hero-bottom { position: relative; z-index: 1; }
+
+    .hero-brand { display: flex; align-items: center; gap: 12px; }
+    .hero-brand .logo-box { background: #fff; border-radius: 8px; padding: 6px 10px; display: flex; align-items: center; }
+    .hero-brand .logo-box img { height: 26px; display: block; }
+    .hero-brand .brand-text { line-height: 1.25; }
+    .hero-brand .brand-text strong { display: block; font-size: 15px; font-weight: 700; }
+    .hero-brand .brand-text span { display: block; font-size: 11px; letter-spacing: .08em; color: rgba(255,255,255,.65); text-transform: uppercase; }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px; margin-top: 40px;
+      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22);
+      border-radius: 20px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: .04em;
+    }
+    .hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); }
+    .hero-mid h1 { font-size: 34px; line-height: 1.2; font-weight: 800; margin: 18px 0 14px; max-width: 480px; }
+    .hero-mid p { font-size: 14px; line-height: 1.6; color: rgba(255,255,255,.8); max-width: 480px; margin: 0; }
+
+    .hero-stats { display: flex; gap: 14px; margin-top: 32px; }
+    .hero-stat {
+      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16);
+      border-radius: 10px; padding: 14px 18px; min-width: 108px; backdrop-filter: blur(2px);
+    }
+    .hero-stat strong { display: block; font-size: 26px; font-weight: 800; }
+    .hero-stat span { display: block; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: rgba(255,255,255,.7); margin-top: 2px; }
+
+    .hero-bottom { display: flex; align-items: center; gap: 8px; font-size: 11px; color: rgba(255,255,255,.6); }
+
+    /* ── RIGHT: sign-in form ── */
+    .form-side { flex: 1 1 48%; display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
+    .form-card { width: 100%; max-width: 420px; }
+    .form-card h2 { margin: 0 0 6px; font-size: 22px; font-weight: 800; color: var(--navy); }
+    .form-card .sub { margin: 0 0 26px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+    label { display: block; font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 6px; letter-spacing: .03em; }
+    .field { margin-bottom: 16px; }
+    .input-wrap { position: relative; }
+    .input-wrap svg.leading { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
+    .input-wrap input {
+      width: 100%; height: 44px; border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 0 14px 0 38px; font-size: 14px; font-family: "Inter", sans-serif;
+      color: #1f2937; background: #f8fafc; transition: border-color .15s, background .15s;
+    }
+    .input-wrap input:focus { outline: none; border-color: var(--brand-blue); background: #fff; }
+    .field.error .input-wrap input { border-color: #ef4444; }
+    .field-hint { font-size: 11px; color: #94a3b8; margin: 6px 0 0; }
+    .field-err  { font-size: 11px; color: #ef4444; margin: 6px 0 0; display: none; }
+    .field.error .field-err { display: block; }
+
+    .signin-btn {
+      width: 100%; height: 46px; border: 0; border-radius: 8px; margin-top: 6px;
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      color: #fff; font-size: 15px; font-weight: 700; font-family: "Inter", sans-serif;
+      cursor: pointer; letter-spacing: .02em; display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 8px 20px rgba(34,197,94,.3); transition: opacity .15s, transform .1s;
+    }
+    .signin-btn:hover { opacity: .92; }
+    .signin-btn:active { transform: scale(.985); }
+
+    .demo-toggle {
+      width: 100%; display: flex; align-items: center; justify-content: space-between;
+      background: transparent; border: 0; border-top: 1px solid var(--border); margin-top: 22px;
+      padding: 16px 0 0; cursor: pointer; font-family: inherit;
+    }
+    .demo-toggle .demo-toggle-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #374151; }
+    .demo-toggle .chev { transition: transform .18s ease; color: #64748b; }
+    .demo-toggle[aria-expanded="true"] .chev { transform: rotate(180deg); }
+
+    .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; overflow: hidden; }
+    .demo-grid[hidden] { display: none; }
+    .demo-btn {
+      border: 1.5px solid var(--border); background: #f8fafc; border-radius: 8px;
+      padding: 10px 12px; font-size: 12.5px; font-weight: 600; color: #374151;
+      cursor: pointer; font-family: inherit; text-align: left; transition: all .15s;
+    }
+    .demo-btn:hover { border-color: #93c5fd; background: #eff6ff; }
+    .demo-btn.active { border-color: var(--brand-blue); background: #eff6ff; color: var(--brand-blue); }
+
+    .footer-note { text-align: center; font-size: 11px; color: #94a3b8; margin-top: 26px; line-height: 1.6; }
+
+    @media (max-width: 860px) {
+      .hero { display: none; }
+      .form-side { padding: 32px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-shell">
+
+    <!-- ═══ LEFT: HERO ═══ -->
+    <div class="hero">
+      <div class="hero-top hero-brand">
+        <div class="logo-box"><img src="https://www.figma.com/api/mcp/asset/2fafd961-c024-4b01-a88b-ea751bdfef9b" alt="Swaraj" /></div>
+        <div class="brand-text">
+          <strong>Mahindra Swaraj Division</strong>
+          <span>Product Development</span>
+        </div>
+      </div>
+
+      <div class="hero-mid">
+        <span class="hero-badge"><span class="dot"></span>SNPD 2.0</span>
+        <h1>Structured New Product Development Platform</h1>
+        <p>Govern the complete tractor product lifecycle — from concept to launch — through six stage gates, 81 deliverables, 45 enterprise forms and 112 sign-off instances.</p>
+        <div class="hero-stats">
+          <div class="hero-stat"><strong>6</strong><span>Stage Gates</span></div>
+          <div class="hero-stat"><strong>81</strong><span>Deliverables</span></div>
+          <div class="hero-stat"><strong>45</strong><span>Enterprise Forms</span></div>
+        </div>
+      </div>
+
+      <div class="hero-bottom">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
+        Enterprise SSO &bull; ISO 27001 &bull; Internal Use Only
+      </div>
+    </div>
+
+    <!-- ═══ RIGHT: SIGN-IN FORM ═══ -->
+    <div class="form-side">
+      <div class="form-card">
+        <h2>Sign in to your workspace</h2>
+        <p class="sub">Enter your Mahindra Swaraj corporate email — access is granted based on your role.</p>
+
+        <div class="field" id="emailField">
+          <label for="emailInput">Corporate Email</label>
+          <div class="input-wrap">
+            <svg class="leading" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
+            <input type="email" id="emailInput" placeholder="firstname.lastname@swaraj.mahindra.com" autocomplete="username" />
+          </div>
+          <p class="field-err" id="emailErr">Enter a recognised corporate email, or pick a demo account below.</p>
+        </div>
+
+        <div class="field">
+          <label for="passwordInput">Password</label>
+          <div class="input-wrap">
+            <svg class="leading" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" id="passwordInput" placeholder="••••••••••" autocomplete="current-password" />
+          </div>
+          <p class="field-hint">Password is not validated — access is email-based.</p>
+        </div>
+
+        <button class="signin-btn" id="signinBtn" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Secure Sign In
+        </button>
+
+        <button class="demo-toggle" id="demoToggle" type="button" aria-expanded="true">
+          <span class="demo-toggle-label">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Demo accounts — click to auto-fill
+          </span>
+          <svg class="chev" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="demo-grid" id="demoGrid">
+          <button class="demo-btn" type="button" data-role="RD">R&amp;D Head</button>
+          <button class="demo-btn" type="button" data-role="PMO">PMO Manager</button>
+          <button class="demo-btn" type="button" data-role="CEO">CEO</button>
+          <button class="demo-btn" type="button" data-role="SA">Super Admin</button>
+        </div>
+
+        <p class="footer-note">By signing in you agree to the Mahindra Group Acceptable Use Policy.<br>Restricted to authorised personnel.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="mockData.js"></script>
+  <script>
+    // roleDirectory (name/email/match) comes from mockData.js — shared with index.html.
+    const emailInput    = document.getElementById("emailInput");
+    const passwordInput = document.getElementById("passwordInput");
+    const emailField    = document.getElementById("emailField");
+    const demoToggle    = document.getElementById("demoToggle");
+    const demoGrid      = document.getElementById("demoGrid");
+    const demoBtns      = document.querySelectorAll(".demo-btn");
+
+    let selectedRole = null;
+
+    demoToggle.addEventListener("click", () => {
+      const open = demoToggle.getAttribute("aria-expanded") === "true";
+      demoToggle.setAttribute("aria-expanded", String(!open));
+      demoGrid.hidden = open;
+    });
+
+    demoBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const roleKey = btn.dataset.role;
+        selectedRole = roleKey;
+        emailInput.value = roleDirectory[roleKey].email;
+        passwordInput.value = "demo-access";
+        emailField.classList.remove("error");
+        demoBtns.forEach(b => b.classList.toggle("active", b === btn));
+      });
+    });
+
+    emailInput.addEventListener("input", () => {
+      selectedRole = null;
+      demoBtns.forEach(b => b.classList.remove("active"));
+      emailField.classList.remove("error");
+    });
+
+    function detectRole(email) {
+      const local = email.toLowerCase().split("@")[0];
+      for (const [key, role] of Object.entries(roleDirectory)) {
+        if (role.match.some(token => local.includes(token))) return key;
+      }
+      return null;
+    }
+
+    function attemptSignIn() {
+      const email = emailInput.value.trim();
+      if (!email) { emailField.classList.add("error"); emailInput.focus(); return; }
+
+      const roleKey = selectedRole || detectRole(email);
+      if (!roleKey) { emailField.classList.add("error"); emailInput.focus(); return; }
+
+      sessionStorage.setItem("snpdRole", roleKey);
+      window.location.href = "index.html";
+    }
+
+    document.getElementById("signinBtn").addEventListener("click", attemptSignIn);
+    passwordInput.addEventListener("keydown", e => { if (e.key === "Enter") attemptSignIn(); });
+    emailInput.addEventListener("keydown", e => { if (e.key === "Enter") passwordInput.focus(); });
+  </script>
+</body>
+</html>

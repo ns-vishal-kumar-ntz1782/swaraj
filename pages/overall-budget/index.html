@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Overall Budget — SNPD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../styles.css" />
+  <script src="../../mockData.js"></script>
+  <script src="../../auth.js"></script>
+  <script>guardPage("overall-budget");</script>
+  <style>
+    body { overflow:auto; height:auto; }
+    html { overflow:auto; }
+    .page-shell { display:flex; flex-direction:column; min-height:100vh; }
+    .page-body { flex:1; display:flex; align-items:center; justify-content:center; padding:40px; }
+    .placeholder-card {
+      text-align:center; max-width:420px; background:#fff; border-radius:12px;
+      box-shadow:0 1px 3px rgba(0,0,0,0.08); padding:48px 40px;
+    }
+    .placeholder-card .placeholder-icon { font-size:40px; margin-bottom:16px; }
+    .placeholder-card h1 { font-size:18px; margin:0 0 8px; color:#1f2937; }
+    .placeholder-card p { font-size:13px; color:#666; margin:0; line-height:1.6; }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <div id="topnav-root"></div>
+    <main class="page-body">
+      <div class="placeholder-card">
+        <div class="placeholder-icon">💰</div>
+        <h1>Overall Budget</h1>
+        <p>This page is part of the next build phase and isn't wired up yet. The routing, role-based access, and shared navigation are already live here.</p>
+      </div>
+    </main>
+  </div>
+  <script src="../../shared.js"></script>
+  <script>renderTopNav("overall-budget");</script>
+</body>
+</html>

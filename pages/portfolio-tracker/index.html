@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfolio Tracker — SNPD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../styles.css" />
+  <link rel="stylesheet" href="portfolio.css" />
+  <script src="../../mockData.js"></script>
+  <script src="../../mock-data.js"></script>
+  <script src="../../auth.js"></script>
+  <script>guardPage("portfolio-tracker");</script>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="topnav-root"></div>
+    <div class="viewport-fit">
+      <div class="pt-page">
+
+        <!-- Page Header -->
+        <div class="pt-header">
+          <div class="pt-header-left">
+            <h1 class="pt-title">Portfolio Tracker</h1>
+            <p class="pt-subtitle">Project Development Dashboard</p>
+          </div>
+          <div class="pt-header-right">
+            <div class="pt-filter-group">
+              <span class="pt-filter-label">Category:</span>
+              <select id="filterCategory" class="pt-select">
+                <option value="">All</option>
+                <option value="M2">M2</option>
+                <option value="M4">M4</option>
+                <option value="M6">M6</option>
+              </select>
+              <select id="filterPortfolio" class="pt-select">
+                <option value="">All Portfolios</option>
+                <option value="BB">BlockBuster</option>
+                <option value="N-BB">Non-BlockBuster</option>
+              </select>
+            </div>
+            <button class="pt-btn pt-btn-outline pt-btn-active" id="btnToday">Today</button>
+            <button class="pt-btn pt-btn-outline" id="btnFilters">Filters</button>
+            <button class="pt-btn pt-btn-outline" id="btnCriticalPath">Critical Path</button>
+            <button class="pt-btn pt-btn-outline" id="btnDependencies">Dependencies</button>
+            <button class="pt-btn pt-btn-dark" id="btnAI">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+              AI Insights
+            </button>
+            <button class="pt-btn pt-btn-navy" id="btnExport">Export</button>
+          </div>
+        </div>
+
+        <!-- KPI Row -->
+        <div class="pt-kpi-row" id="kpiRow"></div>
+
+        <!-- Matrix -->
+        <div class="pt-matrix-wrap">
+          <div class="pt-matrix" id="matrixTable"></div>
+        </div>
+
+        <!-- Legend Panel -->
+        <div class="pt-legend" id="legendPanel"></div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="../../shared.js"></script>
+  <script src="portfolio.js"></script>
+  <script>
+    renderTopNav("portfolio-tracker");
+    initPortfolioTracker();
+  </script>
+</body>
+</html>
