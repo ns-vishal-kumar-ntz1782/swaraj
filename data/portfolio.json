@@ -1,0 +1,60 @@
+{
+  "monthOrder": ["Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar"],
+  "projects": [
+    { "projectName":"Tractor 1",  "gate":"Pre-KO", "type":"M2", "classification":"BB",   "riskScore":72, "delayDays":66, "reason":"Approval Delay",  "correctiveAction":"Escalate Review Board", "month":"Sep", "planned":22, "actual":14 },
+    { "projectName":"Tractor 2",  "gate":"CVPA",   "type":"M2", "classification":"N-BB", "riskScore":74, "delayDays":28, "reason":"Resource Gap",     "correctiveAction":"Reallocate Team",       "month":"May", "planned":22, "actual":15 },
+    { "projectName":"Tractor 3",  "gate":"VV",     "type":"M2", "classification":"BB",   "riskScore":55, "delayDays":12, "reason":"None",             "correctiveAction":"Monitor",               "month":"Aug", "planned":18, "actual":14 },
+    { "projectName":"Tractor 4",  "gate":"PR",     "type":"M2", "classification":"BB",   "riskScore":45, "delayDays":9,  "reason":"None",             "correctiveAction":"Monitor",               "month":"Jun", "planned":17, "actual":14 },
+    { "projectName":"Tractor 5",  "gate":"Pre-KO", "type":"M4", "classification":"BB",   "riskScore":82, "delayDays":70, "reason":"Approval Delay",  "correctiveAction":"Review L2 Sign-off",    "month":"Apr", "planned":28, "actual":17 },
+    { "projectName":"Tractor 6",  "gate":"Pre-KO", "type":"M4", "classification":"N-BB", "riskScore":45, "delayDays":9,  "reason":"None",             "correctiveAction":"Monitor",               "month":"Jun", "planned":20, "actual":17 },
+    { "projectName":"Tractor 7",  "gate":"CVPA",   "type":"M4", "classification":"BB",   "riskScore":49, "delayDays":7,  "reason":"None",             "correctiveAction":"Monitor",               "month":"Oct", "planned":25, "actual":22 },
+    { "projectName":"Tractor 8",  "gate":"CVPA",   "type":"M4", "classification":"N-BB", "riskScore":61, "delayDays":75, "reason":"Approval Delay",  "correctiveAction":"Expedite Review",       "month":"Jul", "planned":22, "actual":14 },
+    { "projectName":"Tractor 9",  "gate":"PC",     "type":"M4", "classification":"BB",   "riskScore":53, "delayDays":10, "reason":"None",             "correctiveAction":"Monitor",               "month":"Nov", "planned":24, "actual":21 },
+    { "projectName":"Tractor 10", "gate":"PR",     "type":"M4", "classification":"BB",   "riskScore":44, "delayDays":4,  "reason":"None",             "correctiveAction":"Monitor",               "month":"Jan", "planned":26, "actual":23 },
+    { "projectName":"Tractor 11", "gate":"PR",     "type":"M4", "classification":"N-BB", "riskScore":80, "delayDays":72, "reason":"Budget Overrun",  "correctiveAction":"Cost Freeze",           "month":"Dec", "planned":20, "actual":11 },
+    { "projectName":"Tractor 12", "gate":"CVPA",   "type":"M6", "classification":"BB",   "riskScore":68, "delayDays":18, "reason":"Budget Overrun",  "correctiveAction":"Escalate CFO",          "month":"Jun", "planned":24, "actual":19 },
+    { "projectName":"Tractor 13", "gate":"VV",     "type":"M6", "classification":"N-BB", "riskScore":47, "delayDays":6,  "reason":"None",             "correctiveAction":"Monitor",               "month":"Apr", "planned":23, "actual":20 },
+    { "projectName":"Tractor 14", "gate":"PC",     "type":"M6", "classification":"N-BB", "riskScore":73, "delayDays":65, "reason":"Supply Chain",    "correctiveAction":"Alternative Vendor",    "month":"May", "planned":19, "actual":10 },
+    { "projectName":"Tractor 15", "gate":"PR",     "type":"M6", "classification":"BB",   "riskScore":64, "delayDays":33, "reason":"Approval Delay",  "correctiveAction":"Fast Track Approval",   "month":"Mar", "planned":20, "actual":14 }
+  ],
+  "reasonDetails": {
+    "Approval Delay": {
+      "riskReason": "Stage-gate sign-off is pending from L2/L3 leadership, exposing the project to schedule slippage if the review isn't closed out soon.",
+      "delayReason": "The approval review has exceeded the standard 10-working-day SLA; the review board has not yet convened to close out the sign-off.",
+      "correctiveActionDetail": "Escalated to the Review Board chair; a dedicated sign-off session has been requested ahead of the next scheduled cycle.",
+      "mitigationPlan": "Assign a named owner to track approval status daily and pre-clear future gate reviews at least 2 weeks ahead of the target date."
+    },
+    "Resource Gap": {
+      "riskReason": "Key engineering or testing resources are under-allocated relative to the plan, putting deliverable timelines at risk.",
+      "delayReason": "Cross-project resource contention has left this project short-staffed against its original resourcing plan.",
+      "correctiveActionDetail": "Team members are being reallocated from lower-priority workstreams to restore planned staffing levels.",
+      "mitigationPlan": "Raise a standing resourcing request with the PMO for the next sprint cycle to prevent recurrence on future gates."
+    },
+    "Budget Overrun": {
+      "riskReason": "Actual spend has exceeded the approved budget envelope, risking a funding freeze on remaining deliverables.",
+      "delayReason": "Cost overruns triggered a finance review, pausing further spend approval until the variance is explained.",
+      "correctiveActionDetail": "A budget variance review has been escalated to the CFO's office; discretionary spend is frozen in the interim.",
+      "mitigationPlan": "Rebaseline the cost plan against actuals and introduce monthly budget checkpoints for the remaining gates."
+    },
+    "Supply Chain": {
+      "riskReason": "A critical component or vendor delivery is delayed, blocking downstream validation and production activities.",
+      "delayReason": "The primary supplier has confirmed a delivery slip, with no confirmed recovery date at this time.",
+      "correctiveActionDetail": "An alternative vendor is being qualified and onboarded for the affected component.",
+      "mitigationPlan": "Dual-source the affected component going forward and hold a minimum safety-stock buffer for critical parts."
+    },
+    "None": {
+      "riskReason": "No material risk identified at this time; the project is progressing within its planned tolerance band.",
+      "delayReason": "No delay driver recorded — current schedule variance is within the accepted 0–15 day tolerance.",
+      "correctiveActionDetail": "No corrective action required; the project remains under standard monitoring.",
+      "mitigationPlan": "Continue the standard monitoring cadence; re-assess if delay exceeds 15 days."
+    }
+  },
+  "kpiCards": [
+    { "metric":"total",  "label": "TOTAL PROGRAMS", "delta": "▲ 2", "up": true,  "accent": "#006a4e", "numColor": "#334155", "alert": false },
+    { "metric":"m6",     "label": "M6 - NEW",       "delta": "▲ 1", "up": true,  "accent": "#3b82f6", "numColor": "#1e40af", "alert": false },
+    { "metric":"m4",     "label": "M4 - MAJOR",     "delta": "▲ 1", "up": true,  "accent": "#60a5fa", "numColor": "#1d4ed8", "alert": false },
+    { "metric":"m2",     "label": "M2 - MINOR",     "delta": "▼ 1", "up": false, "accent": "#2dd4bf", "numColor": "#334155", "alert": false },
+    { "metric":"atRisk", "label": "AT RISK",        "delta": "▲ 1", "up": false, "accent": "#f97316", "numColor": "#ea580c", "alert": true },
+    { "metric":"crit",   "label": "CRITICAL",       "delta": "▲ 1", "up": false, "accent": "#dc2626", "numColor": "#b91c1c", "alert": true }
+  ]
+}

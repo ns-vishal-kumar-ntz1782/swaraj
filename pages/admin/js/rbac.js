@@ -1,104 +1,87 @@
 // ONE RBAC matrix. Every module in the app must check this matrix — no hardcoded role checks.
-import { load, save, ENTITY_KEYS } from "./store/db.js";
+import { load, save, ENTITY_KEYS, loadJsonSync } from "./store/db.js";
 import { addAuditEntry } from "./store/audit.js";
 
-export const BUSINESS_ROLES = [
-  "R&D Head",
-  "PMO Manager",
-  "CEO",
-  "Finance Manager",
-  "System Administrator",
-  "Engineer",
-];
+const _roles = loadJsonSync("roles.json");
 
-export const ALL_MENUS = [
-  "gates", "gate-templates", "deliverables", "forms",
-  "form-builder", "actions", "audit", "users", "rbac-admin",
-];
+export const ALL_MENUS = _roles.allMenus;
 
-// Page/route ids enforced by the router. Detail routes reuse their parent's page id.
-export const ALL_PAGES = [...ALL_MENUS];
+// Pages reachable without their own persistent nav tab — e.g. the form builder is only ever
+// entered via the "+ Build Form" button inside Forms Library, never its own tab. A role gets
+// the extra page automatically once it has both the parent menu and the gating button, so this
+// never has to be hand-kept in sync with each role's button grants (see base() below).
+export const EXTRA_PAGES = _roles.extraPages || {};
+
+// Top-level app pages (Dashboard / Portfolio Tracker / Overall Budget / Admin Console) — reused
+// from pagesCatalog's own key list so this never has to be hand-kept in sync with it.
+export const OUTER_PAGES = (_roles.pagesCatalog || []).map((p) => p.key);
+export const OUTER_PAGE_LABELS = Object.fromEntries((_roles.pagesCatalog || []).map((p) => [p.key, p.label]));
 
 // Purely a sidebar grouping label — governance/admin screens vs. day-to-day workspace screens.
 // Visibility is still driven entirely by RBAC.menus; this only decides which header a visible item sits under.
-export const ADMIN_MENU_IDS = ["gate-templates", "users", "rbac-admin"];
+export const ADMIN_MENU_IDS = _roles.adminMenuIds;
 export const WORKSPACE_MENU_IDS = ALL_MENUS.filter((m) => !ADMIN_MENU_IDS.includes(m));
 
-export const ALL_BUTTONS = [
-  "gate.create", "gate.edit", "gate.approve", "gate.delete",
-  "gatetemplate.manage",
-  "deliverable.create", "deliverable.edit", "deliverable.complete", "deliverable.library.manage",
-  "form.library.manage", "form.builder.use", "form.submission.approve", "form.submission.fill",
-  "action.manage",
-  "user.manage", "rbac.manage",
-];
+export const ALL_BUTTONS = _roles.allButtons;
 
-export const MENU_LABELS = {
-  "gates": "Gate Master",
-  "gate-templates": "Checklist Templates",
-  "deliverables": "Deliverable Library",
-  "forms": "Forms Library",
-  "form-builder": "Form Builder",
-  "actions": "Action Register",
-  "audit": "Activity Log",
-  "users": "Users & Roles",
-  "rbac-admin": "RBAC Matrix",
-};
+export const MENU_LABELS = { ..._roles.menuLabels, ...OUTER_PAGE_LABELS };
 
-export const BUTTON_LABELS = {
-  "gate.create": "Create Gate",
-  "gate.edit": "Edit Gate",
-  "gate.approve": "Approve/Reject Gate",
-  "gate.delete": "Delete Gate",
-  "gatetemplate.manage": "Manage Checklist Templates",
-  "deliverable.create": "Create Deliverable",
-  "deliverable.edit": "Edit Deliverable",
-  "deliverable.complete": "Complete Deliverable (owner)",
-  "deliverable.library.manage": "Manage Deliverable Library (import/link)",
-  "form.library.manage": "Manage Forms Library (import/delete)",
-  "form.builder.use": "Use Form Builder",
-  "form.submission.approve": "Approve Form Submission",
-  "form.submission.fill": "Fill / Submit Form",
-  "action.manage": "Manage Action Items",
-  "user.manage": "Manage Users",
-  "rbac.manage": "Manage RBAC Matrix",
-};
+export const BUTTON_LABELS = _roles.buttonLabels;
 
-function base(menus, buttons) {
-  return { menus, pages: [...menus], buttons };
+// Purely a display grouping for the RBAC checklist UI — buttons are still one flat permission
+// list underneath, this only decides which heading a button's checkbox renders under.
+export const BUTTON_GROUPS = _roles.buttonGroups || {};
+
+// Dashboard KPI/chart widgets (outer app root Dashboard) and Project Detail tabs (incl. the
+// gate drill-down accordion inside the "gate-checklist" tab) — two more flat permission lists,
+// same shape/pattern as menus/buttons above.
+export const ALL_WIDGETS = _roles.allWidgets || [];
+export const WIDGET_LABELS = _roles.widgetLabels || {};
+export const ALL_PD_TABS = _roles.allPdTabs || [];
+export const PD_TAB_LABELS = _roles.pdTabLabels || {};
+
+// No stored "pages" array — page access is always derived live from menus/outerPages/buttons
+// (see canOpenPage below), so a role's checkbox state can never drift out of sync with what's
+// actually reachable in the nav.
+function base(cfg) {
+  const { menus, outerPages = [], widgets = [], pdTabs = [], buttons } = cfg;
+  return { menus, outerPages, widgets, pdTabs, buttons };
 }
 
-export const DEFAULT_MATRIX = {
-  "System Administrator": base([...ALL_MENUS], [...ALL_BUTTONS]),
+export const DEFAULT_MATRIX = Object.fromEntries(
+  Object.entries(_roles.defaultMatrix).map(([role, cfg]) => [role, base(cfg)])
+);
 
-  "CEO": base(
-    ["gates", "deliverables", "forms", "actions", "audit"],
-    ["gate.approve", "form.submission.approve"]
-  ),
-
-  "R&D Head": base(
-    ["gates", "deliverables", "forms", "actions", "audit"],
-    ["gate.create", "gate.edit", "gate.approve", "deliverable.edit", "deliverable.complete", "form.submission.approve", "form.submission.fill", "action.manage"]
-  ),
-
-  "PMO Manager": base(
-    ["gates", "deliverables", "forms", "form-builder", "actions", "audit"],
-    ["gate.create", "gate.edit", "gate.approve", "deliverable.create", "deliverable.edit", "form.builder.use", "form.submission.approve", "form.submission.fill", "action.manage"]
-  ),
-
-  "Finance Manager": base(
-    ["gates", "deliverables", "forms", "actions", "audit"],
-    ["gate.approve", "form.submission.approve", "form.submission.fill", "action.manage"]
-  ),
-
-  "Engineer": base(
-    ["gates", "deliverables", "forms", "actions"],
-    ["deliverable.complete", "form.submission.fill", "action.manage"]
-  ),
-};
+// Self-healing merge: a matrix cached in localStorage from BEFORE a schema addition (e.g.
+// outerPages/widgets/pdTabs were added to defaultMatrix after some browsers had already seeded
+// the older shape) must not silently win with missing fields — that turns into "this role can
+// open nothing" everywhere it's checked. Every read backfills any missing field, per role, from
+// the shipped default, so a stale cache heals itself instead of needing a manual localStorage
+// clear or a version bump that would also wipe unrelated saved customizations.
+function repairMatrix(matrix) {
+  const repaired = {};
+  Object.keys(matrix).forEach((role) => {
+    const saved = matrix[role] || {};
+    const def = DEFAULT_MATRIX[role] || {};
+    repaired[role] = {
+      menus: saved.menus || def.menus || [],
+      outerPages: saved.outerPages || def.outerPages || [],
+      widgets: saved.widgets || def.widgets || [],
+      pdTabs: saved.pdTabs || def.pdTabs || [],
+      buttons: saved.buttons || def.buttons || [],
+    };
+  });
+  // Roles that exist in the shipped defaults but were never saved at all yet (e.g. a role added
+  // to roles.json after this browser's matrix was first seeded).
+  Object.keys(DEFAULT_MATRIX).forEach((role) => {
+    if (!repaired[role]) repaired[role] = JSON.parse(JSON.stringify(DEFAULT_MATRIX[role]));
+  });
+  return repaired;
+}
 
 export function getMatrix() {
-  return load(ENTITY_KEYS.RBAC, null) || cloneDefault();
+  const saved = load(ENTITY_KEYS.RBAC, null);
+  return saved ? repairMatrix(saved) : cloneDefault();
 }
 
 function cloneDefault() {
@@ -106,8 +89,13 @@ function cloneDefault() {
 }
 
 export function ensureSeeded() {
-  if (load(ENTITY_KEYS.RBAC, null) === null) {
+  const saved = load(ENTITY_KEYS.RBAC, null);
+  if (saved === null) {
     save(ENTITY_KEYS.RBAC, cloneDefault());
+  } else {
+    // Persist the healed shape too, so a stale cache is only ever repaired once instead of on
+    // every single getMatrix() call for the lifetime of the browser profile.
+    save(ENTITY_KEYS.RBAC, repairMatrix(saved));
   }
 }
 
@@ -122,6 +110,7 @@ export function saveMatrix(matrix, actor, actorRole) {
 }
 
 export function resetRoleToDefault(role, actor, actorRole) {
+  if (!DEFAULT_MATRIX[role]) throw new Error(`"${role}" has no shipped defaults to reset to (it's a custom or renamed role).`);
   const matrix = getMatrix();
   const before = JSON.parse(JSON.stringify(matrix));
   matrix[role] = JSON.parse(JSON.stringify(DEFAULT_MATRIX[role]));
@@ -135,17 +124,26 @@ export function resetRoleToDefault(role, actor, actorRole) {
 
 function roleConfig(role) {
   const matrix = getMatrix();
-  return matrix[role] || { menus: [], pages: [], buttons: [] };
+  return matrix[role] || { menus: [], outerPages: [], widgets: [], pdTabs: [], buttons: [] };
 }
 
 export function canSeeMenu(role, menuId) {
   return roleConfig(role).menus.includes(menuId);
 }
 export function canOpenPage(role, pageId) {
-  return roleConfig(role).pages.includes(pageId);
+  const cfg = roleConfig(role);
+  if (cfg.outerPages.includes(pageId) || cfg.menus.includes(pageId)) return true;
+  const rule = EXTRA_PAGES[pageId];
+  return !!rule && cfg.menus.includes(rule.parentMenu) && cfg.buttons.includes(rule.requiresButton);
 }
 export function can(role, buttonId) {
   return roleConfig(role).buttons.includes(buttonId);
+}
+export function canSeeWidget(role, widgetId) {
+  return (roleConfig(role).widgets || []).includes(widgetId);
+}
+export function canOpenPdTab(role, tabId) {
+  return (roleConfig(role).pdTabs || []).includes(tabId);
 }
 export function menusFor(role) {
   const allowed = roleConfig(role).menus;

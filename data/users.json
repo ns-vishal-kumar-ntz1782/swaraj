@@ -1,0 +1,31 @@
+{
+  "roleDirectory": {
+    "CEO": { "avatar":"CEO", "name":"CEO",         "email":"ceo@swaraj.mahindra.com",         "match":["ceo"] },
+    "PMO": { "avatar":"PMO", "name":"PMO Manager", "email":"pmo.manager@swaraj.mahindra.com", "match":["pmo"] },
+    "RD":  { "avatar":"R&D", "name":"R&D Head",    "email":"rnd.head@swaraj.mahindra.com",    "match":["rnd", "r&d", "rd."] },
+    "SA":  { "avatar":"SA",  "name":"Super Admin", "email":"admin@swaraj.mahindra.com",       "match":["admin", "sa."] }
+  },
+  "rootRoleToBusinessRole": {
+    "SA": "System Administrator",
+    "CEO": "CEO",
+    "PMO": "PMO Manager",
+    "RD": "R&D Head"
+  },
+  "adminUsers": [
+    { "name":"Alan Roy",     "email":"rndhead@spd.com",    "businessRole":"R&D Head" },
+    { "name":"Priya Menon",  "email":"pmo@spd.com",        "businessRole":"PMO Manager" },
+    { "name":"Karan Shah",   "email":"ceo@spd.com",        "businessRole":"CEO" },
+    { "name":"Divya Iyer",   "email":"finance@spd.com",    "businessRole":"Finance Manager" },
+    { "name":"Sysadmin",     "email":"admin@spd.com",      "businessRole":"System Administrator" },
+    { "name":"Rohit Verma",  "email":"engineer@spd.com",   "businessRole":"Engineer" },
+    { "name":"Neha Kapoor",  "email":"engineer2@spd.com",  "businessRole":"Engineer" }
+  ],
+  "legacyMockUsers": [
+    { "id":1, "name":"Rajesh Sharma", "email":"rajesh.sharma@swaraj.mahindra.com", "role":"CEO", "status":"Active",   "lastLogin":"09 Jul 2026, 09:12" },
+    { "id":2, "name":"Priya Nair",    "email":"priya.nair@swaraj.mahindra.com",    "role":"PMO", "status":"Active",   "lastLogin":"09 Jul 2026, 08:45" },
+    { "id":3, "name":"Arjun Mehta",   "email":"arjun.mehta@swaraj.mahindra.com",   "role":"RD",  "status":"Active",   "lastLogin":"08 Jul 2026, 17:30" },
+    { "id":4, "name":"Sunita Iyer",   "email":"sunita.iyer@swaraj.mahindra.com",   "role":"SA",  "status":"Active",   "lastLogin":"09 Jul 2026, 10:05" },
+    { "id":5, "name":"Karan Verma",   "email":"karan.verma@swaraj.mahindra.com",   "role":"PMO", "status":"Inactive", "lastLogin":"22 Jun 2026, 14:00" },
+    { "id":6, "name":"Neha Kapoor",   "email":"neha.kapoor@swaraj.mahindra.com",   "role":"RD",  "status":"Active",   "lastLogin":"07 Jul 2026, 11:20" }
+  ]
+}

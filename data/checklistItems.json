@@ -1,0 +1,344 @@
+[
+  {
+    "id": "CHK-001",
+    "gateCode": "Pre-KO",
+    "title": "Market & Business Case",
+    "description": "Confirms the program has a validated market rationale and an approved financial case before further concept work proceeds.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D004",
+      "D006",
+      "D007",
+      "D008"
+    ]
+  },
+  {
+    "id": "CHK-002",
+    "gateCode": "Pre-KO",
+    "title": "Technical Feasibility & Cost",
+    "description": "Confirms the concept is technically achievable within the program's cost envelope and locked requirements.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D001",
+      "D003",
+      "D005",
+      "D012"
+    ]
+  },
+  {
+    "id": "CHK-003",
+    "gateCode": "Pre-KO",
+    "title": "Program Governance",
+    "description": "Confirms the program is formally chartered, its risks logged, and functional leads have signed off to proceed.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D009",
+      "D011",
+      "D013",
+      "D014"
+    ]
+  },
+  {
+    "id": "CHK-004",
+    "gateCode": "Pre-KO",
+    "title": "Quality & Regulatory Readiness",
+    "description": "Confirms quality targets and applicable market regulations are understood before the concept is locked.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D002",
+      "D010"
+    ]
+  },
+  {
+    "id": "CHK-005",
+    "gateCode": "CVPA",
+    "title": "Design Review & Concept Validation",
+    "description": "Confirms the DR0 design review has closed and the concept is evidenced as meeting customer and business requirements.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D015",
+      "D018",
+      "D020"
+    ]
+  },
+  {
+    "id": "CHK-006",
+    "gateCode": "CVPA",
+    "title": "Quality & Verification Planning",
+    "description": "Confirms design-level failure modes are analyzed and the verification plan is in place ahead of virtual validation.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D016",
+      "D017"
+    ]
+  },
+  {
+    "id": "CHK-007",
+    "gateCode": "CVPA",
+    "title": "Styling & Package Freeze",
+    "description": "Confirms the styling theme, package layout and ergonomics are locked ahead of detail design.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D019",
+      "D021",
+      "D026",
+      "D027"
+    ]
+  },
+  {
+    "id": "CHK-008",
+    "gateCode": "CVPA",
+    "title": "Powertrain & Sourcing",
+    "description": "Confirms the powertrain selection and supplier sourcing strategy are set, with a manufacturability check complete.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D022",
+      "D023",
+      "D025"
+    ]
+  },
+  {
+    "id": "CHK-009",
+    "gateCode": "CVPA",
+    "title": "Cost Planning",
+    "description": "Confirms the program-level cost target has been decomposed to system/component level.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D024",
+      "D028"
+    ]
+  },
+  {
+    "id": "CHK-010",
+    "gateCode": "VV",
+    "title": "Process & Verification Planning",
+    "description": "Confirms the manufacturing-process failure analysis and executable verification plan are complete.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D029",
+      "D030"
+    ]
+  },
+  {
+    "id": "CHK-011",
+    "gateCode": "VV",
+    "title": "Structural & Durability Simulation",
+    "description": "Confirms structural, durability and overall virtual validation results meet target and are CAE signed-off.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D031",
+      "D032",
+      "D033",
+      "D034"
+    ]
+  },
+  {
+    "id": "CHK-012",
+    "gateCode": "VV",
+    "title": "NVH, Thermal & Emissions",
+    "description": "Confirms cabin comfort (NVH), thermal management and emissions compliance are validated in simulation.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D035",
+      "D036",
+      "D037"
+    ]
+  },
+  {
+    "id": "CHK-013",
+    "gateCode": "VV",
+    "title": "Digital Mockup & Tolerance",
+    "description": "Confirms clearances, assembly sequence and dimensional tolerance stack-up are validated digitally.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D038",
+      "D039"
+    ]
+  },
+  {
+    "id": "CHK-014",
+    "gateCode": "VV",
+    "title": "Electrical & Software Architecture",
+    "description": "Confirms the electronic/software architecture is reviewed and the electrical schematic is locked.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D040",
+      "D041"
+    ]
+  },
+  {
+    "id": "CHK-015",
+    "gateCode": "PC",
+    "title": "Drawing Release & Vendor Readiness",
+    "description": "Confirms production-intent drawings are released and prototype-phase suppliers are onboarded and PPAP-submitted.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D042",
+      "D043",
+      "D049"
+    ]
+  },
+  {
+    "id": "CHK-016",
+    "gateCode": "PC",
+    "title": "Prototype Build",
+    "description": "Confirms validation-prototype parts have been received, assembled, and build quality documented.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D044",
+      "D045",
+      "D046"
+    ]
+  },
+  {
+    "id": "CHK-017",
+    "gateCode": "PC",
+    "title": "Manufacturing Readiness",
+    "description": "Confirms tooling is kicked off, the process sheet is drafted, and the line's manufacturing feasibility is reviewed.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D047",
+      "D050",
+      "D051",
+      "D052"
+    ]
+  },
+  {
+    "id": "CHK-018",
+    "gateCode": "PC",
+    "title": "Test Planning & Calibration",
+    "description": "Confirms the physical test campaign is planned and powertrain/chassis calibration results are in.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D048",
+      "D053"
+    ]
+  },
+  {
+    "id": "CHK-019",
+    "gateCode": "PC",
+    "title": "Quality & Cost Verification",
+    "description": "Confirms component qualification evidence is complete and prototype-phase cost variance is understood.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D054",
+      "D055"
+    ]
+  },
+  {
+    "id": "CHK-020",
+    "gateCode": "PR",
+    "title": "Validation Closure",
+    "description": "Confirms final validation-prototype testing, durability and reliability results close out all DVP requirements.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D056",
+      "D061",
+      "D062"
+    ]
+  },
+  {
+    "id": "CHK-021",
+    "gateCode": "PR",
+    "title": "Homologation & Certification",
+    "description": "Confirms homologation builds, emissions and safety compliance test results are certified for target markets.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D057",
+      "D063",
+      "D064"
+    ]
+  },
+  {
+    "id": "CHK-022",
+    "gateCode": "PR",
+    "title": "Field Trial & Warranty",
+    "description": "Confirms real-world field trial results are in and pre-launch warranty exposure has been assessed.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D059",
+      "D068"
+    ]
+  },
+  {
+    "id": "CHK-023",
+    "gateCode": "PR",
+    "title": "Production Part Approval",
+    "description": "Confirms supplier PPAP packages are complete and parts are formally approved for volume production.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D058",
+      "D067"
+    ]
+  },
+  {
+    "id": "CHK-024",
+    "gateCode": "PR",
+    "title": "Line & Process Readiness",
+    "description": "Confirms production tooling is released and the line's readiness/process capability is demonstrated.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D060",
+      "D065",
+      "D066"
+    ]
+  },
+  {
+    "id": "CHK-025",
+    "gateCode": "PPO",
+    "title": "Engineering & Line Trial",
+    "description": "Confirms the design is frozen for volume production and the full-rate line trial has run successfully.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D069",
+      "D072"
+    ]
+  },
+  {
+    "id": "CHK-026",
+    "gateCode": "PPO",
+    "title": "Production Batch & Readiness",
+    "description": "Confirms the pre-production batch build and the final cross-functional launch readiness review are complete.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D070",
+      "D071",
+      "D073"
+    ]
+  },
+  {
+    "id": "CHK-027",
+    "gateCode": "PPO",
+    "title": "Post-Launch Quality",
+    "description": "Confirms early-build quality, customer feedback and early warranty claims are reviewed shortly after launch.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D074",
+      "D075",
+      "D079"
+    ]
+  },
+  {
+    "id": "CHK-028",
+    "gateCode": "PPO",
+    "title": "Continuous Improvement & Cost",
+    "description": "Optional post-launch planning — ongoing field monitoring, continuous improvement and cost-reduction roadmap.",
+    "mandatory": false,
+    "linkedDeliverables": [
+      "D076",
+      "D077",
+      "D078"
+    ]
+  },
+  {
+    "id": "CHK-029",
+    "gateCode": "PPO",
+    "title": "Ramp-up & Retrospective",
+    "description": "Confirms production ramp-up is tracking to plan and the program retrospective has been captured.",
+    "mandatory": true,
+    "linkedDeliverables": [
+      "D080",
+      "D081"
+    ]
+  }
+]

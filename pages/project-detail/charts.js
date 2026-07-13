@@ -5,39 +5,48 @@
 (function (global) {
   "use strict";
 
-  const NAVY = "#1e3a5f", TEAL = "#14b8a6", TRACK = "#e5e7eb";
+  const NAVY = "#1e3a5f", TEAL = "#14b8a6";
 
   // Half-circle gauge matching the Figma:
-  // - light-gray track, value arc split navy (lead) + teal (trailing ~25 pts)
-  // - large % centred inside the arc
+  // - value arc split navy (lead) + teal (trailing ~25 pts) — always fully colored, only these
+  //   two colors, no separate grey "remaining" track
+  // - large % centred inside the arc, auto-shrunk to fit the small (130x74) canvas
   // - "0" and "100" end labels drawn below the arc endpoints
   const centerTextPlugin = {
     id: "gaugeCenterText",
     afterDraw(chart) {
       const t = chart.config.options.plugins.gaugeText;
       if (!t) return;
-      const { ctx, chartArea, width } = chart;
+      const { ctx, chartArea } = chart;
       // Centre of the arc = horizontal centre, bottom of chartArea
       const cx = (chartArea.left + chartArea.right) / 2;
       const cy = chartArea.bottom;
 
-      // Percentage text — large, bold, navy
+      // Percentage text — bold, navy, sized to fit the donut's inner cutout width (not the full
+      // chart width) so a longer value like "94.29%" never crowds/overlaps the arc the way a
+      // fixed font size could.
+      const innerWidth = (chartArea.right - chartArea.left) * 0.62;
+      let fontSize = 15;
       ctx.save();
       ctx.textAlign = "center";
       ctx.textBaseline = "alphabetic";
       ctx.fillStyle = NAVY;
-      ctx.font = "700 20px Inter, sans-serif";
-      ctx.fillText(t.value, cx, cy - 8);
+      ctx.font = `700 ${fontSize}px Inter, sans-serif`;
+      while (ctx.measureText(t.value).width > innerWidth && fontSize > 10) {
+        fontSize -= 1;
+        ctx.font = `700 ${fontSize}px Inter, sans-serif`;
+      }
+      ctx.fillText(t.value, cx, cy - 6);
 
       // "0" label — bottom-left of arc
-      ctx.font = "500 11px Inter, sans-serif";
+      ctx.font = "500 10px Inter, sans-serif";
       ctx.fillStyle = "#94a3b8";
       ctx.textAlign = "left";
-      ctx.fillText("0", chartArea.left + 2, cy + 14);
+      ctx.fillText("0", chartArea.left + 2, cy + 13);
 
       // "100" label — bottom-right of arc
       ctx.textAlign = "right";
-      ctx.fillText("100", chartArea.right - 2, cy + 14);
+      ctx.fillText("100", chartArea.right - 2, cy + 13);
       ctx.restore();
     }
   };
@@ -55,8 +64,11 @@
       data: {
         labels: ["", "", ""],
         datasets: [{
+          // Same value-proportional geometry as before (navy lead, teal for the trailing ~25
+          // points up to the actual value) — the "rest" beyond the value is now colored navy
+          // too instead of a third grey track color, so only two colors ever render.
           data: [navyLen, tealLen, rest],
-          backgroundColor: [NAVY, TEAL, TRACK],
+          backgroundColor: [NAVY, TEAL, NAVY],
           borderWidth: 0, cutout: "72%",
         }]
       },
@@ -74,8 +86,8 @@
     });
   }
 
-  // Process Compliance Rate — FY26 (dashed teal, dotted markers), FY27 (solid navy),
-  // FY27 AI Predicted (dashed amber). Monthly %, interactive tooltip, responsive.
+  // Process Compliance Rate — FY26 (dashed teal, dotted markers), FY27 (solid navy).
+  // Monthly %, interactive tooltip, responsive.
   function buildComplianceRate(canvasId, detail) {
     const el = document.getElementById(canvasId);
     if (!el || !global.Chart) return null;
@@ -100,13 +112,6 @@
             pointStyle: "circle", pointRadius: 3, pointBackgroundColor: NAVY,
             spanGaps: true,
           },
-          {
-            label: "FY27 (AI Predicted)", data: detail.predicted.map(r => r.pct),
-            borderColor: "#f59e0b", backgroundColor: "rgba(245,158,11,.05)",
-            borderWidth: 1.5, borderDash: [6, 3], tension: .35,
-            pointStyle: "circle", pointRadius: 3, pointBackgroundColor: "#fff", pointBorderColor: "#f59e0b", pointBorderWidth: 1.5,
-            spanGaps: true,
-          },
         ]
       },
       options: {
@@ -122,7 +127,7 @@
         },
         scales: {
           x: { grid: { display: false }, ticks: { color: "#6b7280", font: { size: 11 } } },
-          y: { min: 10, max: 100, ticks: { stepSize: 10, callback: v => v + "%", color: "#6b7280", font: { size: 10 } }, grid: { color: "#eef2f6" } }
+          y: { min: 0, max: 100, ticks: { stepSize: 10, callback: v => v + "%", color: "#6b7280", font: { size: 10 } }, grid: { color: "#eef2f6" } }
         }
       }
     });

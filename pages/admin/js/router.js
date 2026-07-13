@@ -4,9 +4,17 @@
 // console is only ever reached once guardPage("admin-console") has already confirmed a session.
 import { getActiveUser } from "./store/users.js";
 import { canOpenPage } from "./rbac.js";
-import { parseQuery } from "./utils.js";
+import { parseQuery, confirmUnsavedChanges } from "./utils.js";
 
 const routes = [];
+
+// Unsaved-changes guard — one slot, since only one view is ever mounted at a time. A view calls
+// registerUnsavedGuard({ isDirty, onSave }) near the top of its render function; handleRoute()
+// unconditionally clears it right before rendering the next route, so no view has to remember to
+// tear it down itself (there's no unmount hook to hang that off — re-render is a full innerHTML
+// replace). isDirty()/onSave() are re-evaluated live off each view's own closure state.
+let guard = null;
+export function registerUnsavedGuard(g) { guard = g; }
 
 // path is an Express-like pattern, e.g. "/gates/:id". pageId null => always allowed (login/forbidden).
 export function registerRoute(path, pageId, view) {
@@ -42,19 +50,46 @@ export function onRouteChange(cb) {
   onNavigateCallback = cb;
 }
 
+let lastRenderedPath = null;   // concrete resolved path (e.g. "/forms/fill/PK-F01") of the last
+                                // successfully rendered route — NOT a route's registered pattern.
+let revertingForGuard = false; // true only while we're programmatically snapping the hash back
+                                // after blocking a navigation; the resulting extra hashchange must
+                                // be a pure no-op, not a second guard check or re-render.
+
 export async function handleRoute() {
   const { path, query } = currentHash();
+
+  if (revertingForGuard) { revertingForGuard = false; return; }
+
   const user = getActiveUser();
   if (!user) { window.location.replace("../../login.html"); return; }
 
+  // Block navigating away from a dirty view. Works for every navigation path (sub-header tab
+  // clicks are plain <a href="#/...">, not JS calls, so this can only live here — the one
+  // chokepoint every hash change funnels through, including navigate()/back/forward/manual edits).
+  if (guard && lastRenderedPath !== null && path !== lastRenderedPath && guard.isDirty()) {
+    revertingForGuard = true;
+    location.hash = lastRenderedPath; // snap the URL back; current view is never torn down/re-rendered
+    const choice = await confirmUnsavedChanges();
+    if (choice === "cancel") return;
+    guard = null;
+    if (choice === "discard") { navigate(path); return; }
+    if (choice === "save") {
+      const ok = await guard.onSave();
+      if (ok) navigate(path);
+      return;
+    }
+    return;
+  }
+
   if (path === "/" || path === "") {
-    navigate("/gates");
+    navigate("/gate-master");
     return;
   }
 
   const matched = matchRoute(path);
   if (!matched) {
-    navigate("/gates");
+    navigate("/gate-master");
     return;
   }
   const { route, params } = matched;
@@ -64,11 +99,16 @@ export async function handleRoute() {
     return;
   }
 
+  guard = null; // always clear before a real render — the outgoing view's guard is now moot
+  lastRenderedPath = path;
   if (onNavigateCallback) onNavigateCallback(route.path, route.pageId);
   await route.view(params, query);
 }
 
 export function startRouter() {
+  window.addEventListener("beforeunload", (e) => {
+    if (guard && guard.isDirty()) { e.preventDefault(); e.returnValue = ""; }
+  });
   window.addEventListener("hashchange", handleRoute);
   handleRoute();
 }

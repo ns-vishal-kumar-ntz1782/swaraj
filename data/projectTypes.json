@@ -1,0 +1,62 @@
+[
+  {
+    "id": "PT-M2",
+    "code": "M2",
+    "name": "M2 — Minor Change Program",
+    "description": "Minor variant, trim, or feature-level change to an existing platform — facelifts, engine re-tunes, feature add-ons. Lowest engineering risk of the three vehicle programs.",
+    "typicalDuration": "8 months",
+    "defaultGateSequence": [
+      "Pre-KO",
+      "CVPA",
+      "VV",
+      "PC",
+      "PR",
+      "PPO"
+    ],
+    "active": true
+  },
+  {
+    "id": "PT-M4",
+    "code": "M4",
+    "name": "M4 — Major Change Program",
+    "description": "Substantial redesign within an existing platform family — new body variant, major powertrain change, or significant styling refresh. Moderate engineering and validation scope.",
+    "typicalDuration": "14 months",
+    "defaultGateSequence": [
+      "Pre-KO",
+      "CVPA",
+      "VV",
+      "PC",
+      "PR",
+      "PPO"
+    ],
+    "active": true
+  },
+  {
+    "id": "PT-M6",
+    "code": "M6",
+    "name": "M6 — New Platform / Breakthrough Program",
+    "description": "All-new platform or breakthrough product line with no prior-generation baseline. Highest engineering risk — every gate runs at full validation rigor.",
+    "typicalDuration": "22 months",
+    "defaultGateSequence": [
+      "Pre-KO",
+      "CVPA",
+      "VV",
+      "PC",
+      "PR",
+      "PPO"
+    ],
+    "active": true
+  },
+  {
+    "id": "PT-EXP",
+    "code": "Exploration",
+    "name": "Exploration — Pre-Concept Feasibility",
+    "description": "Lightweight feasibility study run before a program is chartered, to test market/technical rationale. Converts into an M2/M4/M6 program if approved at CVPA, or is shelved.",
+    "typicalDuration": "3 months",
+    "defaultGateSequence": [
+      "Pre-KO",
+      "CVPA"
+    ],
+    "active": true
+  }
+]

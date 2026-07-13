@@ -1,468 +1,478 @@
+// Gate Checklist — now project-centric: pick one of the 15 real projects, then work through its
+// full gate sequence (however many gates its template defines) as an accordion. Deliverables,
+// documents, the checklist, and the approval workflow all live inline on this one page — no
+// modal/popup and no page navigation for any of it, per the explicit "everything happens inside
+// the existing Gate page" requirement. Documents belong to Deliverable Assignments (never
+// duplicated here); the checklist only references them.
 import { getActiveUser } from "../store/users.js";
 import { can } from "../rbac.js";
 import { ensureShell, contentEl, setBreadcrumb, setActiveMenu } from "./shell.js";
 import {
-  listGates, getGate, createGate, updateGate, distinctProjectCodes,
-  addDeliverableAssignment, updateDeliverableAssignment, addFormAssignment, updateFormAssignment,
-  activateGate, submitGateForApproval, approveGate, rejectGate, sendBackGate, closeGate,
-  uploadChecklistDoc, approveChecklistDoc, readinessScore, GATE_CODES,
-} from "../store/gates.js";
-import { listDeliverables } from "../store/deliverables.js";
-import { listAllForms } from "../store/forms.js";
-import { listTemplateItems } from "../store/gateTemplates.js";
-import { listUsers } from "../store/users.js";
-import { escapeHtml, fmtDate, fmtDateTime, statusPillClass, openModal, confirmDialog, toast, parseQuery } from "../utils.js";
+  listProjects, getProject, listGateInstances, listAssignments,
+  checklistItemsForGate, computeChecklistStatus, canSubmitGate, submitGateForApproval,
+  respondToGateApproval, closeGateInstance, updateAssignmentStatus,
+  uploadDocument, replaceDocument, removeDocument, gateInfo,
+  READ_ONLY_STATUSES, EDITABLE_STATUSES,
+} from "../store/projectExecution.js";
+import { getProjectTeam, displayFor } from "../store/orgDirectory.js";
+import { escapeHtml, fmtDateTime, statusPillClass, toast } from "../utils.js";
 import { navigate } from "../router.js";
 
-const DELIVERABLE_STATUSES = ["Pending", "InProgress", "Submitted", "Completed"];
-const GATE_STATUSES = ["Draft", "Active", "UnderReview", "Approved", "Rejected", "Closed"];
+const ASSIGNMENT_STATUSES = ["Backlog", "Not Started", "In Progress", "Blocked", "Ready for Review", "Completed", "Rejected", "Overdue"];
+const CHEVRON_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
 
-// ============================== LIST ==============================
-export async function renderGateList(params, query) {
+// The document/deliverable "who did this" fields must be a member of the record's own project
+// team (data/projectMembers.json) — the admin console's own logged-in identity (getActiveUser(),
+// a 4-role login model) has no counterpart in that 241-person roster, so it can never literally
+// be the uploader. Deliverable ownership already names a responsible team member, so uploads are
+// attributed to that deliverable's first responsible member — the same deterministic substitute
+// used for "who's recording an approval response" below, just without an extra picker since a
+// single natural owner already exists.
+function defaultUploaderFor(a, projectCode) {
+  if (a.responsibleMemberUserIds && a.responsibleMemberUserIds.length) return a.responsibleMemberUserIds[0];
+  const team = getProjectTeam(projectCode);
+  return team.length ? team[0].userId : null;
+}
+
+function healthPillClass(h) {
+  return h === "Green" ? "pill-green" : h === "Amber" ? "pill-amber" : "pill-red";
+}
+function bucketOf(status) {
+  if (READ_ONLY_STATUSES.includes(status)) return "readonly";
+  if (EDITABLE_STATUSES.includes(status)) return "editable";
+  if (status === "UnderReview") return "review";
+  return "locked"; // NotStarted
+}
+
+// ============================== LIST — the 15 real projects ==============================
+export async function renderGateList() {
   const user = getActiveUser();
   if (!user) return;
   ensureShell();
-  setBreadcrumb("Gate Master");
+  setBreadcrumb("Gate Checklist");
   setActiveMenu("gates");
 
-  const state = { projectCode: "", status: "", q: query.q || "" };
-
-  function draw() {
-    const gates = listGates({ projectCode: state.projectCode || undefined, status: state.status || undefined, q: state.q || undefined });
-    const projects = distinctProjectCodes();
-    const kpis = {
-      total: listGates().length,
-      active: listGates({ status: "Active" }).length,
-      review: listGates({ status: "UnderReview" }).length,
-      approved: listGates({ status: "Approved" }).length,
-    };
-
-    contentEl().innerHTML = `
-      <div class="sg-page-header">
-        <h1>Gate Master</h1>
-        ${can(user.businessRole, "gate.create") ? `<button class="btn btn-primary" id="btnCreateGate">+ Create Gate</button>` : ""}
-      </div>
-      <div class="sg-kpi-strip">
-        <div class="sg-kpi-card"><div class="sg-kpi-label">Total Gates</div><div class="sg-kpi-value">${kpis.total}</div></div>
-        <div class="sg-kpi-card"><div class="sg-kpi-label">Active</div><div class="sg-kpi-value">${kpis.active}</div></div>
-        <div class="sg-kpi-card"><div class="sg-kpi-label">Under Review</div><div class="sg-kpi-value">${kpis.review}</div></div>
-        <div class="sg-kpi-card"><div class="sg-kpi-label">Approved</div><div class="sg-kpi-value">${kpis.approved}</div></div>
-      </div>
-      <div class="sg-toolbar">
-        <select id="fltProject"><option value="">All Projects</option>${projects.map((p) => `<option value="${escapeHtml(p)}" ${state.projectCode === p ? "selected" : ""}>${escapeHtml(p)}</option>`).join("")}</select>
-        <select id="fltStatus"><option value="">All Statuses</option>${GATE_STATUSES.map((s) => `<option value="${s}" ${state.status === s ? "selected" : ""}>${s}</option>`).join("")}</select>
-        <input type="search" id="fltSearch" placeholder="Search project, code, name, owner…" value="${escapeHtml(state.q)}" />
-      </div>
-      <div class="sg-table-wrap">
-        <table class="sg-table">
-          <thead><tr><th>Project</th><th>Gate</th><th>Name</th><th>Owner</th><th>Status</th><th>Planned Start</th><th>Planned End</th><th>Readiness</th><th></th></tr></thead>
-          <tbody>
-            ${gates.length ? gates.map((g) => `
-              <tr class="sg-row-clickable" data-id="${g.id}">
-                <td>${escapeHtml(g.projectCode)}</td>
-                <td><strong>${escapeHtml(g.code)}</strong></td>
-                <td>${escapeHtml(g.name)}</td>
-                <td>${escapeHtml(g.owner)}</td>
-                <td><span class="pill ${statusPillClass(g.status)}">${g.status}</span></td>
-                <td>${fmtDate(g.plannedStart)}</td>
-                <td>${fmtDate(g.plannedEnd)}</td>
-                <td><div class="sg-mini-bar"><div class="sg-mini-bar-fill" style="width:${readinessScore(g)}%"></div></div><span class="sg-mini-bar-label">${readinessScore(g)}%</span></td>
-                <td><a class="btn btn-ghost btn-sm" href="#/gates/${g.id}">Open</a></td>
-              </tr>
-            `).join("") : `<tr><td colspan="9" class="sg-empty-cell">No gates match your filters.</td></tr>`}
-          </tbody>
-        </table>
-      </div>
-    `;
-
-    document.getElementById("fltProject").addEventListener("change", (e) => { state.projectCode = e.target.value; draw(); });
-    document.getElementById("fltStatus").addEventListener("change", (e) => { state.status = e.target.value; draw(); });
-    document.getElementById("fltSearch").addEventListener("input", (e) => { state.q = e.target.value; draw(); });
-    document.querySelectorAll(".sg-row-clickable").forEach((row) => {
-      row.addEventListener("click", (e) => { if (e.target.tagName !== "A") navigate(`/gates/${row.dataset.id}`); });
-    });
-    const createBtn = document.getElementById("btnCreateGate");
-    if (createBtn) createBtn.addEventListener("click", () => openCreateGateModal(user, draw));
-  }
-
-  draw();
-}
-
-function openCreateGateModal(user, onDone) {
-  const owners = listUsers();
-  openModal({
-    title: "Create Gate",
-    bodyHtml: `
-      <div class="sg-form-grid">
-        <label>Project Code<input type="text" id="gProjectCode" placeholder="PRJ-300" required /></label>
-        <label>Gate Code<select id="gCode">${GATE_CODES.map((c) => `<option value="${c}">${c}</option>`).join("")}</select></label>
-        <label class="span-2">Gate Name<input type="text" id="gName" required /></label>
-        <label class="span-2">Description<textarea id="gDescription" rows="2"></textarea></label>
-        <label>Owner<select id="gOwner">${owners.map((o) => `<option value="${escapeHtml(o.businessRole)}">${escapeHtml(o.name)} (${escapeHtml(o.businessRole)})</option>`).join("")}</select></label>
-        <label>Planned Start<input type="date" id="gPlannedStart" /></label>
-        <label>Planned End<input type="date" id="gPlannedEnd" /></label>
-      </div>
-      <div class="sg-form-error" id="gFormError" hidden></div>
-    `,
-    footerHtml: `<button class="btn btn-ghost" data-act="cancel">Cancel</button><button class="btn btn-primary" data-act="save">Create Gate</button>`,
-    onMount: (backdrop, close) => {
-      backdrop.querySelector('[data-act="cancel"]').addEventListener("click", close);
-      backdrop.querySelector('[data-act="save"]').addEventListener("click", () => {
-        const errEl = document.getElementById("gFormError");
-        try {
-          const gate = createGate({
-            projectCode: document.getElementById("gProjectCode").value.trim(),
-            code: document.getElementById("gCode").value,
-            name: document.getElementById("gName").value.trim(),
-            description: document.getElementById("gDescription").value.trim(),
-            owner: document.getElementById("gOwner").value,
-            plannedStart: document.getElementById("gPlannedStart").value,
-            plannedEnd: document.getElementById("gPlannedEnd").value,
-          }, user.name, user.businessRole);
-          close();
-          toast(`Gate ${gate.code} created for ${gate.projectCode}`, "success");
-          onDone();
-        } catch (err) {
-          errEl.textContent = err.message;
-          errEl.hidden = false;
-        }
-      });
-    },
+  const projects = listProjects();
+  contentEl().innerHTML = `
+    <div class="sg-page-header">
+      <h1>Gate Checklist</h1>
+      <p class="sg-subtle">${projects.length} project${projects.length === 1 ? "" : "s"} — select one to review its gate checklist and approvals.</p>
+    </div>
+    <div class="sg-table-wrap">
+      <table class="sg-table">
+        <thead><tr><th>Code</th><th>Project</th><th>Type</th><th>Current Gate</th><th>Progress</th><th>Health</th><th>Status</th></tr></thead>
+        <tbody>
+          ${projects.map((p) => `
+            <tr class="sg-row-clickable" data-code="${escapeHtml(p.code)}">
+              <td>${escapeHtml(p.code)}</td>
+              <td><strong>${escapeHtml(p.name)}</strong><div class="sg-subtle">${escapeHtml(p.productFamily)}</div></td>
+              <td><span class="chip">${escapeHtml(p.projectTypeCode)}</span></td>
+              <td>${p.currentGate ? escapeHtml(p.currentGate) : "—"}</td>
+              <td><div class="sg-mini-bar"><div class="sg-mini-bar-fill" style="width:${p.overallProgress}%"></div></div><span class="sg-mini-bar-label">${p.overallProgress}%</span></td>
+              <td><span class="pill ${healthPillClass(p.projectHealth)}">${p.projectHealth}</span></td>
+              <td><span class="pill ${statusPillClass(p.status)}">${p.status}</span></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+  document.querySelectorAll(".sg-row-clickable[data-code]").forEach((row) => {
+    row.addEventListener("click", () => navigate(`/gates/${row.dataset.code}`));
   });
 }
 
-// ============================== WORKSPACE ==============================
+// ============================== WORKSPACE — one project's full gate accordion ==============================
 export async function renderGateWorkspace(params) {
   const user = getActiveUser();
   if (!user) return;
   ensureShell();
   setActiveMenu("gates");
 
-  const gate = getGate(params.id);
-  if (!gate) {
-    contentEl().innerHTML = `<div class="sg-empty-state">Gate not found. <a href="#/gates">Back to Gate Master</a></div>`;
+  const project = getProject(params.projectCode);
+  if (!project) {
+    contentEl().innerHTML = `<div class="sg-empty-state">Project not found. <a href="#/gates">Back to Gate Checklist</a></div>`;
     return;
   }
-  setBreadcrumb(`Gate Master / ${gate.projectCode} / ${gate.code}`);
+  setBreadcrumb(`Gate Checklist / ${project.code}`);
+
+  const canChecklist = can(user.businessRole, "gate.checklist.manage");
+  const canClose = can(user.businessRole, "gate.approve");
+  const openState = {}; // gateCode -> user has manually toggled a read-only gate open this visit
 
   function draw() {
-    const g = getGate(params.id);
-    const canEdit = can(user.businessRole, "gate.edit");
-    const canApprove = can(user.businessRole, "gate.approve");
-    const score = readinessScore(g);
-    const checklistItems = listTemplateItems(g.code);
-    const checklist = g.checklist || [];
+    const proj = getProject(project.code); // re-fetch fresh after any mutation
+    const instances = listGateInstances(proj.code);
 
     contentEl().innerHTML = `
       <div class="sg-page-header">
         <div>
-          <h1>${escapeHtml(g.code)} — ${escapeHtml(g.name)}</h1>
-          <p class="sg-subtle">${escapeHtml(g.projectCode)} · Owner: ${escapeHtml(g.owner)} · <span class="pill ${statusPillClass(g.status)}">${g.status}</span></p>
+          <h1>${escapeHtml(proj.name)} <span class="sg-subtle">(${escapeHtml(proj.code)})</span></h1>
+          <p class="sg-subtle">${escapeHtml(proj.businessUnit)} · ${escapeHtml(proj.platform)} · ${escapeHtml(proj.productFamily)}</p>
         </div>
-        <div class="sg-header-actions" id="gateActions"></div>
       </div>
-
-      <div class="sg-readiness-card">
-        <div class="sg-readiness-label">Readiness Score</div>
-        <div class="sg-mini-bar lg"><div class="sg-mini-bar-fill" style="width:${score}%"></div></div>
-        <div class="sg-readiness-pct">${score}%</div>
+      <div class="sg-detail-grid">
+        <div class="sg-detail-card"><div class="sg-kpi-label">Project Manager</div>${escapeHtml(displayFor(proj.projectManagerUserId).name)}</div>
+        <div class="sg-detail-card"><div class="sg-kpi-label">Program Manager</div>${escapeHtml(displayFor(proj.programManagerUserId).name)}</div>
+        <div class="sg-detail-card"><div class="sg-kpi-label">Budget Consumed / Planned</div>₹${proj.budgetConsumed}L / ₹${proj.budgetPlanned}L</div>
+        <div class="sg-detail-card"><div class="sg-kpi-label">Overall Progress</div>${proj.overallProgress}%</div>
+        <div class="sg-detail-card"><div class="sg-kpi-label">Project Health</div><span class="pill ${healthPillClass(proj.projectHealth)}">${proj.projectHealth}</span></div>
+        <div class="sg-detail-card"><div class="sg-kpi-label">Schedule Health</div><span class="pill ${healthPillClass(proj.scheduleHealth)}">${proj.scheduleHealth}</span></div>
       </div>
-
-      <p class="sg-description">${escapeHtml(g.description || "No description provided.")}</p>
-
-      <div class="sg-tabs" id="gateTabs">
-        <button class="sg-tab active" data-tab="deliverables">Deliverables</button>
-        <button class="sg-tab" data-tab="forms">Forms</button>
-        <button class="sg-tab" data-tab="checklist">Checklist Documents</button>
-        <button class="sg-tab" data-tab="approvals">Approval Timeline</button>
-      </div>
-
-      <div class="sg-tab-panel" id="panel-deliverables"></div>
-      <div class="sg-tab-panel" id="panel-forms" hidden></div>
-      <div class="sg-tab-panel" id="panel-checklist" hidden></div>
-      <div class="sg-tab-panel" id="panel-approvals" hidden></div>
+      <div class="adm-scroll" id="gateAccordion"></div>
     `;
 
-    renderActions(g, canEdit, canApprove);
-    renderDeliverablesPanel(g, canEdit);
-    renderFormsPanel(g, canEdit);
-    renderChecklistPanel(g, checklistItems, checklist, canEdit || canApprove);
-    renderApprovalsPanel(g);
-
-    document.querySelectorAll(".sg-tab").forEach((tab) => {
-      tab.addEventListener("click", () => {
-        document.querySelectorAll(".sg-tab").forEach((t) => t.classList.remove("active"));
-        tab.classList.add("active");
-        document.querySelectorAll(".sg-tab-panel").forEach((p) => (p.hidden = true));
-        document.getElementById(`panel-${tab.dataset.tab}`).hidden = false;
-      });
-    });
+    document.getElementById("gateAccordion").innerHTML = instances.map((gi) => renderGateItem(proj, gi)).join("");
+    wireGateItems(proj, instances);
   }
 
-  function renderActions(g, canEdit, canApprove) {
-    const wrap = document.getElementById("gateActions");
-    const buttons = [];
-    if (g.status === "Draft" && canEdit) buttons.push(`<button class="btn btn-secondary" data-act="activate">Activate</button>`);
-    if (g.status === "Active" && canEdit) buttons.push(`<button class="btn btn-primary" data-act="submit">Submit for Approval</button>`);
-    if (g.status === "Rejected" && canEdit) buttons.push(`<button class="btn btn-primary" data-act="submit">Resubmit for Approval</button>`);
-    if (g.status === "UnderReview" && canApprove) {
-      buttons.push(`<button class="btn btn-primary" data-act="approve">Approve</button>`);
-      buttons.push(`<button class="btn btn-danger" data-act="reject">Reject</button>`);
-      buttons.push(`<button class="btn btn-ghost" data-act="sendback">Send Back</button>`);
-    }
-    if (g.status === "Approved" && canApprove) buttons.push(`<button class="btn btn-secondary" data-act="close">Close Gate</button>`);
-    wrap.innerHTML = buttons.join("");
-    wrap.querySelectorAll("button[data-act]").forEach((btn) => {
-      btn.addEventListener("click", () => handleGateAction(btn.dataset.act, g));
-    });
-  }
+  function renderGateItem(proj, gi) {
+    const info = gateInfo(gi.gateCode);
+    const bucket = bucketOf(gi.currentStatus);
+    const disabled = bucket === "locked";
+    const openByDefault = bucket === "editable" || bucket === "review";
+    const openClass = (openByDefault || openState[gi.gateCode]) ? " open" : "";
+    const disabledClass = disabled ? " pd-gate-item-disabled" : "";
 
-  async function handleGateAction(act, g) {
-    const needsComment = ["submit", "approve", "reject", "sendback", "close"].includes(act);
-    let comments = "";
-    if (needsComment) {
-      comments = await promptComment(act);
-      if (comments === null) return;
-    }
-    try {
-      if (act === "activate") activateGate(g.id, user.name, user.businessRole);
-      if (act === "submit") submitGateForApproval(g.id, user.name, user.businessRole, comments);
-      if (act === "approve") approveGate(g.id, user.name, user.businessRole, comments);
-      if (act === "reject") rejectGate(g.id, user.name, user.businessRole, comments);
-      if (act === "sendback") sendBackGate(g.id, user.name, user.businessRole, comments);
-      if (act === "close") closeGate(g.id, user.name, user.businessRole, comments);
-      toast("Gate updated", "success");
-      draw();
-    } catch (err) {
-      toast(err.message, "error");
-    }
-  }
-
-  function promptComment(act) {
-    return new Promise((resolve) => {
-      openModal({
-        title: `${act[0].toUpperCase()}${act.slice(1)} — comments`,
-        bodyHtml: `<label>Comments<textarea id="cmtInput" rows="3" placeholder="Optional comments"></textarea></label>`,
-        footerHtml: `<button class="btn btn-ghost" data-act="cancel">Cancel</button><button class="btn btn-primary" data-act="ok">Confirm</button>`,
-        onMount: (backdrop, close) => {
-          backdrop.querySelector('[data-act="cancel"]').addEventListener("click", () => { close(); resolve(null); });
-          backdrop.querySelector('[data-act="ok"]').addEventListener("click", () => {
-            const v = document.getElementById("cmtInput").value.trim();
-            close(); resolve(v);
-          });
-        },
-      });
-    });
-  }
-
-  function renderDeliverablesPanel(g, canEdit) {
-    const panel = document.getElementById("panel-deliverables");
-    panel.innerHTML = `
-      <div class="sg-panel-toolbar">
-        ${canEdit ? `<button class="btn btn-secondary btn-sm" id="btnAddDeliverable">+ Assign Deliverable</button>` : ""}
+    return `
+      <div class="pd-gate-item${openClass}${disabledClass}" data-gate="${escapeHtml(gi.gateCode)}">
+        <div class="pd-gate-item-head">
+          <span class="pd-gate-item-chevron">${CHEVRON_SVG}</span>
+          <span class="pd-gate-item-label">${escapeHtml(gi.gateCode)} — ${escapeHtml(info ? info.gateName : "")}</span>
+          <span class="pd-gate-item-meta">
+            <span class="pd-gate-item-status pill ${statusPillClass(gi.currentStatus)}">${escapeHtml(gi.currentStatus)}</span>
+            ${gi.gateProgress}%
+          </span>
+        </div>
+        <div class="pd-gate-item-body">
+          ${disabled ? `<p class="sg-subtle">Locked until the previous gate is approved.</p>` : renderGateBody(proj, gi, bucket)}
+        </div>
       </div>
+    `;
+  }
+
+  function renderGateBody(proj, gi, bucket) {
+    const assignments = listAssignments(proj.code, gi.gateCode);
+    const checklist = checklistItemsForGate(gi.gateCode);
+    const readOnly = bucket === "readonly";
+    const isReview = bucket === "review";
+    const pendingApprovers = isReview ? (gi.approvalPanel || []).filter((ap) => !(gi.approvalResponses || {})[ap.userId]) : [];
+    const isPendingApprover = pendingApprovers.length > 0;
+
+    let html = "";
+    if (readOnly) html += `<div class="gc-readonly-banner">✓ ${escapeHtml(gi.currentStatus)} — read only. Documents and approval history remain visible below.</div>`;
+    if (isPendingApprover) html += renderApprovalBanner(gi, pendingApprovers);
+
+    html += renderSummaryGrid(proj, gi, assignments, checklist);
+    html += `<h3 class="sg-section-title">Deliverables</h3>`;
+    html += renderDeliverableTable(assignments, !readOnly && !isReview && canChecklist);
+    html += `<h3 class="sg-section-title">Checklist</h3>`;
+    html += renderChecklistList(proj, gi, checklist);
+
+    if (isReview) {
+      html += `<h3 class="sg-section-title">Approval Progress</h3>`;
+      html += renderApprovalProgress(gi);
+    }
+    html += `<h3 class="sg-section-title">Approval History</h3>`;
+    html += renderApprovalHistory(gi);
+
+    if (!readOnly && !isReview && canChecklist) {
+      const { canSubmit, reasons } = canSubmitGate(proj.code, gi.gateCode);
+      html += `
+        <div class="gc-submit-bar">
+          <div>${!canSubmit ? `<div class="gc-submit-reasons">${escapeHtml(reasons.join(" "))}</div>` : `<span class="sg-subtle">All conditions met — ready to submit.</span>`}</div>
+          <button class="btn btn-primary" data-act="open-submit" data-gate="${escapeHtml(gi.gateCode)}" ${canSubmit ? "" : "disabled"}>Submit for Approval</button>
+        </div>
+        <div class="gc-inline-panel" id="submitPanel-${escapeHtml(gi.gateCode)}" hidden>
+          ${renderApproverAssignmentPanel(proj, gi)}
+        </div>
+      `;
+    }
+    if (gi.currentStatus === "Approved" && canClose) {
+      html += `<div class="gc-submit-bar"><span class="sg-subtle">Gate approved — ready to formally close.</span><button class="btn btn-secondary" data-act="close-gate" data-gate="${escapeHtml(gi.gateCode)}">Close Gate</button></div>`;
+    }
+    return html;
+  }
+
+  function renderSummaryGrid(proj, gi, assignments, checklist) {
+    const mandatoryAssignments = assignments.filter((a) => a.mandatory);
+    const completedMandatory = mandatoryAssignments.filter((a) => a.status === "Completed").length;
+    const totalDocsRequired = assignments.reduce((s, a) => s + a.requiredDocuments.length, 0);
+    const totalDocsUploaded = assignments.reduce((s, a) => s + a.uploadedDocuments.length, 0);
+    const checklistDone = checklist.filter((c) => computeChecklistStatus(proj.code, gi.gateCode, c).completionStatus === "Completed").length;
+    return `
+      <div class="gc-summary-grid">
+        <div class="gc-summary-card"><div class="gc-summary-label">Deliverable Completion</div><div class="gc-summary-value">${completedMandatory}/${mandatoryAssignments.length}</div></div>
+        <div class="gc-summary-card"><div class="gc-summary-label">Checklist Completion</div><div class="gc-summary-value">${checklistDone}/${checklist.length}</div></div>
+        <div class="gc-summary-card"><div class="gc-summary-label">Document Completion</div><div class="gc-summary-value">${totalDocsUploaded}/${totalDocsRequired}</div></div>
+        <div class="gc-summary-card"><div class="gc-summary-label">Approval Status</div><div class="gc-summary-value"><span class="pill ${statusPillClass(gi.currentStatus)}">${escapeHtml(gi.currentStatus)}</span></div></div>
+      </div>
+    `;
+  }
+
+  function renderDeliverableTable(assignments, editable) {
+    return `
+      <div class="sg-table-wrap" style="flex:none; max-height:260px;">
       <table class="sg-table">
-        <thead><tr><th>No</th><th>Mandatory</th><th>Due Date</th><th>Status</th><th>Responsible</th><th>Completed</th></tr></thead>
+        <thead><tr><th>No</th><th>Deliverable</th><th>Mandatory</th><th>Responsible</th><th>Status</th><th>Progress</th><th>Documents</th></tr></thead>
         <tbody>
-          ${g.deliverableAssignments.length ? g.deliverableAssignments.map((d) => `
+          ${assignments.length ? assignments.map((a) => `
             <tr>
-              <td>${escapeHtml(d.no)}</td>
-              <td>${d.mandatory ? "Yes" : "No"}</td>
-              <td>${fmtDate(d.dueDate)}</td>
-              <td>
-                ${canEdit ? `<select class="sg-inline-select" data-no="${d.no}" data-field="status">${DELIVERABLE_STATUSES.map((s) => `<option value="${s}" ${d.status === s ? "selected" : ""}>${s}</option>`).join("")}</select>`
-                          : `<span class="pill ${statusPillClass(d.status)}">${d.status}</span>`}
+              <td>${escapeHtml(a.deliverableNo)}</td>
+              <td>${escapeHtml(a.deliverableName)}</td>
+              <td>${a.mandatory ? "Yes" : "No"}</td>
+              <td>${escapeHtml((a.responsibleMemberUserIds || []).map((uid) => displayFor(uid).name).join(", ") || "—")}</td>
+              <td>${editable
+                ? `<select class="sg-inline-select" data-act="assignment-status" data-id="${escapeHtml(a.assignmentId)}">${ASSIGNMENT_STATUSES.map((s) => `<option value="${s}" ${a.status === s ? "selected" : ""}>${s}</option>`).join("")}</select>`
+                : `<span class="pill ${statusPillClass(a.status)}">${escapeHtml(a.status)}</span>`}
               </td>
-              <td>${escapeHtml((d.responsibleMembers || []).join(", "))}</td>
-              <td>${fmtDate(d.actualCompletedDate)}</td>
+              <td>${a.progress}%</td>
+              <td>${renderDocCell(a, editable)}</td>
             </tr>
-          `).join("") : `<tr><td colspan="6" class="sg-empty-cell">No deliverables assigned yet.</td></tr>`}
+          `).join("") : `<tr><td colspan="7" class="sg-empty-cell">No deliverables assigned.</td></tr>`}
         </tbody>
       </table>
-    `;
-    if (canEdit) {
-      const addBtn = document.getElementById("btnAddDeliverable");
-      if (addBtn) addBtn.addEventListener("click", () => openAssignDeliverableModal(g));
-      panel.querySelectorAll('select[data-field="status"]').forEach((sel) => {
-        sel.addEventListener("change", () => {
-          try {
-            const patch = { status: sel.value };
-            if (sel.value === "Completed") patch.actualCompletedDate = new Date().toISOString().slice(0, 10);
-            updateDeliverableAssignment(g.id, sel.dataset.no, patch, user.name, user.businessRole);
-            toast("Deliverable status updated", "success");
-            draw();
-          } catch (err) { toast(err.message, "error"); }
-        });
-      });
-    }
-  }
-
-  function openAssignDeliverableModal(g) {
-    const catalogue = listDeliverables().filter((d) => !g.deliverableAssignments.some((a) => a.no === d.no));
-    if (!catalogue.length) { toast("All catalogue deliverables are already assigned to this gate.", "info"); return; }
-    openModal({
-      title: "Assign Deliverable",
-      bodyHtml: `
-        <div class="sg-form-grid">
-          <label class="span-2">Deliverable<select id="dNo">${catalogue.map((d) => `<option value="${d.no}">${d.no} — ${escapeHtml(d.name)}</option>`).join("")}</select></label>
-          <label>Mandatory<select id="dMandatory"><option value="true">Yes</option><option value="false">No</option></select></label>
-          <label>Due Date<input type="date" id="dDueDate" /></label>
-          <label class="span-2">Responsible Members (comma-separated)<input type="text" id="dResp" placeholder="Name A, Name B" /></label>
-        </div>
-      `,
-      footerHtml: `<button class="btn btn-ghost" data-act="cancel">Cancel</button><button class="btn btn-primary" data-act="save">Assign</button>`,
-      onMount: (backdrop, close) => {
-        backdrop.querySelector('[data-act="cancel"]').addEventListener("click", close);
-        backdrop.querySelector('[data-act="save"]').addEventListener("click", () => {
-          addDeliverableAssignment(g.id, {
-            no: document.getElementById("dNo").value,
-            mandatory: document.getElementById("dMandatory").value === "true",
-            dueDate: document.getElementById("dDueDate").value,
-            responsibleMembers: document.getElementById("dResp").value.split(",").map((s) => s.trim()).filter(Boolean),
-          }, user.name, user.businessRole);
-          close();
-          toast("Deliverable assigned", "success");
-          draw();
-        });
-      },
-    });
-  }
-
-  function renderFormsPanel(g, canEdit) {
-    const panel = document.getElementById("panel-forms");
-    panel.innerHTML = `
-      <div class="sg-panel-toolbar">
-        ${canEdit ? `<button class="btn btn-secondary btn-sm" id="btnAddForm">+ Assign Form</button>` : ""}
       </div>
-      <table class="sg-table">
-        <thead><tr><th>Code</th><th>Mandatory</th><th>Due Date</th><th>Status</th><th>Linked Deliverable</th></tr></thead>
-        <tbody>
-          ${g.formAssignments.length ? g.formAssignments.map((f) => `
-            <tr>
-              <td>${escapeHtml(f.code)}</td>
-              <td>${f.mandatory ? "Yes" : "No"}</td>
-              <td>${fmtDate(f.dueDate)}</td>
-              <td>
-                ${canEdit ? `<select class="sg-inline-select" data-code="${f.code}" data-field="status">${DELIVERABLE_STATUSES.map((s) => `<option value="${s}" ${f.status === s ? "selected" : ""}>${s}</option>`).join("")}</select>`
-                          : `<span class="pill ${statusPillClass(f.status)}">${f.status}</span>`}
-              </td>
-              <td>${escapeHtml(f.linkedDeliverable || "—")}</td>
-            </tr>
-          `).join("") : `<tr><td colspan="5" class="sg-empty-cell">No forms assigned yet.</td></tr>`}
-        </tbody>
-      </table>
     `;
-    if (canEdit) {
-      const addBtn = document.getElementById("btnAddForm");
-      if (addBtn) addBtn.addEventListener("click", () => openAssignFormModal(g));
-      panel.querySelectorAll('select[data-field="status"]').forEach((sel) => {
-        sel.addEventListener("change", () => {
-          try {
-            updateFormAssignment(g.id, sel.dataset.code, { status: sel.value }, user.name, user.businessRole);
-            toast("Form status updated", "success");
-            draw();
-          } catch (err) { toast(err.message, "error"); }
-        });
-      });
-    }
   }
 
-  function openAssignFormModal(g) {
-    const forms = listAllForms().filter((f) => !g.formAssignments.some((a) => a.code === f.code));
-    if (!forms.length) { toast("All forms are already assigned to this gate.", "info"); return; }
-    openModal({
-      title: "Assign Form",
-      bodyHtml: `
-        <div class="sg-form-grid">
-          <label class="span-2">Form<select id="fCode">${forms.map((f) => `<option value="${f.code}">${f.code} — ${escapeHtml(f.name)}</option>`).join("")}</select></label>
-          <label>Mandatory<select id="fMandatory"><option value="true">Yes</option><option value="false">No</option></select></label>
-          <label>Due Date<input type="date" id="fDueDate" /></label>
-          <label class="span-2">Linked Deliverable<select id="fLinked"><option value="">None</option>${g.deliverableAssignments.map((d) => `<option value="${d.no}">${d.no}</option>`).join("")}</select></label>
-        </div>
-      `,
-      footerHtml: `<button class="btn btn-ghost" data-act="cancel">Cancel</button><button class="btn btn-primary" data-act="save">Assign</button>`,
-      onMount: (backdrop, close) => {
-        backdrop.querySelector('[data-act="cancel"]').addEventListener("click", close);
-        backdrop.querySelector('[data-act="save"]').addEventListener("click", () => {
-          addFormAssignment(g.id, {
-            code: document.getElementById("fCode").value,
-            mandatory: document.getElementById("fMandatory").value === "true",
-            dueDate: document.getElementById("fDueDate").value,
-            linkedDeliverable: document.getElementById("fLinked").value,
-          }, user.name, user.businessRole);
-          close();
-          toast("Form assigned", "success");
-          draw();
-        });
-      },
-    });
-  }
-
-  function renderChecklistPanel(g, items, checklist, canManage) {
-    const panel = document.getElementById("panel-checklist");
-    if (!items.length) {
-      panel.innerHTML = `<div class="sg-empty-state">No checklist template defined for ${escapeHtml(g.code)}. Ask a System Administrator to configure one under Checklist Templates.</div>`;
-      return;
-    }
-    panel.innerHTML = `
-      <table class="sg-table">
-        <thead><tr><th>Item</th><th>Mandatory</th><th>Responsibility</th><th>Document</th><th>Approval</th><th></th></tr></thead>
-        <tbody>
-          ${items.map((item) => {
-            const c = checklist.find((x) => x.templateItemId === item.id);
-            return `
-              <tr>
-                <td>${escapeHtml(item.name)}<div class="sg-subtle">${escapeHtml(item.description || "")}</div></td>
-                <td>${item.mandatory ? "Yes" : "No"}</td>
-                <td>${escapeHtml(item.responsibility)}</td>
-                <td>${c && c.fileName ? `📄 ${escapeHtml(c.fileName)}<div class="sg-subtle">${fmtDateTime(c.uploadedAt)}</div>` : `<span class="sg-subtle">Not uploaded</span>`}</td>
-                <td>${c && c.approved ? `<span class="pill pill-green">Approved</span><div class="sg-subtle">${escapeHtml(c.approvedBy)}</div>` : `<span class="pill pill-slate">Pending</span>`}</td>
-                <td>
-                  ${canManage ? `<button class="btn btn-ghost btn-sm" data-act="upload" data-item="${item.id}">Upload</button>` : ""}
-                  ${canManage && c && c.fileName && !c.approved ? `<button class="btn btn-ghost btn-sm" data-act="approve" data-item="${item.id}">Approve</button>` : ""}
-                </td>
-              </tr>
-            `;
-          }).join("")}
-        </tbody>
-      </table>
-    `;
-    panel.querySelectorAll('button[data-act="upload"]').forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const fileName = window.prompt("Enter a file name to simulate an upload:", "document.pdf");
-        if (!fileName) return;
-        uploadChecklistDoc(g.id, btn.dataset.item, fileName, user.name, user.businessRole);
-        toast("Document uploaded", "success");
-        draw();
-      });
-    });
-    panel.querySelectorAll('button[data-act="approve"]').forEach((btn) => {
-      btn.addEventListener("click", () => {
-        try {
-          approveChecklistDoc(g.id, btn.dataset.item, user.name, user.businessRole);
-          toast("Document approved", "success");
-          draw();
-        } catch (err) { toast(err.message, "error"); }
-      });
-    });
-  }
-
-  function renderApprovalsPanel(g) {
-    const panel = document.getElementById("panel-approvals");
-    panel.innerHTML = `
-      <div class="sg-timeline">
-        ${g.approvals.length ? g.approvals.slice().reverse().map((a) => `
-          <div class="sg-timeline-item">
-            <div class="sg-timeline-dot ${statusPillClass(a.action)}"></div>
-            <div class="sg-timeline-body">
-              <div class="sg-timeline-title">${escapeHtml(a.action)} by ${escapeHtml(a.approver)} <span class="sg-subtle">(${escapeHtml(a.role)})</span></div>
-              <div class="sg-timeline-time">${fmtDateTime(a.timestamp)}</div>
-              ${a.comments ? `<div class="sg-timeline-comments">${escapeHtml(a.comments)}</div>` : ""}
+  function renderDocCell(a, editable) {
+    const pendingCount = Math.max(0, a.requiredDocuments.length - a.uploadedDocuments.length);
+    return `
+      <div>
+        ${a.uploadedDocuments.map((d) => `
+          <div class="gc-doc-row">
+            <span class="gc-doc-name">📄 ${escapeHtml(d.fileName)} <span class="sg-subtle">v${d.version}</span></span>
+            <div class="gc-doc-actions">
+              <button type="button" data-act="doc-view" data-id="${escapeHtml(a.assignmentId)}" data-file="${escapeHtml(d.fileName)}">View</button>
+              <button type="button" data-act="doc-download" data-id="${escapeHtml(a.assignmentId)}" data-file="${escapeHtml(d.fileName)}">Download</button>
+              ${editable ? `<button type="button" data-act="doc-replace" data-id="${escapeHtml(a.assignmentId)}" data-file="${escapeHtml(d.fileName)}">Replace</button>` : ""}
+              ${editable ? `<button type="button" class="danger" data-act="doc-remove" data-id="${escapeHtml(a.assignmentId)}" data-file="${escapeHtml(d.fileName)}">Remove</button>` : ""}
             </div>
           </div>
-        `).join("") : `<div class="sg-empty-state">No approval activity yet.</div>`}
+        `).join("")}
+        ${pendingCount > 0 ? `<div class="gc-doc-pending">${pendingCount} pending</div>` : ""}
+        ${editable && pendingCount > 0 ? `<button type="button" class="btn btn-ghost btn-sm" data-act="doc-upload" data-id="${escapeHtml(a.assignmentId)}">+ Upload</button>` : ""}
       </div>
     `;
+  }
+
+  function renderChecklistList(proj, gi, checklist) {
+    if (!checklist.length) return `<div class="sg-empty-state">No checklist items defined for this gate.</div>`;
+    return checklist.map((c) => {
+      const s = computeChecklistStatus(proj.code, gi.gateCode, c);
+      return `
+        <div class="gc-checklist-row">
+          <div>
+            <div class="gc-checklist-title">${escapeHtml(c.title)} <span class="pill ${c.mandatory ? "pill-red" : "pill-slate"}" style="margin-left:6px">${c.mandatory ? "Mandatory" : "Optional"}</span></div>
+            <div class="gc-checklist-desc">${escapeHtml(c.description)}</div>
+          </div>
+          <div class="gc-checklist-meta">
+            <span class="gc-checklist-docs">${s.uploadedDocumentsCount} uploaded · ${s.pendingDocumentsCount} pending</span>
+            <span class="pill ${statusPillClass(s.completionStatus)}">${s.completionStatus}</span>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderApprovalHistory(gi) {
+    const hist = gi.approvalHistory || [];
+    if (!hist.length) return `<div class="sg-empty-state">No approval activity yet.</div>`;
+    return `
+      <div class="sg-timeline no-grow">
+        ${hist.slice().reverse().map((h) => `
+          <div class="sg-timeline-item">
+            <div class="sg-timeline-dot ${statusPillClass(h.decision)}"></div>
+            <div class="sg-timeline-body">
+              <div class="sg-timeline-title">${escapeHtml(h.decision)} by ${escapeHtml(h.approverUserId ? displayFor(h.approverUserId).name : h.actorName)}</div>
+              <div class="sg-timeline-time">${fmtDateTime(h.timestamp)}</div>
+              ${h.comments ? `<div class="sg-timeline-comments">${escapeHtml(h.comments)}</div>` : ""}
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  function renderApprovalProgress(gi) {
+    return `<div class="sg-chip-row">${(gi.approvalPanel || []).map((ap) => {
+      const resp = (gi.approvalResponses || {})[ap.userId];
+      const info = displayFor(ap.userId);
+      return `<span class="chip">${escapeHtml(info.name)} (${escapeHtml(info.role)}): ${resp ? escapeHtml(resp) : "Pending"}</span>`;
+    }).join("")}</div>`;
+  }
+
+  function renderApprovalBanner(gi, pendingApprovers) {
+    return `
+      <div class="gc-approval-banner" style="flex-direction:column;align-items:stretch;">
+        <span>This gate is awaiting approval. Record a response on behalf of the pending approver:</span>
+        <select id="respAs-${escapeHtml(gi.gateCode)}" style="margin-top:8px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px;font-size:12.5px;font-family:inherit">
+          ${pendingApprovers.map((ap) => `<option value="${escapeHtml(ap.userId)}">${escapeHtml(displayFor(ap.userId).name)} — ${escapeHtml(displayFor(ap.userId).role)}</option>`).join("")}
+        </select>
+        <textarea id="respComments-${escapeHtml(gi.gateCode)}" rows="2" placeholder="Comments (required for reject / clarification)" style="width:100%;margin-top:8px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px;font-size:12.5px;font-family:inherit"></textarea>
+        <div class="gc-abtns" style="margin-left:0;margin-top:8px">
+          <button class="btn btn-primary btn-sm" data-act="respond-approve" data-gate="${escapeHtml(gi.gateCode)}">Approve</button>
+          <button class="btn btn-danger btn-sm" data-act="respond-reject" data-gate="${escapeHtml(gi.gateCode)}">Reject</button>
+          <button class="btn btn-ghost btn-sm" data-act="respond-clarify" data-gate="${escapeHtml(gi.gateCode)}">Request Clarification</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderApproverAssignmentPanel(proj, gi) {
+    const team = getProjectTeam(proj.code);
+    const rows = [0, 1, 2, 3].map((i) => `
+      <div class="gc-approver-row">
+        <select class="gc-appr-userid" data-idx="${i}">
+          <option value="">— none —</option>
+          ${team.map((m) => `<option value="${escapeHtml(m.userId)}">${escapeHtml(m.user ? m.user.fullName : m.userName)} — ${escapeHtml(m.projectRole)}</option>`).join("")}
+        </select>
+        <input type="number" class="gc-appr-order" data-idx="${i}" value="${i + 1}" min="1" title="Approval order" />
+        <input type="text" class="gc-appr-comments" data-idx="${i}" placeholder="Comments (optional)" style="flex:1;min-width:140px" />
+      </div>
+    `).join("");
+    return `
+      <h4>Assign Approvers — select 1 or more project members</h4>
+      ${rows}
+      <div class="sg-form-actions">
+        <button class="btn btn-ghost" data-act="cancel-submit" data-gate="${escapeHtml(gi.gateCode)}">Cancel</button>
+        <button class="btn btn-primary" data-act="confirm-submit" data-gate="${escapeHtml(gi.gateCode)}">Confirm Submit</button>
+      </div>
+    `;
+  }
+
+  function wireGateItems(proj, instances) {
+    document.querySelectorAll(".pd-gate-item:not(.pd-gate-item-disabled) > .pd-gate-item-head").forEach((head) => {
+      head.addEventListener("click", () => {
+        const item = head.closest(".pd-gate-item");
+        const gateCode = item.dataset.gate;
+        const nowOpen = !item.classList.contains("open");
+        item.classList.toggle("open", nowOpen);
+        openState[gateCode] = nowOpen;
+      });
+    });
+
+    document.querySelectorAll('select[data-act="assignment-status"]').forEach((sel) => {
+      sel.addEventListener("click", (e) => e.stopPropagation());
+      sel.addEventListener("change", () => {
+        try {
+          updateAssignmentStatus(sel.dataset.id, sel.value, user.name, user.businessRole);
+          toast("Deliverable status updated", "success");
+          draw();
+        } catch (err) {
+          toast(err.message, "error");
+        }
+      });
+    });
+
+    document.querySelectorAll('button[data-act^="doc-"]').forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const { act, id, file } = btn.dataset;
+        if (act === "doc-view" || act === "doc-download") {
+          toast(`${act === "doc-view" ? "Viewing" : "Downloading"} ${file} (simulated — no file storage in this demo).`, "info");
+          return;
+        }
+        const findAssignment = () => instances.flatMap((g) => listAssignments(proj.code, g.gateCode)).find((a) => a.assignmentId === id);
+        if (act === "doc-upload") {
+          const fileName = window.prompt("Enter a file name to simulate an upload:", "document.pdf");
+          if (!fileName) return;
+          uploadDocument(id, fileName, defaultUploaderFor(findAssignment(), proj.code), user.name, user.businessRole);
+          toast("Document uploaded", "success");
+          draw();
+        } else if (act === "doc-replace") {
+          const fileName = window.prompt("Enter the replacement file name:", file);
+          if (!fileName) return;
+          replaceDocument(id, file, fileName, defaultUploaderFor(findAssignment(), proj.code), user.name, user.businessRole);
+          toast("Document replaced", "success");
+          draw();
+        } else if (act === "doc-remove") {
+          if (!window.confirm(`Remove "${file}"?`)) return;
+          removeDocument(id, file, user.name, user.businessRole);
+          toast("Document removed", "success");
+          draw();
+        }
+      });
+    });
+
+    document.querySelectorAll('button[data-act="open-submit"]').forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const panel = document.getElementById(`submitPanel-${btn.dataset.gate}`);
+        if (panel) panel.hidden = !panel.hidden;
+      });
+    });
+    document.querySelectorAll('button[data-act="cancel-submit"]').forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const panel = document.getElementById(`submitPanel-${btn.dataset.gate}`);
+        if (panel) panel.hidden = true;
+      });
+    });
+    document.querySelectorAll('button[data-act="confirm-submit"]').forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const gateCode = btn.dataset.gate;
+        const panel = document.getElementById(`submitPanel-${gateCode}`);
+        const rows = Array.from(panel.querySelectorAll(".gc-approver-row"));
+        const approvalPanel = rows.map((row) => {
+          const userId = row.querySelector(".gc-appr-userid").value;
+          if (!userId) return null;
+          return {
+            userId,
+            approvalOrder: Number(row.querySelector(".gc-appr-order").value) || 1,
+            comments: row.querySelector(".gc-appr-comments").value.trim(),
+          };
+        }).filter(Boolean);
+        try {
+          submitGateForApproval(proj.code, gateCode, approvalPanel, user.name, user.businessRole);
+          toast("Gate submitted for approval", "success");
+          draw();
+        } catch (err) {
+          toast(err.message, "error");
+        }
+      });
+    });
+
+    document.querySelectorAll('button[data-act^="respond-"]').forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const gateCode = btn.dataset.gate;
+        const decision = btn.dataset.act === "respond-approve" ? "Approved" : btn.dataset.act === "respond-reject" ? "Rejected" : "ClarificationRequested";
+        const respondingUserId = document.getElementById(`respAs-${gateCode}`)?.value;
+        const comments = document.getElementById(`respComments-${gateCode}`)?.value.trim() || "";
+        if (!respondingUserId) {
+          toast("Select which approver this response is for.", "error");
+          return;
+        }
+        if (decision !== "Approved" && !comments) {
+          toast("Comments are required to reject or request clarification.", "error");
+          return;
+        }
+        try {
+          respondToGateApproval(proj.code, gateCode, respondingUserId, user.name, user.businessRole, decision, comments);
+          toast(`Recorded: ${decision}`, "success");
+          draw();
+        } catch (err) {
+          toast(err.message, "error");
+        }
+      });
+    });
+
+    document.querySelectorAll('button[data-act="close-gate"]').forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (!window.confirm("Close this gate?")) return;
+        try {
+          closeGateInstance(proj.code, btn.dataset.gate, user.name, user.businessRole, "");
+          toast("Gate closed", "success");
+          draw();
+        } catch (err) {
+          toast(err.message, "error");
+        }
+      });
+    });
   }
 
   draw();

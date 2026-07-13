@@ -45,19 +45,47 @@ changes per page (and the Admin Console adds a notification bell next to the ava
 ├── login.html                 entry point — email lookup, sets the session, role-based redirect
 ├── index.html                 main Dashboard (charts, drill-downs)
 ├── server.js                  zero-dependency dev server (node server.js)
+├── data/                      every mock/seed data record in the app, as JSON — projects.json,
+│                              portfolio.json, gates.json, deliverables.json, forms.json,
+│                              users.json, roles.json, templates.json, actions.json,
+│                              activity-log.json, approvals.json. Loaded via a synchronous XHR
+│                              at the top of the JS file that owns that data (app-config.js,
+│                              project-detail-seed.js, portfolio.js, or the relevant admin
+│                              store/*.js module) — nothing downstream had to change, since
+│                              every consumer still just reads the same global/export names.
+├── styles/                    centralized design system — every color, typography, spacing,
+│   │                          shadow, radius, and transition value used anywhere in the app,
+│   │                          as a CSS custom property. Change a value once here, it updates
+│   │                          everywhere that value is used.
+│   ├── variables.css          the :root token definitions (colors, type scale, spacing scale,
+│   │                          shadows, radii, transitions) — nothing else in styles/ or
+│   │                          assets/css/ declares a raw color/px/shadow literal, it's all var()
+│   ├── theme.css               resets + base element theming (body, button)
+│   ├── layout.css              .app-shell/.viewport-fit + the .topnav header component tree
+│   └── components.css          common, reusable, additive components (buttons, pills, cards,
+│                                tables, modal) — available on every page, not yet adopted by
+│                                any existing page's own bespoke rules
 ├── assets/
-│   ├── css/                   styles.css (design tokens + dashboard), project-detail.css
+│   ├── css/
+│   │   ├── styles.css         entry point — @imports styles/*.css + this page's own
+│   │   │                      dashboard.css, in order; every page's <link> still just points
+│   │   │                      here, nothing else had to change
+│   │   └── dashboard.css      index.html-only widget/drill-down/badge rules
 │   └── js/
-│       ├── mockData.js        role directory, page/route catalog, seed portfolio data
-│       ├── mock-data.js       generated per-project detail dataset
 │       ├── auth.js            session, route guard (guardPage), APP_ROOT path resolution
 │       ├── shared.js          the ONE header component every page renders (renderTopNav)
-│       ├── script.js          index.html's dashboard logic (charts, drill-downs, viewport fit)
-│       ├── project-detail.js, charts.js, timeline.js
+│       ├── dashboard.js       index.html's dashboard logic (charts, drill-downs, viewport fit)
+│       ├── data/
+│       │   ├── app-config.js         role directory, page/route catalog, seed portfolio data
+│       │   └── project-detail-seed.js  generated per-project detail dataset
+│       └── lib/                common utilities (escapeHtml, ragColor, fmtDate, openModal) —
+│                                new/additive, not wired into any existing page's own logic
 ├── pages/
 │   ├── portfolio-tracker/     portfolio table + filters
 │   ├── overall-budget/        budget rollups
-│   ├── project-detail/        drill-down opened from a dashboard chart (?id=<project>)
+│   ├── project-detail/        drill-down opened from a dashboard chart (?id=<project>);
+│   │                          project-detail.css/.js, charts.js, timeline.js live here now,
+│   │                          colocated with their page like portfolio-tracker already was
 │   └── admin/                 Admin Console — Super Admin only
 │       ├── index.html         shell: shared header (top-nav tabs, no sidebar) + module app
 │       ├── admin-console.css  component styles, fixed-viewport layout (tables scroll, page doesn't)
@@ -66,8 +94,8 @@ changes per page (and the Admin Console adds a notification bell next to the ava
 
 ## Access control
 
-`assets/js/mockData.js`'s `pagesCatalog` is the single source of truth for who can open which
-page — every protected page calls `guardPage("<key>")` at the very top of `<head>`, before
+`assets/js/data/app-config.js`'s `pagesCatalog` is the single source of truth for who can open
+which page — every protected page calls `guardPage("<key>")` at the very top of `<head>`, before
 anything renders, and the header only shows tabs a role is actually allowed to follow
 (`accessiblePages(role)`), so the nav never promises access the guard would then deny.
 

@@ -1,0 +1,7 @@
+[
+  { "projectCode": "PRJ-100", "gateCode": "Pre-KO", "approver": "Priya Menon", "role": "PMO Manager", "action": "Submitted", "timestampOffset": -26, "comments": "Submitted for approval to 2 members." },
+  { "projectCode": "PRJ-100", "gateCode": "Pre-KO", "approver": "Alan Roy",    "role": "R&D Head",    "action": "Approved",  "timestampOffset": -25, "comments": "Concept looks solid." },
+  { "projectCode": "PRJ-100", "gateCode": "Pre-KO", "approver": "Karan Shah",  "role": "CEO",         "action": "Approved",  "timestampOffset": -24, "comments": "Approved." },
+  { "projectCode": "PRJ-100", "gateCode": "CVPA",   "approver": "Priya Menon", "role": "PMO Manager", "action": "Submitted", "timestampOffset": -1,  "comments": "Submitted for approval to 3 members." },
+  { "projectCode": "PRJ-100", "gateCode": "CVPA",   "approver": "Alan Roy",    "role": "R&D Head",    "action": "Approved",  "timestampOffset": 0,   "comments": "Looks good from R&D side." }
+]

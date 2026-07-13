@@ -1,0 +1,62 @@
+[
+  {
+    "id": "GT-01",
+    "gateCode": "Pre-KO",
+    "gateName": "Pre-Kickoff",
+    "description": "Early concept screening — market rationale, technical feasibility and business case are established before a program is formally chartered.",
+    "displayOrder": 1,
+    "defaultDuration": "4 weeks",
+    "color": "#64748b",
+    "active": true
+  },
+  {
+    "id": "GT-02",
+    "gateCode": "CVPA",
+    "gateName": "Concept & Vehicle Program Approval",
+    "description": "The concept, styling theme, and program-level cost/technical viability are reviewed and formally approved to proceed.",
+    "displayOrder": 2,
+    "defaultDuration": "6 weeks",
+    "color": "#2563eb",
+    "active": true
+  },
+  {
+    "id": "GT-03",
+    "gateCode": "VV",
+    "gateName": "Virtual Validation",
+    "description": "Design is validated digitally — CAE, simulation and DFMEA/PFMEA analysis — before any physical build is committed.",
+    "displayOrder": 3,
+    "defaultDuration": "8 weeks",
+    "color": "#0d9488",
+    "active": true
+  },
+  {
+    "id": "GT-04",
+    "gateCode": "PC",
+    "gateName": "Prototype Certification",
+    "description": "Physical prototypes are built and tested; tooling, vendors and manufacturing feasibility are confirmed.",
+    "displayOrder": 4,
+    "defaultDuration": "10 weeks",
+    "color": "#d97706",
+    "active": true
+  },
+  {
+    "id": "GT-05",
+    "gateCode": "PR",
+    "gateName": "Production Readiness",
+    "description": "Field trials, homologation and PPAP confirm the design and process are ready for volume production.",
+    "displayOrder": 5,
+    "defaultDuration": "8 weeks",
+    "color": "#ea580c",
+    "active": true
+  },
+  {
+    "id": "GT-06",
+    "gateCode": "PPO",
+    "gateName": "Post Production Optimization",
+    "description": "Launch readiness, initial production ramp-up and early-field feedback are reviewed to close out the program.",
+    "displayOrder": 6,
+    "defaultDuration": "6 weeks",
+    "color": "#16a34a",
+    "active": true
+  }
+]

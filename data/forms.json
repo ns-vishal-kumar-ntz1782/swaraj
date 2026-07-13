@@ -1,0 +1,61 @@
+{
+  "fieldTypes": ["text", "textarea", "number", "date", "select", "checkbox", "radio", "email", "phone"],
+  "templates": [
+    {
+      "code": "FT-001", "name": "Concept Review Form", "type": "Review", "stage": "Pre-KO", "owner": "R&D Head",
+      "fieldsSchema": [
+        { "id": "projectName", "label": "Project Name", "type": "text", "required": true },
+        { "id": "summary", "label": "Concept Summary", "type": "textarea", "required": true },
+        { "id": "riskLevel", "label": "Risk Level", "type": "select", "required": true, "options": ["Low", "Medium", "High"] },
+        { "id": "targetDate", "label": "Target Decision Date", "type": "date", "required": false },
+        { "id": "approverComments", "label": "Approver Comments", "type": "textarea", "required": false }
+      ]
+    },
+    {
+      "code": "FT-002", "name": "Feasibility Assessment", "type": "Assessment", "stage": "CVPA", "owner": "PMO Manager",
+      "fieldsSchema": [
+        { "id": "technicalFeasibility", "label": "Technical Feasibility", "type": "radio", "required": true, "options": ["Yes", "No", "Partial"] },
+        { "id": "costEstimate", "label": "Cost Estimate", "type": "number", "required": true },
+        { "id": "currency", "label": "Currency", "type": "select", "required": false, "options": ["INR", "USD", "EUR"] },
+        { "id": "notes", "label": "Notes", "type": "textarea", "required": false }
+      ]
+    },
+    {
+      "code": "FT-003", "name": "Design Review Checklist", "type": "Checklist", "stage": "VV", "owner": "Engineer",
+      "fieldsSchema": [
+        { "id": "designDocLink", "label": "Design Document Link", "type": "text", "required": true },
+        { "id": "reviewedBy", "label": "Reviewed By", "type": "text", "required": true },
+        { "id": "passed", "label": "Review Passed", "type": "checkbox", "required": false },
+        { "id": "comments", "label": "Comments", "type": "textarea", "required": false }
+      ]
+    },
+    {
+      "code": "FT-004", "name": "Budget Approval Request", "type": "Approval", "stage": "CVPA", "owner": "Finance Manager",
+      "fieldsSchema": [
+        { "id": "requestedAmount", "label": "Requested Amount", "type": "number", "required": true },
+        { "id": "justification", "label": "Justification", "type": "textarea", "required": true },
+        { "id": "department", "label": "Department", "type": "select", "required": true, "options": ["R&D", "Engineering", "Manufacturing", "Finance"] },
+        { "id": "contactEmail", "label": "Contact Email", "type": "email", "required": false }
+      ]
+    },
+    {
+      "code": "FT-005", "name": "Prototype Test Report", "type": "Report", "stage": "PC", "owner": "Engineer",
+      "fieldsSchema": [
+        { "id": "testDate", "label": "Test Date", "type": "date", "required": true },
+        { "id": "testResult", "label": "Test Result", "type": "radio", "required": true, "options": ["Pass", "Fail"] },
+        { "id": "defectCount", "label": "Defect Count", "type": "number", "required": false },
+        { "id": "attachmentsNote", "label": "Attachments Note", "type": "textarea", "required": false },
+        { "id": "contactPhone", "label": "Contact Phone", "type": "phone", "required": false }
+      ]
+    },
+    {
+      "code": "FT-006", "name": "Launch Readiness Sign-off", "type": "Signoff", "stage": "PPO", "owner": "CEO",
+      "fieldsSchema": [
+        { "id": "readinessScore", "label": "Readiness Score (%)", "type": "number", "required": true },
+        { "id": "signOffDate", "label": "Sign-off Date", "type": "date", "required": true },
+        { "id": "finalComments", "label": "Final Comments", "type": "textarea", "required": false },
+        { "id": "approved", "label": "Approved for Launch", "type": "checkbox", "required": false }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "statuses": ["Open", "InProgress", "OnHold", "Completed", "Closed", "Escalated"],
+  "priorities": ["Low", "Medium", "High", "Critical"],
+  "seeds": [
+    {
+      "number": "AR-0001", "projectCode": "PRJ-100", "gateCode": "CVPA",
+      "title": "Resolve feasibility cost variance", "description": "Reconcile the cost model gap flagged during feasibility review.",
+      "assignedTo": "Neha Kapoor", "priority": "High", "status": "InProgress", "createdBy": "Priya Menon",
+      "startDateOffset": -5, "targetDateOffset": 3
+    },
+    {
+      "number": "AR-0002", "projectCode": "PRJ-200", "gateCode": "Pre-KO",
+      "title": "Complete risk assessment log", "description": "Populate the risk register for the PRJ-200 concept gate.",
+      "assignedTo": "Rohit Verma", "priority": "Medium", "status": "Open", "createdBy": "Alan Roy",
+      "startDateOffset": -2, "targetDateOffset": 7
+    }
+  ]
+}

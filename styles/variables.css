@@ -1,0 +1,297 @@
+/* ═══════════════════════════════════════════
+   DESIGN SYSTEM — VARIABLES
+   Every color, typography, spacing, shadow, radius, and transition value used
+   anywhere in the app, as a CSS custom property. Values are copied verbatim from
+   what was already on screen — nothing was changed, only named. Changing a value
+   here changes every place that uses it; adding a new one should reuse an existing
+   token before minting another.
+═══════════════════════════════════════════ */
+:root {
+  /* ---- Color — semantic (referenced by name across every page) ---- */
+  --bg:          #f0f2f5;
+  --panel:       #fff;
+  --border:      #e5e7eb;
+  --title:       #1f2937;
+  --muted:       #666;
+  --navy:        #1e3a5f;
+  --teal:        #14b8a6;
+  --brand-blue:  #003b88;
+  --dd-border:   #7da7d9;
+  --panel-alt:   #f8fafc;
+  --danger:      #dc2626;
+  --success:     #16a34a;
+  --warning:     #d97706;
+
+  /* ---- Color — palette: slate ---- */
+  --color-slate-50: #f4f5f6;
+  --color-slate-80: #f3f4f6;
+  --color-slate-100: #f1f2f4;
+  --color-slate-130: #eeeff2;
+  --color-slate-150: #e8ebf2;
+  --color-slate-180: #e6eaf0;
+  --color-slate-200: #eaeaea;
+  --color-slate-230: #dee0e5;
+  --color-slate-250: #dee0e3;
+  --color-slate-280: #dbdee3;
+  --color-slate-300: #d1d6de;
+  --color-slate-330: #ccd4e0;
+  --color-slate-350: #d1d5db;
+  --color-slate-380: #cbd5e1;
+  --color-slate-400: #ccd1d9;
+  --color-slate-430: #c7ccd6;
+  --color-slate-450: #b8bdc7;
+  --color-slate-480: #b0b6c2;
+  --color-slate-500: #a6abb8;
+  --color-slate-530: #94a3b8;
+  --color-slate-550: #9ca3af;
+  --color-slate-580: #99a1b2;
+  --color-slate-600: #8c94a3;
+  --color-slate-630: #80879e;
+  --color-slate-650: #70788a;
+  --color-slate-680: #64748b;
+  --color-slate-700: #6b7280;
+  --color-slate-730: #5c637a;
+  --color-slate-750: #666666;
+  --color-slate-780: #575e70;
+  --color-slate-800: #475569;
+  --color-slate-830: #4b5563;
+  --color-slate-850: #475266;
+  --color-slate-880: #374151;
+  --color-slate-900: #334155;
+  --color-slate-930: #1f242e;
+  --color-slate-950: #1a1c24;
+
+  /* ---- Color — palette: blue ---- */
+  --color-blue-50: #eff6ff;
+  --color-blue-90: #f1f5f9;
+  --color-blue-130: #eef3fb;
+  --color-blue-170: #f0f4f8;
+  --color-blue-210: #edebfc;
+  --color-blue-250: #dbeafe;
+  --color-blue-300: #e2eaf5;
+  --color-blue-340: #e2e8f0;
+  --color-blue-380: #bfdbfe;
+  --color-blue-420: #93c5fd;
+  --color-blue-460: #3878ed;
+  --color-blue-500: #336ee0;
+  --color-blue-540: #2563eb;
+  --color-blue-580: #1d4ed8;
+  --color-blue-620: #522ec2;
+  --color-blue-660: #1565c0;
+  --color-blue-700: #0d47a1;
+  --color-blue-750: #0369a1;
+  --color-blue-790: #203a63;
+  --color-blue-830: #0f2c5a;
+  --color-blue-870: #162b4a;
+  --color-blue-910: #15294a;
+  --color-blue-950: #1e293b;
+
+  /* ---- Color — palette: teal ---- */
+  --color-teal-50: #ccfbf1;
+  --color-teal-200: #10b981;
+  --color-teal-350: #0dad85;
+  --color-teal-500: #0d8c66;
+  --color-teal-650: #0f766e;
+  --color-teal-800: #0a7a5c;
+  --color-teal-950: #065e42;
+
+  /* ---- Color — palette: green ---- */
+  --color-green-50: #f0fdf4;
+  --color-green-160: #e8f7f0;
+  --color-green-280: #dcfce7;
+  --color-green-390: #e0f7ed;
+  --color-green-500: #ccefe0;
+  --color-green-610: #22c55e;
+  --color-green-730: #15803d;
+  --color-green-840: #123a2c;
+  --color-green-950: #0c2818;
+
+  /* ---- Color — palette: amber ---- */
+  --color-amber-50: #fffbeb;
+  --color-amber-230: #fff8e1;
+  --color-amber-410: #e8b95c;
+  --color-amber-590: #f59e0b;
+  --color-amber-770: #ff8f00;
+  --color-amber-950: #b45309;
+
+  /* ---- Color — palette: red ---- */
+  --color-red-50: #ffebee;
+  --color-red-150: #fde8e8;
+  --color-red-250: #fee2e2;
+  --color-red-350: #fecaca;
+  --color-red-450: #ef4444;
+  --color-red-550: #e24b4b;
+  --color-red-650: #ea3933;
+  --color-red-750: #e53935;
+  --color-red-850: #c23a36;
+  --color-red-950: #b91c1c;
+
+  /* ---- Color — palette: purple ---- */
+  --color-purple-500: #572eb2;
+
+  /* ---- Color — palette: white ---- */
+  --color-white-50: #fafbfc;
+  --color-white-350: #f8f9fb;
+  --color-white-650: #fef2f2;
+  --color-white-950: #f7f7f9;
+
+  /* ---- Color — palette: black ---- */
+  --color-black-500: #000000;
+
+  /* ---- Color — overlays (rgba tints used for glows/backgrounds/hovers) ---- */
+  --color-overlay-1: rgba(0,0,0,.08);
+  --color-overlay-2: rgba(15,23,42,.14);
+  --color-overlay-3: rgba(100,116,139,.15);
+  --color-overlay-4: rgba(37,99,235,.13);
+  --color-overlay-5: rgba(217,119,6,.15);
+  --color-overlay-6: rgba(22,163,74,.15);
+  --color-overlay-7: rgba(220,38,38,.13);
+  --color-overlay-8: rgba(15,23,42,.55);
+  --color-overlay-9: rgba(0,0,0,0.08);
+  --color-overlay-10: rgba(0,0,0,.8);
+  --color-overlay-11: rgba(255,255,255,.8);
+  --color-overlay-12: rgba(0,0,0,.07);
+  --color-overlay-13: rgba(71,133,242,0.88);
+  --color-overlay-14: rgba(26,173,112,0.9);
+  --color-overlay-15: rgba(71,133,242,.9);
+  --color-overlay-16: rgba(26,173,112,.9);
+  --color-overlay-17: rgba(56,120,237,.15);
+  --color-overlay-18: rgba(56,120,237,.25);
+  --color-overlay-19: rgba(245,158,11,.12);
+  --color-overlay-20: rgba(245,158,11,.25);
+  --color-overlay-21: rgba(0,0,0,.05);
+  --color-overlay-22: rgba(0,59,136,.05);
+  --color-overlay-23: rgba(220,38,38,.08);
+  --color-overlay-24: rgba(15,44,90,.92);
+  --color-overlay-25: rgba(30,58,95,.85);
+  --color-overlay-26: rgba(6,78,59,.9);
+  --color-overlay-27: rgba(20,184,166,.35);
+  --color-overlay-28: rgba(245,158,11,.28);
+  --color-overlay-29: rgba(255,255,255,.035);
+  --color-overlay-30: rgba(255,255,255,.65);
+  --color-overlay-31: rgba(255,255,255,.12);
+  --color-overlay-32: rgba(255,255,255,.22);
+  --color-overlay-33: rgba(255,255,255,.08);
+  --color-overlay-34: rgba(255,255,255,.16);
+  --color-overlay-35: rgba(255,255,255,.7);
+  --color-overlay-36: rgba(255,255,255,.6);
+
+  /* ---- Typography — font size ---- */
+  --fs-8: 8px;
+  --fs-8-5: 8.5px;
+  --fs-9: 9px;
+  --fs-9-5: 9.5px;
+  --fs-10: 10px;
+  --fs-10-5: 10.5px;
+  --fs-11: 11px;
+  --fs-11-5: 11.5px;
+  --fs-12: 12px;
+  --fs-12-5: 12.5px;
+  --fs-13: 13px;
+  --fs-13-5: 13.5px;
+  --fs-14: 14px;
+  --fs-15: 15px;
+  --fs-16: 16px;
+  --fs-17: 17px;
+  --fs-18: 18px;
+  --fs-19: 19px;
+  --fs-22: 22px;
+  --fs-23: 23px;
+  --fs-26: 26px;
+  --fs-34: 34px;
+  --fs-42: 42px;
+
+  /* ---- Typography — font weight ---- */
+  --fw-400: 400;
+  --fw-500: 500;
+  --fw-600: 600;
+  --fw-700: 700;
+  --fw-800: 800;
+  --fw-900: 900;
+
+  /* ---- Spacing ---- */
+  --space-1: 1px;
+  --space-2: 2px;
+  --space-3: 3px;
+  --space-4: 4px;
+  --space-5: 5px;
+  --space-6: 6px;
+  --space-7: 7px;
+  --space-8: 8px;
+  --space-9: 9px;
+  --space-10: 10px;
+  --space-12: 12px;
+  --space-13: 13px;
+  --space-14: 14px;
+  --space-16: 16px;
+  --space-18: 18px;
+  --space-20: 20px;
+  --space-22: 22px;
+  --space-24: 24px;
+  --space-26: 26px;
+  --space-32: 32px;
+  --space-38: 38px;
+  --space-40: 40px;
+  --space-48: 48px;
+  --space-56: 56px;
+
+  /* ---- Shadow — semantic ---- */
+  --shadow:      0 1px 3px rgba(0,0,0,.08);
+  --shadow-lg:   0 10px 30px rgba(15,23,42,.14);
+
+  /* ---- Shadow — palette ---- */
+  --shadow-1: 0px 4px 12px rgba(0,0,0,0.05);
+  --shadow-2: 0 0 0 4px rgba(125,167,217,.18);
+  --shadow-3: 0 8px 32px rgba(30,58,95,.12);
+  --shadow-4: 0 24px 80px rgba(0,0,0,.35);
+  --shadow-5: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-6: 0 2px 8px rgba(0,0,0,0.1);
+  --shadow-7: 0 1px 1px rgba(0,0,0,0.05);
+  --shadow-8: 0 3px 10px rgba(0,59,136,.25);
+  --shadow-9: 0 2px 6px rgba(0,0,0,.15);
+  --shadow-10: 0 1px 4px rgba(245,158,11,.4);
+  --shadow-11: 0 0 0 2px rgba(0,59,136,.15);
+  --shadow-12: 0 8px 20px rgba(34,197,94,.3);
+
+  /* ---- Radius — semantic ---- */
+  --radius:      10px;
+  --radius-sm:   6px;
+
+  /* ---- Radius — palette ---- */
+  --radius-0: 0;
+  --radius-0-alt2: 0 6px 6px 0;
+  --radius-2: 2px 0 0 2px;
+  --radius-2-alt2: 2px;
+  --radius-3: 3px;
+  --radius-4: 4px;
+  --radius-5: 5px;
+  --radius-7: 7px;
+  --radius-8: 8px;
+  --radius-9: 9px;
+  --radius-12: 12px;
+  --radius-16: 16px;
+  --radius-18: 18px;
+  --radius-20: 20px;
+  --radius-40: 40px;
+  --radius-50: 50%;
+  --radius-100: 100px;
+
+  /* ---- Transition ---- */
+  --transition-1: width .28s cubic-bezier(.4,0,.2,1), opacity .18s, padding .28s;
+  --transition-2: opacity .15s, background .15s;
+  --transition-3: outline .2s, box-shadow .2s;
+  --transition-4: max-height .38s cubic-bezier(.4,0,.2,1), opacity .3s ease;
+  --transition-5: none;
+  --transition-6: background .15s, border-color .15s;
+  --transition-7: box-shadow .15s, border-color .15s;
+  --transition-8: background .15s;
+  --transition-9: color .15s;
+  --transition-10: transform .22s ease;
+  --transition-11: transform .18s ease;
+  --transition-12: background .15s, color .15s;
+  --transition-13: opacity .15s;
+  --transition-14: opacity .2s, transform .2s;
+  --transition-15: border-color .15s, background .15s;
+  --transition-16: opacity .15s, transform .1s;
+  --transition-17: all .15s;
+}

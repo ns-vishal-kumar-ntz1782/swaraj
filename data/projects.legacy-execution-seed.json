@@ -1,0 +1,61 @@
+{
+  "monthOrder": ["Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar"],
+  "stages": ["Pre-KO","CVPA","VV","PC","PR","PPO","SOP"],
+  "activities": [
+    { "key":"PRF APPROVAL",         "stage":"Pre-KO" },
+    { "key":"QA & CC INPUTS",       "stage":"Pre-KO" },
+    { "key":"TECHNICAL FEASIBILITY","stage":"Pre-KO" },
+    { "key":"BC APPROVAL",          "stage":"Pre-KO" },
+    { "key":"TARGET APPROVAL",      "stage":"Pre-KO" },
+    { "key":"DR0",                  "stage":"CVPA" },
+    { "key":"DFMEA-DVP MATRIX",     "stage":"CVPA" },
+    { "key":"VV",                   "stage":"VV" },
+    { "key":"L2 RELEASE",           "stage":"PC" },
+    { "key":"VENDOR ONBOARD",       "stage":"PC" },
+    { "key":"VP PART RECEIPT",      "stage":"PC" },
+    { "key":"VP BUILD",             "stage":"PC" },
+    { "key":"VP VALIDATION",        "stage":"PR" },
+    { "key":"HOMOLOGATION BUILDS",  "stage":"PR" },
+    { "key":"PPAP READINESS",       "stage":"PR" },
+    { "key":"ER-SOVP",              "stage":"PPO" },
+    { "key":"PP BATCH",             "stage":"PPO" },
+    { "key":"SOP",                  "stage":"SOP" }
+  ],
+  "departments": ["Product Engineering","Quality Assurance","Manufacturing","Supply Chain","Testing & Validation","Homologation","Program Management","Purchase"],
+  "gateDeliverables": {
+    "Pre-KO": ["Product Requirement Freeze","QA & CC Inputs","Technical Feasibility Study","Business Case Approval","Target Cost Sign-off"],
+    "CVPA":   ["DR0 Design Review","DFMEA","DVP Matrix","Concept Validation Report","Styling Theme Freeze"],
+    "VV":     ["PFMEA","Design Verification Plan","Virtual Validation Report","CAE Sign-off"],
+    "PC":     ["L2 Drawing Release","Vendor Onboarding","VP Part Receipt","VP Build Report","Prototype Assembly"],
+    "PR":     ["VP Validation","Homologation Builds","PPAP Readiness","Field Trial Report","Tool Release"],
+    "PPO":    ["ER-SOVP Sign-off","PP Batch Build","Production Readiness Review","Line Trial"],
+    "SOP":    ["Start of Production","Launch Sign-off","Quality Gate Closure"]
+  },
+  "riskPool": [
+    { "title":"Supplier tool delivery delay",        "mitigation":"Alternative supplier activated in parallel", "corrective":"Weekly tool-progress tracking with vendor" },
+    { "title":"Homologation approval slippage",      "mitigation":"Early submission of type-approval dossier",  "corrective":"Dedicated homologation liaison assigned" },
+    { "title":"CAE correlation gap on BIW",          "mitigation":"Additional physical validation build",       "corrective":"Design review with CAE & test teams weekly" },
+    { "title":"Long-lead casting availability",      "mitigation":"Buffer stock secured for critical castings", "corrective":"Dual-sourcing casting supplier qualified" },
+    { "title":"Emission compliance margin tight",    "mitigation":"Calibration optimisation sprint",            "corrective":"Bi-weekly emission bench review" },
+    { "title":"Cost target overrun on transmission", "mitigation":"Value-engineering workshop scheduled",       "corrective":"Line-item cost freeze until re-baseline" },
+    { "title":"Test track slot contention",          "mitigation":"Off-site proving ground booked",             "corrective":"Shift-based test scheduling introduced" },
+    { "title":"Software release dependency",         "mitigation":"Feature-flagged staged rollout",             "corrective":"Daily software integration stand-up" }
+  ],
+  "seeds": [
+    { "name":"Tractor 1",  "code":"PJ01001", "platform":"Heavy",   "category":"M2", "series":"7250 Series", "portfolio":"BB",   "priority":"High",   "gateReached":5, "health":78, "goalsDone":4, "goalsTotal":5, "delivDone":52, "delivTotal":81, "budgetPlanned":1420, "burn":71, "pmgr":"A. Kulkarni", "pel":"R. Deshmukh", "pml":"S. Pawar",   "pvl":"N. Joshi",    "members":["V. Rao"],        "owner":"CEO Office", "sop":"01 Jul 2026", "launch":"15 Aug 2026" },
+    { "name":"Tractor 2",  "code":"PJ01002", "platform":"Heavy",   "category":"M6", "series":"9500 Series", "portfolio":"N-BB", "priority":"Critical","gateReached":2, "health":61, "goalsDone":4, "goalsTotal":5, "delivDone":48, "delivTotal":87, "budgetPlanned":1680, "burn":64, "pmgr":"Leader 1",    "pel":"Leader 2",    "pml":"Leader 3",   "pvl":"Leader 4",    "members":["Member 1"],      "owner":"PMO",         "sop":"01 Jul 2026", "launch":"20 Sep 2026" },
+    { "name":"Tractor 3",  "code":"PJ01003", "platform":"Compact", "category":"M2", "series":"744 Series",  "portfolio":"BB",   "priority":"High",   "gateReached":6, "health":83, "goalsDone":5, "goalsTotal":6, "delivDone":70, "delivTotal":79, "budgetPlanned":980,  "burn":74, "pmgr":"P. Menon",    "pel":"K. Iyer",     "pml":"D. Nair",    "pvl":"G. Shetty",   "members":["M. Reddy"],      "owner":"R&D",         "sop":"12 Aug 2026", "launch":"05 Oct 2026" },
+    { "name":"Tractor 4",  "code":"PJ01004", "platform":"Compact", "category":"M2", "series":"735 Series",  "portfolio":"BB",   "priority":"Medium", "gateReached":6, "health":88, "goalsDone":6, "goalsTotal":6, "delivDone":74, "delivTotal":82, "budgetPlanned":910,  "burn":69, "pmgr":"S. Gupta",    "pel":"A. Verma",    "pml":"R. Malhotra","pvl":"T. Bansal",   "members":["H. Sethi"],      "owner":"R&D",         "sop":"09 Jun 2026", "launch":"25 Jul 2026" },
+    { "name":"Tractor 5",  "code":"PJ01005", "platform":"Heavy",   "category":"M4", "series":"8100 Series", "portfolio":"BB",   "priority":"Critical","gateReached":1, "health":58, "goalsDone":2, "goalsTotal":6, "delivDone":44, "delivTotal":96, "budgetPlanned":2050, "burn":60, "pmgr":"J. Thomas",   "pel":"L. Fernandez","pml":"B. Kurien",  "pvl":"E. Mathew",   "members":["C. Philip"],     "owner":"CEO Office", "sop":"18 Aug 2026", "launch":"30 Oct 2026" },
+    { "name":"Tractor 6",  "code":"PJ01006", "platform":"Utility", "category":"M4", "series":"6075 Series", "portfolio":"N-BB", "priority":"High",   "gateReached":1, "health":66, "goalsDone":3, "goalsTotal":5, "delivDone":51, "delivTotal":88, "budgetPlanned":1240, "burn":73, "pmgr":"F. Khan",     "pel":"Z. Ahmed",    "pml":"Y. Sheikh",  "pvl":"I. Ansari",   "members":["O. Qureshi"],    "owner":"PMO",         "sop":"22 Sep 2026", "launch":"10 Nov 2026" },
+    { "name":"Tractor 7",  "code":"PJ01007", "platform":"Utility", "category":"M4", "series":"6042 Series", "portfolio":"BB",   "priority":"Medium", "gateReached":2, "health":79, "goalsDone":4, "goalsTotal":5, "delivDone":66, "delivTotal":80, "budgetPlanned":1150, "burn":70, "pmgr":"D. Chauhan",  "pel":"M. Rathore",  "pml":"S. Solanki", "pvl":"V. Rana",     "members":["A. Bhati"],      "owner":"R&D",         "sop":"14 Oct 2026", "launch":"28 Nov 2026" },
+    { "name":"Tractor 8",  "code":"PJ01008", "platform":"Heavy",   "category":"M4", "series":"8300 Series", "portfolio":"N-BB", "priority":"Critical","gateReached":2, "health":61, "goalsDone":2, "goalsTotal":6, "delivDone":49, "delivTotal":92, "budgetPlanned":1990, "burn":64, "pmgr":"R. Krishnan", "pel":"P. Subramanian","pml":"N. Balaji","pvl":"K. Venkat",   "members":["S. Anand"],      "owner":"CEO Office", "sop":"09 Jul 2026", "launch":"18 Sep 2026" },
+    { "name":"Tractor 9",  "code":"PJ01009", "platform":"Compact", "category":"M4", "series":"742 Series",  "portfolio":"BB",   "priority":"Medium", "gateReached":4, "health":82, "goalsDone":5, "goalsTotal":6, "delivDone":69, "delivTotal":84, "budgetPlanned":1020, "burn":72, "pmgr":"A. Kapoor",   "pel":"R. Chadha",   "pml":"M. Sood",    "pvl":"D. Khanna",   "members":["P. Ahuja"],      "owner":"R&D",         "sop":"20 Nov 2026", "launch":"12 Jan 2027" },
+    { "name":"Tractor 10", "code":"PJ01010", "platform":"Compact", "category":"M4", "series":"724 Series",  "portfolio":"BB",   "priority":"Low",    "gateReached":5, "health":86, "goalsDone":6, "goalsTotal":6, "delivDone":73, "delivTotal":80, "budgetPlanned":940,  "burn":68, "pmgr":"S. Naidu",    "pel":"V. Prasad",   "pml":"K. Rao",     "pvl":"G. Murthy",   "members":["L. Kamath"],     "owner":"R&D",         "sop":"10 Jan 2027", "launch":"22 Feb 2027" },
+    { "name":"Tractor 11", "code":"PJ01011", "platform":"Heavy",   "category":"M4", "series":"8500 Series", "portfolio":"N-BB", "priority":"Critical","gateReached":5, "health":62, "goalsDone":3, "goalsTotal":6, "delivDone":55, "delivTotal":95, "budgetPlanned":2100, "burn":65, "pmgr":"H. Bhatt",    "pel":"J. Trivedi",  "pml":"M. Dave",    "pvl":"R. Mehta",    "members":["A. Shah"],       "owner":"CEO Office", "sop":"05 Dec 2026", "launch":"20 Feb 2027" },
+    { "name":"Tractor 12", "code":"PJ01012", "platform":"Utility", "category":"M6", "series":"6055 Series", "portfolio":"BB",   "priority":"Critical","gateReached":2, "health":67, "goalsDone":3, "goalsTotal":5, "delivDone":53, "delivTotal":86, "budgetPlanned":1560, "burn":79, "pmgr":"N. Pillai",   "pel":"S. Kurup",    "pml":"A. Menon",   "pvl":"R. Warrier",  "members":["D. Nambiar"],    "owner":"PMO",         "sop":"18 Jun 2026", "launch":"02 Aug 2026" },
+    { "name":"Tractor 13", "code":"PJ01013", "platform":"Utility", "category":"M6", "series":"6028 Series", "portfolio":"N-BB", "priority":"Medium", "gateReached":3, "health":74, "goalsDone":4, "goalsTotal":6, "delivDone":63, "delivTotal":83, "budgetPlanned":1180, "burn":70, "pmgr":"T. Sen",      "pel":"B. Ghosh",    "pml":"R. Dutta",   "pvl":"S. Bose",     "members":["A. Chatterjee"], "owner":"R&D",         "sop":"09 Apr 2026", "launch":"25 May 2026" },
+    { "name":"Tractor 14", "code":"PJ01014", "platform":"Heavy",   "category":"M6", "series":"9200 Series", "portfolio":"N-BB", "priority":"Critical","gateReached":4, "health":73, "goalsDone":4, "goalsTotal":6, "delivDone":60, "delivTotal":90, "budgetPlanned":1740, "burn":75, "pmgr":"V. Nanda",    "pel":"A. Sethi",    "pml":"P. Chopra",  "pvl":"K. Grewal",   "members":["M. Gill"],       "owner":"CEO Office", "sop":"05 May 2026", "launch":"18 Jun 2026" },
+    { "name":"Tractor 15", "code":"PJ01015", "platform":"Compact", "category":"M6", "series":"717 Series",  "portfolio":"BB",   "priority":"High",   "gateReached":5, "health":70, "goalsDone":4, "goalsTotal":5, "delivDone":58, "delivTotal":82, "budgetPlanned":990,  "burn":71, "pmgr":"R. Iyengar",  "pel":"S. Acharya",  "pml":"K. Hegde",   "pvl":"G. Kamath",   "members":["N. Bhat"],       "owner":"R&D",         "sop":"25 Mar 2027", "launch":"10 May 2027" }
+  ]
+}

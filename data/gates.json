@@ -1,0 +1,90 @@
+[
+  {
+    "projectCode": "PRJ-100", "code": "Pre-KO",
+    "description": "Initial concept sign-off for the PRJ-100 launch program.",
+    "plannedStartOffset": -40, "plannedEndOffset": -25, "actualStartOffset": -39, "actualEndOffset": -24,
+    "owner": "R&D Head", "status": "Approved",
+    "deliverableAssignments": [
+      { "no": "D001", "mandatory": true, "dueDateOffset": -28, "status": "Completed", "responsibleMembers": ["Rohit Verma"], "actualCompletedDateOffset": -27, "checklistFileName": "D001_Signoff.pdf", "checklistUploadedAtOffset": -27 },
+      { "no": "D002", "mandatory": true, "dueDateOffset": -27, "status": "Completed", "responsibleMembers": ["Neha Kapoor"], "actualCompletedDateOffset": -26, "checklistFileName": "D002_Report.pdf", "checklistUploadedAtOffset": -26 }
+    ],
+    "formAssignments": [
+      { "code": "FT-001", "mandatory": true, "dueDateOffset": -28, "status": "Completed", "linkedDeliverable": "D001" }
+    ],
+    "checklistApprovers": ["Alan Roy", "Karan Shah"],
+    "checklistApprovalResponses": { "Alan Roy": "Approved", "Karan Shah": "Approved" },
+    "checklistSubmittedBy": "Priya Menon"
+  },
+  {
+    "projectCode": "PRJ-100", "code": "CVPA",
+    "description": "Concept & vehicle program approval covering technical and financial viability.",
+    "plannedStartOffset": -24, "plannedEndOffset": -5, "actualStartOffset": -23, "actualEndOffset": null,
+    "owner": "PMO Manager", "status": "UnderReview",
+    "deliverableAssignments": [
+      { "no": "D015", "mandatory": true, "dueDateOffset": -2, "status": "Submitted", "responsibleMembers": ["Neha Kapoor"], "actualCompletedDateOffset": null, "checklistFileName": "D015_DR0.pdf", "checklistUploadedAtOffset": -2 },
+      { "no": "D016", "mandatory": true, "dueDateOffset": 1, "status": "InProgress", "responsibleMembers": ["Rohit Verma"], "actualCompletedDateOffset": null, "checklistFileName": "", "checklistUploadedAtOffset": null },
+      { "no": "D017", "mandatory": false, "dueDateOffset": 3, "status": "Pending", "responsibleMembers": [], "actualCompletedDateOffset": null, "checklistFileName": "", "checklistUploadedAtOffset": null }
+    ],
+    "formAssignments": [
+      { "code": "FT-002", "mandatory": true, "dueDateOffset": -2, "status": "Submitted", "linkedDeliverable": "D015" }
+    ],
+    "checklistApprovers": ["Alan Roy", "Karan Shah", "Divya Iyer"],
+    "checklistApprovalResponses": { "Alan Roy": "Approved" },
+    "checklistSubmittedBy": "Priya Menon"
+  },
+  {
+    "projectCode": "PRJ-100", "code": "VV",
+    "description": "Virtual validation — CAE, simulation and digital sign-off before physical builds.",
+    "plannedStartOffset": -4, "plannedEndOffset": 15, "actualStartOffset": -3, "actualEndOffset": null,
+    "owner": "R&D Head", "status": "Active",
+    "deliverableAssignments": [
+      { "no": "D029", "mandatory": true, "dueDateOffset": 10, "status": "InProgress", "responsibleMembers": ["Rohit Verma"], "actualCompletedDateOffset": null, "checklistFileName": "", "checklistUploadedAtOffset": null },
+      { "no": "D030", "mandatory": true, "dueDateOffset": 12, "status": "Pending", "responsibleMembers": [], "actualCompletedDateOffset": null, "checklistFileName": "", "checklistUploadedAtOffset": null }
+    ],
+    "formAssignments": [],
+    "checklistApprovers": [], "checklistApprovalResponses": {}, "checklistSubmittedBy": ""
+  },
+  {
+    "projectCode": "PRJ-100", "code": "PC",
+    "description": "Prototype certification — vendor onboarding, tooling and prototype builds.",
+    "plannedStartOffset": 16, "plannedEndOffset": 40, "actualStartOffset": null, "actualEndOffset": null,
+    "owner": "PMO Manager", "status": "Draft",
+    "deliverableAssignments": [], "formAssignments": [],
+    "checklistApprovers": [], "checklistApprovalResponses": {}, "checklistSubmittedBy": ""
+  },
+  {
+    "projectCode": "PRJ-100", "code": "PR",
+    "description": "Production readiness — field trials, homologation and PPAP.",
+    "plannedStartOffset": 41, "plannedEndOffset": 65, "actualStartOffset": null, "actualEndOffset": null,
+    "owner": "PMO Manager", "status": "Draft",
+    "deliverableAssignments": [], "formAssignments": [],
+    "checklistApprovers": [], "checklistApprovalResponses": {}, "checklistSubmittedBy": ""
+  },
+  {
+    "projectCode": "PRJ-100", "code": "PPO",
+    "description": "Post production optimization — launch readiness and ramp-up.",
+    "plannedStartOffset": 66, "plannedEndOffset": 90, "actualStartOffset": null, "actualEndOffset": null,
+    "owner": "PMO Manager", "status": "Draft",
+    "deliverableAssignments": [], "formAssignments": [],
+    "checklistApprovers": [], "checklistApprovalResponses": {}, "checklistSubmittedBy": ""
+  },
+  {
+    "projectCode": "PRJ-200", "code": "Pre-KO",
+    "description": "Concept approval for PRJ-200 accessory line.",
+    "plannedStartOffset": -10, "plannedEndOffset": 10, "actualStartOffset": -9, "actualEndOffset": null,
+    "owner": "R&D Head", "status": "Active",
+    "deliverableAssignments": [
+      { "no": "D003", "mandatory": true, "dueDateOffset": 6, "status": "Pending", "responsibleMembers": ["Rohit Verma"], "actualCompletedDateOffset": null, "checklistFileName": "", "checklistUploadedAtOffset": null }
+    ],
+    "formAssignments": [],
+    "checklistApprovers": [], "checklistApprovalResponses": {}, "checklistSubmittedBy": ""
+  },
+  {
+    "projectCode": "PRJ-200", "code": "CVPA",
+    "description": "Concept & vehicle program approval, pending kick-off.",
+    "plannedStartOffset": 11, "plannedEndOffset": 30, "actualStartOffset": null, "actualEndOffset": null,
+    "owner": "PMO Manager", "status": "Draft",
+    "deliverableAssignments": [], "formAssignments": [],
+    "checklistApprovers": [], "checklistApprovalResponses": {}, "checklistSubmittedBy": ""
+  }
+]

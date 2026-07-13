@@ -2,19 +2,22 @@ import { getActiveUser } from "../store/users.js";
 import { can } from "../rbac.js";
 import { ensureShell, contentEl, setBreadcrumb, setActiveMenu } from "./shell.js";
 import {
-  listDeliverables, getDeliverable, createDeliverable, updateDeliverable, deleteDeliverable,
-  completeDeliverable, bulkImport, STAGES, getFormLinks, setFormLinks,
+  listDeliverables, updateDeliverable, createDeliverable,
+  bulkImport, stages, CATEGORIES, DEPARTMENTS, listFormOptions,
 } from "../store/deliverables.js";
-import { listAllForms } from "../store/forms.js";
+import { listTemplates } from "../store/projectTemplateAdmin.js";
 import { listAuditEntries } from "../store/audit.js";
-import { escapeHtml, fmtDate, fmtDateTime, statusPillClass, openModal, confirmDialog, toast, relTime } from "../utils.js";
+import {
+  escapeHtml, openModal, openDrawer, toast, paginate, paginationHtml, wirePagination,
+  sortList, sortableTh, wireSortableTh, iconBtn, ICONS, fmtDateTime, relTime,
+} from "../utils.js";
 import { navigate } from "../router.js";
 
-const PRIORITIES = ["Low", "Medium", "High", "Critical"];
-const STATUSES = ["Pending", "InProgress", "Submitted", "Completed"];
-const RAGS = ["green", "amber", "red"];
+const PAGE_SIZE = 15;
 
-// ============================== LIBRARY ==============================
+// ============================== LIBRARY — the only Deliverable Library view; everything
+// (create, edit, link a form) happens inline here via modals/inline controls, never a
+// separate detail page. ==============================
 export async function renderDeliverableLibrary() {
   const user = getActiveUser();
   if (!user) return;
@@ -24,113 +27,255 @@ export async function renderDeliverableLibrary() {
 
   const canManage = can(user.businessRole, "deliverable.library.manage");
   const canCreate = can(user.businessRole, "deliverable.create") || canManage;
-  const state = { stage: "", rag: "", q: "" };
+  const state = { gateCode: "", active: "", q: "", page: 1, sortKey: "", sortDir: "asc" };
+  // Linked-form changes are staged here (deliverableNo -> new formCode) and only written to the
+  // store when "Save Changes" is clicked, same pattern as Gate Master's order.
+  const pendingLinks = {};
 
   function draw() {
-    const list = listDeliverables({ stage: state.stage || undefined, rag: state.rag || undefined, q: state.q || undefined });
-    const kpis = {
-      total: listDeliverables().length,
-      red: listDeliverables({ rag: "red" }).length,
-      completed: listDeliverables({ status: "Completed" }).length,
-    };
+    let list = listDeliverables({
+      gateCode: state.gateCode || undefined,
+      active: state.active === "" ? undefined : state.active === "true",
+      q: state.q || undefined,
+    });
+    list = sortList(list, state.sortKey, state.sortDir);
+    const allList = listDeliverables();
+    const forms = listFormOptions();
+    const formByCode = Object.fromEntries(forms.map((f) => [f.formCode, f]));
+    const kpis = { total: allList.length, active: allList.filter((d) => d.active).length, mandatory: allList.filter((d) => d.mandatory).length };
+    const dirtyCount = Object.keys(pendingLinks).length;
+    const { pageItems, totalPages, page, total } = paginate(list, state.page, PAGE_SIZE);
 
     contentEl().innerHTML = `
       <div class="sg-page-header">
-        <h1>Deliverable Library</h1>
+        <div>
+          <h1>Deliverable Library</h1>
+          <p class="sg-subtle">Master catalog of every deliverable. Project-level status/progress lives on each Project's own Gate Checklist, not here.</p>
+        </div>
         <div class="sg-header-actions">
+          ${canManage && dirtyCount ? `<button class="btn btn-ghost" id="btnDiscardLinks">Discard Changes</button>` : ""}
+          ${canManage && dirtyCount ? `<button class="btn btn-secondary" id="btnSaveLinks">Save Changes (${dirtyCount})</button>` : ""}
           ${canManage ? `<button class="btn btn-ghost" id="btnImport">Bulk Import</button>` : ""}
-          ${canManage ? `<button class="btn btn-ghost" id="btnLinks">Form Links</button>` : ""}
           ${canCreate ? `<button class="btn btn-primary" id="btnCreate">+ New Deliverable</button>` : ""}
         </div>
       </div>
-      <div class="sg-kpi-strip">
-        <div class="sg-kpi-card"><div class="sg-kpi-label">Total Deliverables</div><div class="sg-kpi-value">${kpis.total}</div></div>
-        <div class="sg-kpi-card"><div class="sg-kpi-label">At Risk (Red)</div><div class="sg-kpi-value">${kpis.red}</div></div>
-        <div class="sg-kpi-card"><div class="sg-kpi-label">Completed</div><div class="sg-kpi-value">${kpis.completed}</div></div>
-      </div>
-      <div class="sg-toolbar">
-        <select id="fltStage"><option value="">All Stages</option>${STAGES.map((s) => `<option value="${s}" ${state.stage === s ? "selected" : ""}>${s}</option>`).join("")}</select>
-        <select id="fltRag"><option value="">All RAG</option>${RAGS.map((r) => `<option value="${r}" ${state.rag === r ? "selected" : ""}>${r.toUpperCase()}</option>`).join("")}</select>
-        <input type="search" id="fltSearch" placeholder="Search deliverables…" value="${escapeHtml(state.q)}" />
+      ${dirtyCount ? `<div class="sg-form-error" style="margin-bottom:var(--space-12)">${dirtyCount} linked-form change${dirtyCount === 1 ? "" : "s"} not saved yet — click "Save Changes" to apply, or "Discard Changes" to revert.</div>` : ""}
+      <div class="sg-kpi-filter-row">
+        <div class="sg-kpi-strip compact">
+          <div class="sg-kpi-card"><span class="sg-kpi-icon sg-kpi-icon-blue">${ICONS.list}</span><div><div class="sg-kpi-label">Total</div><div class="sg-kpi-value">${kpis.total}</div></div></div>
+          <div class="sg-kpi-card"><span class="sg-kpi-icon sg-kpi-icon-green">${ICONS.check}</span><div><div class="sg-kpi-label">Active</div><div class="sg-kpi-value">${kpis.active}</div></div></div>
+          <div class="sg-kpi-card"><span class="sg-kpi-icon sg-kpi-icon-red">${ICONS.flag}</span><div><div class="sg-kpi-label">Mandatory</div><div class="sg-kpi-value">${kpis.mandatory}</div></div></div>
+        </div>
+        <div class="sg-toolbar sg-toolbar-flex">
+          <select id="fltStage"><option value="">All Stages</option>${stages().map((s) => `<option value="${s}" ${state.gateCode === s ? "selected" : ""}>${s}</option>`).join("")}</select>
+          <select id="fltActive"><option value="">Active + Inactive</option><option value="true" ${state.active === "true" ? "selected" : ""}>Active only</option><option value="false" ${state.active === "false" ? "selected" : ""}>Inactive only</option></select>
+          <input type="search" id="fltSearch" placeholder="Search deliverables…" value="${escapeHtml(state.q)}" />
+        </div>
       </div>
       <div class="sg-table-wrap">
         <table class="sg-table">
-          <thead><tr><th>No</th><th>Name</th><th>Stage</th><th>Owner</th><th>Dept</th><th>Due</th><th>RAG</th><th>Status</th><th>Priority</th></tr></thead>
+          <thead><tr>
+            ${sortableTh("No", "deliverableNo", state)}${sortableTh("Code", "deliverableCode", state)}${sortableTh("Name", "deliverableName", state)}${sortableTh("Stage", "gateCode", state)}
+            <th>Mandatory</th><th>Linked Form</th>${sortableTh("Version", "version", state)}<th>Status</th><th>Actions</th>
+          </tr></thead>
           <tbody>
-            ${list.length ? list.map((d) => `
-              <tr class="sg-row-clickable" data-no="${d.no}">
-                <td>${escapeHtml(d.no)}</td>
-                <td>${escapeHtml(d.name)}</td>
-                <td>${escapeHtml(d.stage)}</td>
-                <td>${escapeHtml(d.owner)}</td>
-                <td>${escapeHtml(d.dept)}</td>
-                <td>${fmtDate(d.due)}</td>
-                <td><span class="pill ${statusPillClass(d.rag)}">${d.rag.toUpperCase()}</span></td>
-                <td><span class="pill ${statusPillClass(d.status)}">${d.status}</span></td>
-                <td>${escapeHtml(d.priority)}</td>
+            ${pageItems.length ? pageItems.map((d) => `
+              <tr class="${d.active ? "" : "sg-row-muted"}" data-no="${escapeHtml(d.deliverableNo)}">
+                <td>${escapeHtml(d.deliverableNo)}</td>
+                <td class="sg-link-text" data-act="edit" data-no="${escapeHtml(d.deliverableNo)}">${escapeHtml(d.deliverableCode)}</td>
+                <td>${escapeHtml(d.deliverableName)}</td>
+                <td>${escapeHtml(d.gateCode)}</td>
+                <td>${d.mandatory ? `<span class="pill pill-red">Mandatory</span>` : `<span class="pill pill-slate">Optional</span>`}</td>
+                <td>${renderLinkedFormCell(d, forms, pendingLinks[d.deliverableNo])}</td>
+                <td>v${escapeHtml(d.version)}</td>
+                <td><span class="pill ${d.active ? "pill-green" : "pill-slate"}">${d.active ? "Active" : "Inactive"}</span></td>
+                <td class="sg-row-actions">${canManage || canCreate ? iconBtn("edit", { act: "edit", id: d.deliverableNo, title: "Edit deliverable" }) : ""}</td>
               </tr>
             `).join("") : `<tr><td colspan="9" class="sg-empty-cell">No deliverables match your filters.</td></tr>`}
           </tbody>
         </table>
       </div>
+      ${paginationHtml(page, totalPages, total, PAGE_SIZE)}
     `;
 
-    document.getElementById("fltStage").addEventListener("change", (e) => { state.stage = e.target.value; draw(); });
-    document.getElementById("fltRag").addEventListener("change", (e) => { state.rag = e.target.value; draw(); });
-    document.getElementById("fltSearch").addEventListener("input", (e) => { state.q = e.target.value; draw(); });
-    document.querySelectorAll(".sg-row-clickable").forEach((row) => {
-      row.addEventListener("click", () => navigate(`/deliverables/${row.dataset.no}`));
+    document.getElementById("fltStage").addEventListener("change", (e) => { state.gateCode = e.target.value; state.page = 1; draw(); });
+    document.getElementById("fltActive").addEventListener("change", (e) => { state.active = e.target.value; state.page = 1; draw(); });
+    document.getElementById("fltSearch").addEventListener("input", (e) => { state.q = e.target.value; state.page = 1; draw(); });
+    wirePagination(contentEl(), (p) => { state.page = p; draw(); });
+    wireSortableTh(contentEl(), state, draw);
+    document.getElementById("btnCreate")?.addEventListener("click", () => openDeliverableModal(null, draw));
+    document.getElementById("btnImport")?.addEventListener("click", () => openImportModal(draw));
+
+    document.querySelectorAll('[data-act="edit"]').forEach((btn) => {
+      btn.addEventListener("click", () => openDeliverableModal(list.find((d) => d.deliverableNo === btn.dataset.no) || allList.find((d) => d.deliverableNo === btn.dataset.no), draw));
     });
-    const createBtn = document.getElementById("btnCreate");
-    if (createBtn) createBtn.addEventListener("click", () => openDeliverableModal(null, draw));
-    const importBtn = document.getElementById("btnImport");
-    if (importBtn) importBtn.addEventListener("click", () => openImportModal(draw));
-    const linksBtn = document.getElementById("btnLinks");
-    if (linksBtn) linksBtn.addEventListener("click", () => openFormLinksModal());
+    document.querySelectorAll('[data-act="open-linked-form"]').forEach((el) => {
+      el.addEventListener("click", () => { if (el.dataset.code) navigate(`/form-builder?code=${encodeURIComponent(el.dataset.code)}`); });
+    });
+    document.querySelectorAll('[data-act="link-form"]').forEach((sel) => {
+      sel.addEventListener("change", () => {
+        const no = sel.dataset.no;
+        const original = allList.find((d) => d.deliverableNo === no)?.linkedFormCode || "";
+        if (sel.value === original) delete pendingLinks[no];
+        else pendingLinks[no] = sel.value;
+        draw();
+      });
+    });
+    document.getElementById("btnSaveLinks")?.addEventListener("click", () => {
+      Object.entries(pendingLinks).forEach(([no, formCode]) => {
+        updateDeliverable(no, { linkedFormCode: formCode || null }, user.name, user.businessRole);
+      });
+      toast(`${Object.keys(pendingLinks).length} linked-form change(s) saved`, "success");
+      Object.keys(pendingLinks).forEach((k) => delete pendingLinks[k]);
+      draw();
+    });
+    document.getElementById("btnDiscardLinks")?.addEventListener("click", () => {
+      Object.keys(pendingLinks).forEach((k) => delete pendingLinks[k]);
+      toast("Linked-form changes discarded", "info");
+      draw();
+    });
   }
 
   draw();
 }
 
+// Always an editable picker (so the linked form can be changed, not just set once), plus a small
+// "open" affordance to jump straight to that form in the Form Builder when one is selected.
+function renderLinkedFormCell(d, forms, pendingValue) {
+  const current = pendingValue !== undefined ? pendingValue : (d.linkedFormCode || "");
+  return `
+    <div class="sg-linked-form-cell">
+      <select class="sg-inline-select" data-act="link-form" data-no="${escapeHtml(d.deliverableNo)}">
+        <option value="">— none —</option>
+        ${forms.map((f) => `<option value="${escapeHtml(f.formCode)}" ${current === f.formCode ? "selected" : ""}>${escapeHtml(f.formCode)} — ${escapeHtml(f.formName)}</option>`).join("")}
+      </select>
+      <button type="button" class="sg-linked-form-open" data-act="open-linked-form" data-code="${escapeHtml(current)}" title="Open in Form Builder" ${current ? "" : "disabled"}>↗</button>
+    </div>
+  `;
+}
+
+// Deliverables this one is used by — a real, derived relationship (which Project Template gates
+// reference it), not an invented "dependency" field; deliverableLibrary.json has no such field.
+function usedByTemplates(deliverableNo) {
+  const rows = [];
+  listTemplates().forEach((t) => {
+    t.gates.forEach((gc) => {
+      if (gc.defaultDeliverables.includes(deliverableNo)) rows.push({ templateCode: t.templateCode, templateName: t.templateName, gateCode: gc.gateCode });
+    });
+  });
+  return rows;
+}
+
 function openDeliverableModal(deliverable, onDone) {
   const editing = !!deliverable;
   const user = getActiveUser();
-  openModal({
-    title: editing ? `Edit ${deliverable.no}` : "New Deliverable",
+  const forms = listFormOptions();
+  const history = editing ? listAuditEntries({ entityType: "Deliverable" }).filter((e) => e.entityId === deliverable.deliverableNo) : [];
+  const usedBy = editing ? usedByTemplates(deliverable.deliverableNo) : [];
+
+  function readForm(backdrop) {
+    return {
+      deliverableCode: backdrop.querySelector("#dCode").value.trim(),
+      deliverableName: backdrop.querySelector("#dName").value.trim(),
+      description: backdrop.querySelector("#dDesc").value.trim(),
+      gateCode: backdrop.querySelector("#dStage").value,
+      category: backdrop.querySelector("#dCategory").value.trim(),
+      department: backdrop.querySelector("#dDept").value.trim(),
+      estimatedDuration: backdrop.querySelector("#dDuration").value.trim(),
+      linkedFormCode: backdrop.querySelector("#dForm").value || null,
+      mandatory: backdrop.querySelector("#dMandatory").checked,
+      active: backdrop.querySelector("#dActive").checked,
+      version: backdrop.querySelector("#dVersion").value.trim(),
+    };
+  }
+  const original = {
+    deliverableCode: deliverable?.deliverableCode || "", deliverableName: deliverable?.deliverableName || "",
+    description: deliverable?.description || "", gateCode: deliverable?.gateCode || stages()[0],
+    category: deliverable?.category || "", department: deliverable?.department || "",
+    estimatedDuration: deliverable?.estimatedDuration || "5 days", linkedFormCode: deliverable?.linkedFormCode || null,
+    mandatory: !!deliverable?.mandatory, active: deliverable?.active !== false, version: deliverable?.version || "1.0",
+  };
+
+  let backdropRef = null;
+  openDrawer({
+    title: editing ? `Edit ${deliverable.deliverableNo}` : "New Deliverable",
+    isDirty: () => backdropRef && JSON.stringify(readForm(backdropRef)) !== JSON.stringify(original),
     bodyHtml: `
-      <div class="sg-form-grid">
-        <label class="span-2">Name<input type="text" id="dName" value="${escapeHtml(deliverable?.name || "")}" required /></label>
-        <label>Stage<select id="dStage">${STAGES.map((s) => `<option value="${s}" ${deliverable?.stage === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
-        <label>Priority<select id="dPriority">${PRIORITIES.map((p) => `<option value="${p}" ${deliverable?.priority === p ? "selected" : ""}>${p}</option>`).join("")}</select></label>
-        <label>Owner<input type="text" id="dOwner" value="${escapeHtml(deliverable?.owner || "")}" /></label>
-        <label>Department<input type="text" id="dDept" value="${escapeHtml(deliverable?.dept || "")}" /></label>
-        <label>Due Date<input type="date" id="dDue" value="${deliverable?.due || ""}" /></label>
-        <label>RAG<select id="dRag">${RAGS.map((r) => `<option value="${r}" ${deliverable?.rag === r ? "selected" : ""}>${r.toUpperCase()}</option>`).join("")}</select></label>
-        <label>Status<select id="dStatus">${STATUSES.map((s) => `<option value="${s}" ${deliverable?.status === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
-        <label>Version<input type="text" id="dVersion" value="${escapeHtml(deliverable?.version || "1.0")}" /></label>
+      <div class="drawer-section">
+        <h4 class="drawer-section-title">General Information</h4>
+        <div class="sg-form-grid">
+          <label>Deliverable Code<input type="text" id="dCode" value="${escapeHtml(original.deliverableCode)}" placeholder="e.g. PK-15" required /></label>
+          <label>Version<input type="text" id="dVersion" value="${escapeHtml(original.version)}" /></label>
+          <label class="span-2">Name<input type="text" id="dName" value="${escapeHtml(original.deliverableName)}" required /></label>
+          <label class="span-2">Description<textarea id="dDesc" rows="2">${escapeHtml(original.description)}</textarea></label>
+          <label>Category<input type="text" id="dCategory" value="${escapeHtml(original.category)}" list="dCategoryList" /></label>
+          <label>Estimated Duration<input type="text" id="dDuration" value="${escapeHtml(original.estimatedDuration)}" /></label>
+          <label class="sg-check-inline"><input type="checkbox" id="dMandatory" ${original.mandatory ? "checked" : ""} /> Mandatory</label>
+          <label class="sg-check-inline"><input type="checkbox" id="dActive" ${original.active ? "checked" : ""} /> Active</label>
+        </div>
+        <datalist id="dCategoryList">${CATEGORIES.map((c) => `<option value="${escapeHtml(c)}"></option>`).join("")}</datalist>
+        <datalist id="dDeptList">${DEPARTMENTS.map((d) => `<option value="${escapeHtml(d)}"></option>`).join("")}</datalist>
+      </div>
+      <div class="drawer-section">
+        <h4 class="drawer-section-title">Linked Form</h4>
+        <div class="sg-form-grid one-col">
+          <label>Form<select id="dForm"><option value="">— none —</option>${forms.map((f) => `<option value="${escapeHtml(f.formCode)}" ${original.linkedFormCode === f.formCode ? "selected" : ""}>${escapeHtml(f.formCode)} — ${escapeHtml(f.formName)}</option>`).join("")}</select></label>
+        </div>
+      </div>
+      <div class="drawer-section">
+        <h4 class="drawer-section-title">Department</h4>
+        <div class="sg-form-grid one-col">
+          <label>Department<input type="text" id="dDept" value="${escapeHtml(original.department)}" list="dDeptList" /></label>
+        </div>
+      </div>
+      <div class="drawer-section">
+        <h4 class="drawer-section-title">Stage</h4>
+        <div class="sg-form-grid one-col">
+          <label>Gate / Stage<select id="dStage">${stages().map((s) => `<option value="${s}" ${original.gateCode === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
+        </div>
+      </div>
+      <div class="drawer-section">
+        <h4 class="drawer-section-title">Version</h4>
+        <p class="sg-subtle" style="margin:0">Current version: v${escapeHtml(original.version)} (editable in General Information above).</p>
+      </div>
+      <div class="drawer-section">
+        <h4 class="drawer-section-title">History</h4>
+        <div class="sg-timeline no-grow">
+          ${history.length ? history.map((e) => `
+            <div class="sg-timeline-item">
+              <div class="sg-timeline-dot pill-blue"></div>
+              <div class="sg-timeline-body">
+                <div class="sg-timeline-title">${escapeHtml(e.summary)}</div>
+                <div class="sg-timeline-time">${escapeHtml(e.actor)} · ${relTime(e.timestamp)} · ${fmtDateTime(e.timestamp)}</div>
+              </div>
+            </div>
+          `).join("") : `<p class="sg-subtle" style="margin:0">${editing ? "No changes recorded yet." : "History appears once this deliverable is created."}</p>`}
+        </div>
+      </div>
+      <div class="drawer-section">
+        <h4 class="drawer-section-title">Dependencies</h4>
+        ${usedBy.length ? `
+          <p class="sg-subtle" style="margin:0 0 var(--space-8)">Used by ${usedBy.length} Project Template gate${usedBy.length === 1 ? "" : "s"}:</p>
+          <div class="sg-chip-row">${usedBy.map((u) => `<span class="chip">${escapeHtml(u.templateCode)} / ${escapeHtml(u.gateCode)}</span>`).join("")}</div>
+        ` : `<p class="sg-subtle" style="margin:0">${editing ? "Not referenced by any Project Template yet." : "Dependencies appear once this deliverable is created and linked from a Project Template."}</p>`}
       </div>
     `,
     footerHtml: `<button class="btn btn-ghost" data-act="cancel">Cancel</button><button class="btn btn-primary" data-act="save">${editing ? "Save" : "Create"}</button>`,
-    onMount: (backdrop, close) => {
-      backdrop.querySelector('[data-act="cancel"]').addEventListener("click", close);
+    onMount: (backdrop, close, requestClose) => {
+      backdropRef = backdrop;
+      backdrop.querySelector('[data-act="cancel"]').addEventListener("click", requestClose);
       backdrop.querySelector('[data-act="save"]').addEventListener("click", () => {
-        const payload = {
-          name: document.getElementById("dName").value.trim(),
-          stage: document.getElementById("dStage").value,
-          priority: document.getElementById("dPriority").value,
-          owner: document.getElementById("dOwner").value.trim(),
-          dept: document.getElementById("dDept").value.trim(),
-          due: document.getElementById("dDue").value,
-          rag: document.getElementById("dRag").value,
-          status: document.getElementById("dStatus").value,
-          version: document.getElementById("dVersion").value.trim(),
-        };
-        if (!payload.name) { toast("Name is required.", "error"); return; }
-        if (editing) updateDeliverable(deliverable.no, payload, user.name, user.businessRole);
-        else createDeliverable(payload, user.name, user.businessRole);
-        close();
-        toast(editing ? "Deliverable updated" : "Deliverable created", "success");
-        onDone();
+        const payload = readForm(backdrop);
+        if (!payload.deliverableCode || !payload.deliverableName) { toast("Deliverable code and name are required.", "error"); return; }
+        try {
+          if (editing) updateDeliverable(deliverable.deliverableNo, payload, user.name, user.businessRole);
+          else createDeliverable(payload, user.name, user.businessRole);
+          close();
+          toast(editing ? "Deliverable updated" : "Deliverable created", "success");
+          onDone();
+        } catch (err) {
+          toast(err.message, "error");
+        }
       });
     },
   });
@@ -141,7 +286,7 @@ function openImportModal(onDone) {
   openModal({
     title: "Bulk Import Deliverables",
     bodyHtml: `
-      <p class="sg-subtle">Upload a CSV or JSON file. Columns/keys: name, stage, owner, dept, due, rag, status, version, priority. Include "no" to update an existing deliverable.</p>
+      <p class="sg-subtle">Upload a CSV or JSON file. Columns/keys: deliverableCode, deliverableName, description, gateCode, category, department, estimatedDuration, mandatory, linkedFormCode, version, active. Existing codes are updated in place; duplicate codes within the file are rejected.</p>
       <input type="file" id="importFile" accept=".csv,.json,application/json,text/csv" />
       <div class="sg-form-error" id="importError" hidden></div>
     `,
@@ -155,142 +300,15 @@ function openImportModal(onDone) {
         if (!file) { errEl.textContent = "Choose a file first."; errEl.hidden = false; return; }
         try {
           const text = await file.text();
-          const { created, updated } = bulkImport(text, file.name, user.name, user.businessRole);
+          const { created, updated, errors } = bulkImport(text, file.name, user.name, user.businessRole);
           close();
-          toast(`Import complete: ${created} created, ${updated} updated`, "success");
+          toast(`Import complete: ${created} created, ${updated} updated${errors.length ? `, ${errors.length} row(s) skipped` : ""}`, errors.length ? "info" : "success");
           onDone();
         } catch (err) {
-          errEl.textContent = "Could not parse file: " + err.message;
+          errEl.textContent = "Import failed: " + err.message;
           errEl.hidden = false;
         }
       });
     },
   });
-}
-
-function openFormLinksModal() {
-  const user = getActiveUser();
-  const deliverables = listDeliverables();
-  const forms = listAllForms();
-  openModal({
-    title: "Deliverable → Form Links",
-    size: "lg",
-    bodyHtml: `
-      <div class="sg-links-editor">
-        ${deliverables.map((d) => `
-          <div class="sg-links-row">
-            <div class="sg-links-name"><strong>${escapeHtml(d.no)}</strong> ${escapeHtml(d.name)}</div>
-            <div class="sg-links-checks">
-              ${forms.map((f) => `
-                <label class="sg-check-chip">
-                  <input type="checkbox" data-no="${d.no}" data-form="${f.code}" ${getFormLinks(d.no).includes(f.code) ? "checked" : ""} />
-                  ${escapeHtml(f.code)}
-                </label>
-              `).join("")}
-            </div>
-          </div>
-        `).join("")}
-      </div>
-    `,
-    footerHtml: `<button class="btn btn-ghost" data-act="cancel">Close</button><button class="btn btn-primary" data-act="save">Save Links</button>`,
-    onMount: (backdrop, close) => {
-      backdrop.querySelector('[data-act="cancel"]').addEventListener("click", close);
-      backdrop.querySelector('[data-act="save"]').addEventListener("click", () => {
-        deliverables.forEach((d) => {
-          const checked = Array.from(backdrop.querySelectorAll(`input[data-no="${d.no}"]:checked`)).map((el) => el.dataset.form);
-          setFormLinks(d.no, checked, user.name, user.businessRole);
-        });
-        close();
-        toast("Form links saved", "success");
-      });
-    },
-  });
-}
-
-// ============================== DETAIL ==============================
-export async function renderDeliverableDetail(params) {
-  const user = getActiveUser();
-  if (!user) return;
-  ensureShell();
-  setActiveMenu("deliverables");
-
-  const canManage = can(user.businessRole, "deliverable.library.manage") || can(user.businessRole, "deliverable.edit");
-
-  function draw() {
-    const d = getDeliverable(params.no);
-    if (!d) {
-      contentEl().innerHTML = `<div class="sg-empty-state">Deliverable not found. <a href="#/deliverables">Back to Library</a></div>`;
-      return;
-    }
-    setBreadcrumb(`Deliverable Library / ${d.no}`);
-    const links = getFormLinks(d.no);
-    const isOwner = d.owner === user.name;
-    const auditEntries = listAuditEntries({ entityType: "Deliverable" }).filter((e) => e.entityId === d.no);
-
-    contentEl().innerHTML = `
-      <div class="sg-page-header">
-        <div>
-          <h1>${escapeHtml(d.no)} — ${escapeHtml(d.name)}</h1>
-          <p class="sg-subtle">${escapeHtml(d.stage)} · Owner: ${escapeHtml(d.owner)} · v${escapeHtml(d.version)}</p>
-        </div>
-        <div class="sg-header-actions">
-          ${canManage ? `<button class="btn btn-ghost" id="btnEditDeliverable">Edit</button>` : ""}
-          ${isOwner && d.status !== "Completed" ? `<button class="btn btn-primary" id="btnComplete">Mark Complete</button>` : ""}
-        </div>
-      </div>
-      <div class="sg-detail-grid">
-        <div class="sg-detail-card"><div class="sg-kpi-label">Status</div><span class="pill ${statusPillClass(d.status)}">${d.status}</span></div>
-        <div class="sg-detail-card"><div class="sg-kpi-label">RAG</div><span class="pill ${statusPillClass(d.rag)}">${d.rag.toUpperCase()}</span></div>
-        <div class="sg-detail-card"><div class="sg-kpi-label">Priority</div>${escapeHtml(d.priority)}</div>
-        <div class="sg-detail-card"><div class="sg-kpi-label">Due Date</div>${fmtDate(d.due)}</div>
-        <div class="sg-detail-card"><div class="sg-kpi-label">Department</div>${escapeHtml(d.dept)}</div>
-      </div>
-      <div class="sg-tabs" id="dTabs">
-        <button class="sg-tab active" data-tab="links">Linked Forms</button>
-        <button class="sg-tab" data-tab="audit">Audit Trail</button>
-      </div>
-      <div class="sg-tab-panel" id="panel-links"></div>
-      <div class="sg-tab-panel" id="panel-audit" hidden></div>
-    `;
-
-    document.getElementById("panel-links").innerHTML = links.length
-      ? `<div class="sg-chip-row">${links.map((code) => `<a class="chip" href="#/forms">${escapeHtml(code)}</a>`).join("")}</div>`
-      : `<div class="sg-empty-state">No forms linked to this deliverable.</div>`;
-
-    document.getElementById("panel-audit").innerHTML = `
-      <div class="sg-timeline">
-        ${auditEntries.length ? auditEntries.map((e) => `
-          <div class="sg-timeline-item">
-            <div class="sg-timeline-dot pill-blue"></div>
-            <div class="sg-timeline-body">
-              <div class="sg-timeline-title">${escapeHtml(e.summary)}</div>
-              <div class="sg-timeline-time">${escapeHtml(e.actor)} (${escapeHtml(e.actorRole)}) · ${relTime(e.timestamp)} · ${fmtDateTime(e.timestamp)}</div>
-            </div>
-          </div>
-        `).join("") : `<div class="sg-empty-state">No audit history for this deliverable yet.</div>`}
-      </div>
-    `;
-
-    document.querySelectorAll("#dTabs .sg-tab").forEach((tab) => {
-      tab.addEventListener("click", () => {
-        document.querySelectorAll("#dTabs .sg-tab").forEach((t) => t.classList.remove("active"));
-        tab.classList.add("active");
-        document.querySelectorAll(".sg-tab-panel").forEach((p) => (p.hidden = true));
-        document.getElementById(`panel-${tab.dataset.tab}`).hidden = false;
-      });
-    });
-
-    const editBtn = document.getElementById("btnEditDeliverable");
-    if (editBtn) editBtn.addEventListener("click", () => openDeliverableModal(d, draw));
-    const completeBtn = document.getElementById("btnComplete");
-    if (completeBtn) completeBtn.addEventListener("click", () => {
-      try {
-        completeDeliverable(d.no, user.name, user.businessRole);
-        toast("Deliverable marked complete", "success");
-        draw();
-      } catch (err) { toast(err.message, "error"); }
-    });
-  }
-
-  draw();
 }

@@ -1,0 +1,168 @@
+/* ═══════════════════════════════════════════
+   DESIGN SYSTEM — LAYOUT
+   The app shell every page wraps its content in, and the .topnav header component
+   shared.js's renderTopNav() renders on every page (login.html excepted, which has
+   its own self-contained header markup). Extracted from base.css + header.css
+   verbatim — no values changed.
+═══════════════════════════════════════════ */
+
+/* ── APP SHELL ── */
+.app-shell { display: flex; flex-direction: column; width: 100vw; height: 100vh; }
+
+/* ── VIEWPORT ── */
+.viewport-fit {
+  flex: 1; min-height: 0; width: 100%;
+  display: flex; justify-content: center; align-items: flex-start;
+  overflow-x: hidden; overflow-y: hidden;
+}
+.viewport-fit.scroll-enabled { overflow-y: auto; }
+
+@media (max-width: 1024px) {
+  .viewport-fit { overflow-y: auto !important; }
+}
+
+/* ── HEADER / TOPNAV ── */
+.topnav {
+  flex: 0 0 56px; width: 100%; background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 var(--space-24); gap: 0;
+}
+.brand { width: 106px; height: 50px; display: flex; align-items: center; flex-shrink: 0; }
+.brand img { width: 106px; height: 50px; object-fit: cover; }
+
+/* Nav tabs: left of spacer */
+.nav-tabs { display: flex; align-items: center; padding: 0 var(--space-24); height: 56px; }
+.tab {
+  border: 0; background: transparent; padding: 0 var(--space-16); height: 56px;
+  font-size: var(--fs-14); color: var(--muted); font-weight: var(--fw-400); cursor: pointer;
+  white-space: nowrap; text-decoration: none; display: inline-flex; align-items: center;
+}
+.tab-active { color: var(--brand-blue); font-weight: var(--fw-700); border-bottom: 2px solid var(--brand-blue); }
+.tab:hover:not(.tab-active) { color: var(--color-slate-880); }
+
+.topnav-spacer { flex: 1; }
+
+/* Nav right: search | as-on-date | fy-btn | maximize | export | avatar */
+.nav-right { display: flex; align-items: center; gap: var(--space-16); }
+
+/* Search */
+.nav-search-wrap { position: relative; display: flex; align-items: center; }
+.icon-btn {
+  width: 32px; height: 32px; border: 0; background: transparent;
+  color: var(--color-slate-700); display: grid; place-items: center; cursor: pointer; padding: 0;
+}
+.icon-btn:hover { color: var(--navy); }
+.nav-search-input-wrap {
+  position: absolute; top: 50%; right: 40px; transform: translateY(-50%);
+  display: flex; align-items: center; gap: var(--space-6);
+  width: 0; opacity: 0; overflow: hidden; pointer-events: none;
+  background: var(--panel-alt); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 0; height: 32px;
+  transition: var(--transition-1);
+}
+.nav-search-input-wrap.open { width: 240px; opacity: 1; pointer-events: auto; padding: 0 var(--space-8); }
+.nav-search-input { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font-size: var(--fs-13); font-family: inherit; color: var(--title); }
+.nav-search-clear { border: 0; background: transparent; color: var(--color-slate-530); font-size: var(--fs-13); cursor: pointer; padding: var(--space-2); line-height: 1; }
+
+/* As-of-date text */
+.nav-asofdate { font-size: var(--fs-12); color: var(--muted); white-space: nowrap; }
+
+/* FY dropdown button */
+.date-fy-wrap { position: relative; }
+.fy-btn {
+  display: flex; align-items: center; gap: var(--space-6);
+  border: 1px solid var(--border); border-radius: var(--radius-5); background: var(--panel);
+  height: 27px; padding: 0 var(--space-10); font-size: var(--fs-12); font-weight: var(--fw-500); color: var(--title);
+  cursor: pointer; white-space: nowrap;
+}
+.fy-btn:hover { background: var(--panel-alt); }
+.fy-dropdown {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 600;
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-8);
+  box-shadow: var(--shadow-lg); width: 220px; padding: var(--space-8);
+  animation: ddPop .15s ease;
+}
+.fy-dropdown-section-title { font-size: var(--fs-10); font-weight: var(--fw-700); color: var(--color-slate-530); text-transform: uppercase; padding: var(--space-4) var(--space-8) var(--space-6); letter-spacing: .04em; }
+.fy-option {
+  display: block; width: 100%; text-align: left; border: 0; background: transparent;
+  border-radius: var(--radius-sm); padding: var(--space-8); font-size: var(--fs-13); font-weight: var(--fw-500); color: var(--color-slate-880);
+  cursor: pointer; font-family: inherit;
+}
+.fy-option:hover { background: var(--color-blue-90); }
+.fy-option-active { background: var(--color-blue-50); color: var(--color-blue-580); font-weight: var(--fw-700); }
+
+/* Export button */
+.outline-btn {
+  border: 1px solid var(--border); border-radius: var(--radius-5); background: var(--panel);
+  height: 29px; padding: 0 var(--space-12);
+  display: inline-flex; align-items: center; gap: var(--space-6);
+  font-size: var(--fs-14); font-weight: var(--fw-500); cursor: pointer; white-space: nowrap; color: var(--title);
+}
+.outline-btn:hover { background: var(--panel-alt); }
+.export-btn { gap: var(--space-6); }
+
+/* Notification bell — the one bell in the whole app (shown on every page, including inside the
+   admin console). Moved here from admin-console.css's old .sg-notif-* rules (renamed .nav-notif-*
+   to match the ids/classes shared.js's header markup actually uses) so it renders correctly
+   everywhere, not just on admin-console pages. */
+.nav-notif-wrap { position: relative; }
+.nav-notif-badge {
+  position: absolute; top: 2px; right: 2px; background: var(--danger); color: var(--panel); font-size: var(--fs-9);
+  font-weight: var(--fw-700); border-radius: var(--radius-8); min-width: 15px; height: 15px; display: grid; place-items: center; padding: 0 var(--space-3);
+}
+/* [hidden] alone loses to the class rule above (equal specificity, class rule comes later in
+   source order) — this explicit pairing is what actually keeps the badge hidden at zero unread. */
+.nav-notif-badge[hidden] { display: none; }
+.nav-notif-dropdown {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 600; width: 320px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-8); box-shadow: var(--shadow-lg);
+  animation: ddPop .15s ease;
+}
+.nav-notif-header { display: flex; align-items: center; justify-content: space-between; padding: var(--space-12) var(--space-14); border-bottom: 1px solid var(--border); font-size: var(--fs-13); }
+.nav-notif-markall { border: 0; background: transparent; color: var(--brand-blue); font-size: var(--fs-12); font-weight: var(--fw-600); cursor: pointer; font-family: inherit; }
+.nav-notif-list { max-height: 340px; overflow-y: auto; }
+.nav-notif-item { display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--border); background: transparent; padding: var(--space-10) var(--space-14); cursor: pointer; font-family: inherit; }
+.nav-notif-item:hover { background: var(--panel-alt); }
+.nav-notif-item.unread { background: var(--color-blue-50); }
+.nav-notif-title { font-size: var(--fs-12-5); font-weight: var(--fw-700); color: var(--title); }
+.nav-notif-msg { font-size: var(--fs-12); color: var(--muted); margin-top: var(--space-2); }
+.nav-notif-time { font-size: var(--fs-10-5); color: var(--muted); margin-top: var(--space-4); }
+.nav-notif-empty { padding: var(--space-24); text-align: center; color: var(--muted); font-size: var(--fs-12-5); }
+
+/* Avatar */
+.avatar-wrap { position: relative; }
+.avatar {
+  width: 36px; height: 36px; border-radius: var(--radius-18); background: var(--teal);
+  display: grid; place-items: center; color: var(--panel); font-size: var(--fs-12); font-weight: var(--fw-700);
+  border: 0; cursor: pointer; font-family: inherit;
+}
+.avatar:hover { opacity: .9; }
+.avatar-dropdown {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 600;
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-8);
+  box-shadow: var(--shadow-lg); width: 220px; padding: var(--space-12);
+  animation: ddPop .15s ease;
+}
+.avatar-dropdown-name  { font-size: var(--fs-14); font-weight: var(--fw-700); color: var(--title); }
+.avatar-dropdown-email { font-size: var(--fs-12); color: var(--muted); margin-top: var(--space-2); word-break: break-all; }
+.avatar-dropdown-divider { height: 1px; background: var(--border); margin: var(--space-10) 0; }
+.avatar-dropdown-logout {
+  display: flex; align-items: center; gap: var(--space-8); width: 100%; border: 0;
+  background: transparent; border-radius: var(--radius-sm); padding: var(--space-8);
+  font-size: var(--fs-13); font-weight: var(--fw-600); color: var(--danger); cursor: pointer; font-family: inherit;
+}
+.avatar-dropdown-logout:hover { background: var(--color-white-650); }
+
+@keyframes ddPop { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 1024px) {
+  .nav-asofdate { display: none; }
+  .nav-right { gap: var(--space-8); }
+  .nav-tabs { padding: 0 var(--space-8); }
+  .tab { padding: 0 var(--space-10); font-size: var(--fs-13); }
+  .topnav { padding: 0 var(--space-12); }
+}
+@media (max-width: 820px) {
+  .brand img { width: 88px; height: 42px; }
+  .tab { padding: 0 var(--space-8); font-size: var(--fs-12); }
+}

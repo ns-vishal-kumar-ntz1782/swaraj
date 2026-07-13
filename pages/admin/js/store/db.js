@@ -2,6 +2,20 @@
 const NS = "spd";
 const VERSION = "v1";
 
+// Project-root data/ folder, resolved from this module's own URL so it works regardless of
+// how deep the loading page is — same trick assets/js/auth.js uses for APP_ROOT.
+export const DATA_ROOT = new URL("../../../../data/", import.meta.url).href;
+
+// Synchronous XHR (not fetch) so every seedX() factory that reads a data/*.json file can stay
+// a plain synchronous function — the whole admin bootstrap (app.js's seedAll()) depends on
+// seeding running in a fixed synchronous order, so this avoids having to convert it to async.
+export function loadJsonSync(relPath) {
+  const xhr = new XMLHttpRequest();
+  xhr.open("GET", DATA_ROOT + relPath, false);
+  xhr.send(null);
+  return JSON.parse(xhr.responseText);
+}
+
 function key(entity) {
   return `${NS}.${entity}.${VERSION}`;
 }
@@ -38,6 +52,7 @@ export function clearAll() {
 
 export const ENTITY_KEYS = {
   USERS: "users",
+  ROLES: "roles",
   RBAC: "rbac_matrix",
   GATES: "gates",
   GATE_TEMPLATES: "gate_templates",
@@ -50,4 +65,14 @@ export const ENTITY_KEYS = {
   AUDIT: "audit_log",
   NOTIFICATIONS: "notifications",
   SESSION: "session",
+  PROJECTS_EXEC: "projects_exec",
+  GATE_INSTANCES: "project_gate_instances",
+  DELIVERABLE_ASSIGNMENTS: "project_deliverable_assignments",
+  GATE_MASTER: "gate_master",
+  PROJECT_TEMPLATES_ADMIN: "project_templates_admin",
+  FORM_SCHEMAS: "form_schemas",
+  ORG_USERS: "org_users",
+  ORG_ROLES: "org_roles",
+  ACTION_REGISTER: "action_register",
+  GATE_CHECKLIST_TEMPLATES: "gate_checklist_templates",
 };

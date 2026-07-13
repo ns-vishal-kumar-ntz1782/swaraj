@@ -1,0 +1,44 @@
+{
+  "pool": {
+    "Pre-KO": [
+      "Product Requirement Freeze", "QA & CC Inputs", "Technical Feasibility Study", "Business Case Approval",
+      "Target Cost Sign-off", "Market Requirement Document", "Competitive Benchmarking Report", "Customer Voice Analysis",
+      "Program Charter", "Regulatory Scan Report", "Platform Strategy Alignment", "Preliminary BOM Estimate",
+      "Risk Assessment Log", "Stakeholder Sign-off Matrix"
+    ],
+    "CVPA": [
+      "DR0 Design Review", "DFMEA", "DVP Matrix", "Concept Validation Report", "Styling Theme Freeze",
+      "Concept Sketch Package", "Package Layout Freeze", "Powertrain Selection Report", "Supplier Sourcing Plan",
+      "Cost Target Breakdown", "Design for Manufacturability Review", "Ergonomics Study", "Ergonomics Sign-off",
+      "Ownership Cost Model"
+    ],
+    "VV": [
+      "PFMEA", "Design Verification Plan", "Virtual Validation Report", "CAE Sign-off", "Structural Simulation Report",
+      "Durability Simulation Report", "Thermal Simulation Report", "NVH Simulation Report", "Emission Compliance Model",
+      "Digital Mockup Review", "Tolerance Stack-up Analysis", "Software Architecture Review", "Electrical Schematic Freeze"
+    ],
+    "PC": [
+      "L2 Drawing Release", "Vendor Onboarding", "VP Part Receipt", "VP Build Report", "Prototype Assembly",
+      "Tooling Kickoff Report", "Prototype Test Plan", "Supplier PPAP Submission", "Bill of Process Draft",
+      "Manufacturing Feasibility Review", "Fixture Design Release", "Prototype Calibration Report",
+      "Component Qualification Report", "Cost Variance Report"
+    ],
+    "PR": [
+      "VP Validation", "Homologation Builds", "PPAP Readiness", "Field Trial Report", "Tool Release",
+      "Durability Field Test Report", "Reliability Test Report", "Emission Certification Report",
+      "Safety Compliance Report", "Line Trial Readiness Review", "Process Capability Study",
+      "Production Part Approval", "Warranty Risk Assessment"
+    ],
+    "PPO": [
+      "ER-SOVP Sign-off", "PP Batch Build", "Production Readiness Review", "Line Trial", "Launch Readiness Checklist",
+      "Post-Launch Quality Review", "Customer Feedback Report", "Field Performance Monitoring Plan",
+      "Continuous Improvement Plan", "Cost Reduction Roadmap", "Warranty Claims Analysis",
+      "Production Ramp-up Report", "Lessons Learned Report"
+    ]
+  },
+  "owners": ["Alan Roy", "Priya Menon", "Rohit Verma", "Neha Kapoor", "Divya Iyer"],
+  "departments": ["R&D", "Engineering", "Manufacturing", "Quality", "Finance", "Program Management", "Supply Chain", "Homologation"],
+  "ragCycle": ["green", "green", "green", "amber", "green", "red"],
+  "priorityCycle": ["Medium", "High", "Medium", "Critical", "Low", "High"],
+  "formLinks": { "D001": ["FT-001"], "D015": ["FT-002"], "D029": ["FT-003"], "D033": ["FT-004"], "D048": ["FT-005"], "D073": ["FT-006"] }
+}

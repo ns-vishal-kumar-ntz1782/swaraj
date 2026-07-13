@@ -1,18 +1,11 @@
-import { load, save, seedOnce, ENTITY_KEYS } from "./db.js";
+import { load, save, seedOnce, ENTITY_KEYS, loadJsonSync } from "./db.js";
 import { uid, nowIso } from "../utils.js";
 import { addAuditEntry } from "./audit.js";
-import { BUSINESS_ROLES } from "../rbac.js";
+import { listRoleNames } from "./roles.js";
 
 function seedUsers() {
-  return [
-    { id: uid("usr"), name: "Alan Roy", email: "rndhead@spd.com", businessRole: "R&D Head", createdAt: nowIso() },
-    { id: uid("usr"), name: "Priya Menon", email: "pmo@spd.com", businessRole: "PMO Manager", createdAt: nowIso() },
-    { id: uid("usr"), name: "Karan Shah", email: "ceo@spd.com", businessRole: "CEO", createdAt: nowIso() },
-    { id: uid("usr"), name: "Divya Iyer", email: "finance@spd.com", businessRole: "Finance Manager", createdAt: nowIso() },
-    { id: uid("usr"), name: "Sysadmin", email: "admin@spd.com", businessRole: "System Administrator", createdAt: nowIso() },
-    { id: uid("usr"), name: "Rohit Verma", email: "engineer@spd.com", businessRole: "Engineer", createdAt: nowIso() },
-    { id: uid("usr"), name: "Neha Kapoor", email: "engineer2@spd.com", businessRole: "Engineer", createdAt: nowIso() },
-  ];
+  const { adminUsers } = loadJsonSync("users.json");
+  return adminUsers.map((u) => ({ id: uid("usr"), name: u.name, email: u.email, businessRole: u.businessRole, createdAt: nowIso() }));
 }
 
 export function ensureSeeded() {
@@ -32,7 +25,7 @@ export function getUserById(id) {
 }
 
 export function createUser({ name, email, businessRole }, actor, actorRole) {
-  if (!BUSINESS_ROLES.includes(businessRole)) throw new Error("A valid business role is required.");
+  if (!listRoleNames().includes(businessRole)) throw new Error("A valid business role is required.");
   if (getUserByEmail(email)) throw new Error("A user with this email already exists.");
   const users = listUsers();
   const user = { id: uid("usr"), name, email, businessRole, createdAt: nowIso() };
@@ -49,7 +42,7 @@ export function updateUser(id, patch, actor, actorRole) {
   const users = listUsers();
   const idx = users.findIndex((u) => u.id === id);
   if (idx === -1) throw new Error("User not found.");
-  if (patch.businessRole && !BUSINESS_ROLES.includes(patch.businessRole)) throw new Error("A valid business role is required.");
+  if (patch.businessRole && !listRoleNames().includes(patch.businessRole)) throw new Error("A valid business role is required.");
   const before = { ...users[idx] };
   users[idx] = { ...users[idx], ...patch };
   save(ENTITY_KEYS.USERS, users);
@@ -76,12 +69,7 @@ export function deleteUser(id, actor, actorRole) {
 // Login itself lives at the project root (login.html / auth.js, sessionStorage "snpdRole").
 // This admin console never shows its own login screen — guardPage("admin-console") already
 // keeps anyone but Super Admin out before this module ever runs. We just read who's signed in.
-const ROOT_ROLE_TO_BUSINESS_ROLE = {
-  SA: "System Administrator",
-  CEO: "CEO",
-  PMO: "PMO Manager",
-  RD: "R&D Head",
-};
+const ROOT_ROLE_TO_BUSINESS_ROLE = loadJsonSync("users.json").rootRoleToBusinessRole;
 
 export function getActiveUser() {
   const roleKey = sessionStorage.getItem("snpdRole");

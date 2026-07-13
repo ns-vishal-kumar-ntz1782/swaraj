@@ -1,0 +1,945 @@
+[
+  {
+    "id": "TPL-M2",
+    "templateName": "Standard M2 — Minor Change Template",
+    "templateCode": "TPL-M2",
+    "version": "1.0",
+    "projectType": "M2",
+    "defaultGateSequence": [
+      "Pre-KO",
+      "CVPA",
+      "VV",
+      "PC",
+      "PR",
+      "PPO"
+    ],
+    "gates": [
+      {
+        "gateCode": "Pre-KO",
+        "defaultDeliverables": [
+          "D001",
+          "D002",
+          "D003",
+          "D004",
+          "D005",
+          "D006",
+          "D007",
+          "D008",
+          "D009",
+          "D010",
+          "D011",
+          "D012",
+          "D013",
+          "D014"
+        ],
+        "mandatoryDeliverables": [
+          "D004",
+          "D005",
+          "D014"
+        ],
+        "optionalDeliverables": [
+          "D001",
+          "D002",
+          "D003",
+          "D006",
+          "D007",
+          "D008",
+          "D009",
+          "D010",
+          "D011",
+          "D012",
+          "D013"
+        ],
+        "linkedForms": [
+          "PK-F04",
+          "PK-F01",
+          "PK-F03",
+          "PK-F02",
+          "PK-F05",
+          "PK-F06",
+          "PK-F07",
+          "PK-F08"
+        ],
+        "gateDuration": "4 weeks"
+      },
+      {
+        "gateCode": "CVPA",
+        "defaultDeliverables": [
+          "D015",
+          "D016",
+          "D017",
+          "D018",
+          "D019",
+          "D020",
+          "D021",
+          "D022",
+          "D023",
+          "D024",
+          "D025",
+          "D026",
+          "D027",
+          "D028"
+        ],
+        "mandatoryDeliverables": [
+          "D019",
+          "D021"
+        ],
+        "optionalDeliverables": [
+          "D015",
+          "D016",
+          "D017",
+          "D018",
+          "D020",
+          "D022",
+          "D023",
+          "D024",
+          "D025",
+          "D026",
+          "D027",
+          "D028"
+        ],
+        "linkedForms": [
+          "CV-F02",
+          "CV-F03",
+          "CV-F04",
+          "CV-F01",
+          "CV-F05",
+          "CV-F06",
+          "CV-F07",
+          "CV-F08"
+        ],
+        "gateDuration": "6 weeks"
+      },
+      {
+        "gateCode": "VV",
+        "defaultDeliverables": [
+          "D029",
+          "D030",
+          "D031",
+          "D032",
+          "D033",
+          "D034",
+          "D035",
+          "D036",
+          "D037",
+          "D038",
+          "D039",
+          "D040",
+          "D041"
+        ],
+        "mandatoryDeliverables": [
+          "D032",
+          "D041"
+        ],
+        "optionalDeliverables": [
+          "D029",
+          "D030",
+          "D031",
+          "D033",
+          "D034",
+          "D035",
+          "D036",
+          "D037",
+          "D038",
+          "D039",
+          "D040"
+        ],
+        "linkedForms": [
+          "VV-F01",
+          "VV-F02",
+          "VV-F03",
+          "VV-F04",
+          "VV-F05",
+          "VV-F07",
+          "VV-F06"
+        ],
+        "gateDuration": "8 weeks"
+      },
+      {
+        "gateCode": "PC",
+        "defaultDeliverables": [
+          "D042",
+          "D043",
+          "D044",
+          "D045",
+          "D046",
+          "D047",
+          "D048",
+          "D049",
+          "D050",
+          "D051",
+          "D052",
+          "D053",
+          "D054",
+          "D055"
+        ],
+        "mandatoryDeliverables": [
+          "D043",
+          "D049"
+        ],
+        "optionalDeliverables": [
+          "D042",
+          "D044",
+          "D045",
+          "D046",
+          "D047",
+          "D048",
+          "D050",
+          "D051",
+          "D052",
+          "D053",
+          "D054",
+          "D055"
+        ],
+        "linkedForms": [
+          "PC-F01",
+          "PC-F02",
+          "PC-F03",
+          "PC-F04",
+          "PC-F05",
+          "PC-F06",
+          "PC-F07",
+          "PC-F08"
+        ],
+        "gateDuration": "10 weeks"
+      },
+      {
+        "gateCode": "PR",
+        "defaultDeliverables": [
+          "D056",
+          "D057",
+          "D058",
+          "D059",
+          "D060",
+          "D061",
+          "D062",
+          "D063",
+          "D064",
+          "D065",
+          "D066",
+          "D067",
+          "D068"
+        ],
+        "mandatoryDeliverables": [
+          "D060",
+          "D067"
+        ],
+        "optionalDeliverables": [
+          "D056",
+          "D057",
+          "D058",
+          "D059",
+          "D061",
+          "D062",
+          "D063",
+          "D064",
+          "D065",
+          "D066",
+          "D068"
+        ],
+        "linkedForms": [
+          "PR-F01",
+          "PR-F02",
+          "PR-F08",
+          "PR-F03",
+          "PR-F04",
+          "PR-F05",
+          "PR-F06",
+          "PR-F07"
+        ],
+        "gateDuration": "8 weeks"
+      },
+      {
+        "gateCode": "PPO",
+        "defaultDeliverables": [
+          "D069",
+          "D070",
+          "D071",
+          "D072",
+          "D073",
+          "D074",
+          "D075",
+          "D076",
+          "D077",
+          "D078",
+          "D079",
+          "D080",
+          "D081"
+        ],
+        "mandatoryDeliverables": [
+          "D069"
+        ],
+        "optionalDeliverables": [
+          "D070",
+          "D071",
+          "D072",
+          "D073",
+          "D074",
+          "D075",
+          "D076",
+          "D077",
+          "D078",
+          "D079",
+          "D080",
+          "D081"
+        ],
+        "linkedForms": [
+          "PP-F01",
+          "PP-F02",
+          "PP-F06",
+          "PP-F03",
+          "PP-F04",
+          "PP-F05"
+        ],
+        "gateDuration": "6 weeks"
+      }
+    ]
+  },
+  {
+    "id": "TPL-M4",
+    "templateName": "Standard M4 — Major Change Template",
+    "templateCode": "TPL-M4",
+    "version": "1.0",
+    "projectType": "M4",
+    "defaultGateSequence": [
+      "Pre-KO",
+      "CVPA",
+      "VV",
+      "PC",
+      "PR",
+      "PPO"
+    ],
+    "gates": [
+      {
+        "gateCode": "Pre-KO",
+        "defaultDeliverables": [
+          "D001",
+          "D002",
+          "D003",
+          "D004",
+          "D005",
+          "D006",
+          "D007",
+          "D008",
+          "D009",
+          "D010",
+          "D011",
+          "D012",
+          "D013",
+          "D014"
+        ],
+        "mandatoryDeliverables": [
+          "D001",
+          "D002",
+          "D003",
+          "D004",
+          "D005",
+          "D006",
+          "D008",
+          "D009",
+          "D010",
+          "D013",
+          "D014"
+        ],
+        "optionalDeliverables": [
+          "D007",
+          "D011",
+          "D012"
+        ],
+        "linkedForms": [
+          "PK-F04",
+          "PK-F01",
+          "PK-F03",
+          "PK-F02",
+          "PK-F05",
+          "PK-F06",
+          "PK-F07",
+          "PK-F08"
+        ],
+        "gateDuration": "4 weeks"
+      },
+      {
+        "gateCode": "CVPA",
+        "defaultDeliverables": [
+          "D015",
+          "D016",
+          "D017",
+          "D018",
+          "D019",
+          "D020",
+          "D021",
+          "D022",
+          "D023",
+          "D024",
+          "D025",
+          "D026",
+          "D027",
+          "D028"
+        ],
+        "mandatoryDeliverables": [
+          "D015",
+          "D016",
+          "D017",
+          "D018",
+          "D019",
+          "D021",
+          "D022",
+          "D023",
+          "D024",
+          "D026"
+        ],
+        "optionalDeliverables": [
+          "D020",
+          "D025",
+          "D027",
+          "D028"
+        ],
+        "linkedForms": [
+          "CV-F02",
+          "CV-F03",
+          "CV-F04",
+          "CV-F01",
+          "CV-F05",
+          "CV-F06",
+          "CV-F07",
+          "CV-F08"
+        ],
+        "gateDuration": "6 weeks"
+      },
+      {
+        "gateCode": "VV",
+        "defaultDeliverables": [
+          "D029",
+          "D030",
+          "D031",
+          "D032",
+          "D033",
+          "D034",
+          "D035",
+          "D036",
+          "D037",
+          "D038",
+          "D039",
+          "D040",
+          "D041"
+        ],
+        "mandatoryDeliverables": [
+          "D029",
+          "D030",
+          "D031",
+          "D032",
+          "D033",
+          "D034",
+          "D036",
+          "D037",
+          "D038",
+          "D040",
+          "D041"
+        ],
+        "optionalDeliverables": [
+          "D035",
+          "D039"
+        ],
+        "linkedForms": [
+          "VV-F01",
+          "VV-F02",
+          "VV-F03",
+          "VV-F04",
+          "VV-F05",
+          "VV-F07",
+          "VV-F06"
+        ],
+        "gateDuration": "8 weeks"
+      },
+      {
+        "gateCode": "PC",
+        "defaultDeliverables": [
+          "D042",
+          "D043",
+          "D044",
+          "D045",
+          "D046",
+          "D047",
+          "D048",
+          "D049",
+          "D050",
+          "D051",
+          "D052",
+          "D053",
+          "D054",
+          "D055"
+        ],
+        "mandatoryDeliverables": [
+          "D042",
+          "D043",
+          "D044",
+          "D045",
+          "D046",
+          "D047",
+          "D048",
+          "D049",
+          "D051",
+          "D053",
+          "D054"
+        ],
+        "optionalDeliverables": [
+          "D050",
+          "D052",
+          "D055"
+        ],
+        "linkedForms": [
+          "PC-F01",
+          "PC-F02",
+          "PC-F03",
+          "PC-F04",
+          "PC-F05",
+          "PC-F06",
+          "PC-F07",
+          "PC-F08"
+        ],
+        "gateDuration": "10 weeks"
+      },
+      {
+        "gateCode": "PR",
+        "defaultDeliverables": [
+          "D056",
+          "D057",
+          "D058",
+          "D059",
+          "D060",
+          "D061",
+          "D062",
+          "D063",
+          "D064",
+          "D065",
+          "D066",
+          "D067",
+          "D068"
+        ],
+        "mandatoryDeliverables": [
+          "D056",
+          "D057",
+          "D058",
+          "D059",
+          "D060",
+          "D061",
+          "D062",
+          "D063",
+          "D064",
+          "D065",
+          "D066",
+          "D067"
+        ],
+        "optionalDeliverables": [
+          "D068"
+        ],
+        "linkedForms": [
+          "PR-F01",
+          "PR-F02",
+          "PR-F08",
+          "PR-F03",
+          "PR-F04",
+          "PR-F05",
+          "PR-F06",
+          "PR-F07"
+        ],
+        "gateDuration": "8 weeks"
+      },
+      {
+        "gateCode": "PPO",
+        "defaultDeliverables": [
+          "D069",
+          "D070",
+          "D071",
+          "D072",
+          "D073",
+          "D074",
+          "D075",
+          "D076",
+          "D077",
+          "D078",
+          "D079",
+          "D080",
+          "D081"
+        ],
+        "mandatoryDeliverables": [
+          "D069",
+          "D070",
+          "D071",
+          "D072",
+          "D073",
+          "D074",
+          "D075",
+          "D081"
+        ],
+        "optionalDeliverables": [
+          "D076",
+          "D077",
+          "D078",
+          "D079",
+          "D080"
+        ],
+        "linkedForms": [
+          "PP-F01",
+          "PP-F02",
+          "PP-F06",
+          "PP-F03",
+          "PP-F04",
+          "PP-F05"
+        ],
+        "gateDuration": "6 weeks"
+      }
+    ]
+  },
+  {
+    "id": "TPL-M6",
+    "templateName": "Standard M6 — New Platform Template",
+    "templateCode": "TPL-M6",
+    "version": "1.0",
+    "projectType": "M6",
+    "defaultGateSequence": [
+      "Pre-KO",
+      "CVPA",
+      "VV",
+      "PC",
+      "PR",
+      "PPO"
+    ],
+    "gates": [
+      {
+        "gateCode": "Pre-KO",
+        "defaultDeliverables": [
+          "D001",
+          "D002",
+          "D003",
+          "D004",
+          "D005",
+          "D006",
+          "D007",
+          "D008",
+          "D009",
+          "D010",
+          "D011",
+          "D012",
+          "D013",
+          "D014"
+        ],
+        "mandatoryDeliverables": [
+          "D001",
+          "D002",
+          "D003",
+          "D004",
+          "D005",
+          "D006",
+          "D007",
+          "D008",
+          "D009",
+          "D010",
+          "D011",
+          "D012",
+          "D013",
+          "D014"
+        ],
+        "optionalDeliverables": [],
+        "linkedForms": [
+          "PK-F04",
+          "PK-F01",
+          "PK-F03",
+          "PK-F02",
+          "PK-F05",
+          "PK-F06",
+          "PK-F07",
+          "PK-F08"
+        ],
+        "gateDuration": "4 weeks"
+      },
+      {
+        "gateCode": "CVPA",
+        "defaultDeliverables": [
+          "D015",
+          "D016",
+          "D017",
+          "D018",
+          "D019",
+          "D020",
+          "D021",
+          "D022",
+          "D023",
+          "D024",
+          "D025",
+          "D026",
+          "D027",
+          "D028"
+        ],
+        "mandatoryDeliverables": [
+          "D015",
+          "D016",
+          "D017",
+          "D018",
+          "D019",
+          "D020",
+          "D021",
+          "D022",
+          "D023",
+          "D024",
+          "D025",
+          "D026",
+          "D027",
+          "D028"
+        ],
+        "optionalDeliverables": [],
+        "linkedForms": [
+          "CV-F02",
+          "CV-F03",
+          "CV-F04",
+          "CV-F01",
+          "CV-F05",
+          "CV-F06",
+          "CV-F07",
+          "CV-F08"
+        ],
+        "gateDuration": "6 weeks"
+      },
+      {
+        "gateCode": "VV",
+        "defaultDeliverables": [
+          "D029",
+          "D030",
+          "D031",
+          "D032",
+          "D033",
+          "D034",
+          "D035",
+          "D036",
+          "D037",
+          "D038",
+          "D039",
+          "D040",
+          "D041"
+        ],
+        "mandatoryDeliverables": [
+          "D029",
+          "D030",
+          "D031",
+          "D032",
+          "D033",
+          "D034",
+          "D035",
+          "D036",
+          "D037",
+          "D038",
+          "D039",
+          "D040",
+          "D041"
+        ],
+        "optionalDeliverables": [],
+        "linkedForms": [
+          "VV-F01",
+          "VV-F02",
+          "VV-F03",
+          "VV-F04",
+          "VV-F05",
+          "VV-F07",
+          "VV-F06"
+        ],
+        "gateDuration": "8 weeks"
+      },
+      {
+        "gateCode": "PC",
+        "defaultDeliverables": [
+          "D042",
+          "D043",
+          "D044",
+          "D045",
+          "D046",
+          "D047",
+          "D048",
+          "D049",
+          "D050",
+          "D051",
+          "D052",
+          "D053",
+          "D054",
+          "D055"
+        ],
+        "mandatoryDeliverables": [
+          "D042",
+          "D043",
+          "D044",
+          "D045",
+          "D046",
+          "D047",
+          "D048",
+          "D049",
+          "D050",
+          "D051",
+          "D052",
+          "D053",
+          "D054",
+          "D055"
+        ],
+        "optionalDeliverables": [],
+        "linkedForms": [
+          "PC-F01",
+          "PC-F02",
+          "PC-F03",
+          "PC-F04",
+          "PC-F05",
+          "PC-F06",
+          "PC-F07",
+          "PC-F08"
+        ],
+        "gateDuration": "10 weeks"
+      },
+      {
+        "gateCode": "PR",
+        "defaultDeliverables": [
+          "D056",
+          "D057",
+          "D058",
+          "D059",
+          "D060",
+          "D061",
+          "D062",
+          "D063",
+          "D064",
+          "D065",
+          "D066",
+          "D067",
+          "D068"
+        ],
+        "mandatoryDeliverables": [
+          "D056",
+          "D057",
+          "D058",
+          "D059",
+          "D060",
+          "D061",
+          "D062",
+          "D063",
+          "D064",
+          "D065",
+          "D066",
+          "D067",
+          "D068"
+        ],
+        "optionalDeliverables": [],
+        "linkedForms": [
+          "PR-F01",
+          "PR-F02",
+          "PR-F08",
+          "PR-F03",
+          "PR-F04",
+          "PR-F05",
+          "PR-F06",
+          "PR-F07"
+        ],
+        "gateDuration": "8 weeks"
+      },
+      {
+        "gateCode": "PPO",
+        "defaultDeliverables": [
+          "D069",
+          "D070",
+          "D071",
+          "D072",
+          "D073",
+          "D074",
+          "D075",
+          "D076",
+          "D077",
+          "D078",
+          "D079",
+          "D080",
+          "D081"
+        ],
+        "mandatoryDeliverables": [
+          "D069",
+          "D070",
+          "D071",
+          "D072",
+          "D073",
+          "D074",
+          "D075",
+          "D076",
+          "D077",
+          "D078",
+          "D079",
+          "D080",
+          "D081"
+        ],
+        "optionalDeliverables": [],
+        "linkedForms": [
+          "PP-F01",
+          "PP-F02",
+          "PP-F06",
+          "PP-F03",
+          "PP-F04",
+          "PP-F05"
+        ],
+        "gateDuration": "6 weeks"
+      }
+    ]
+  },
+  {
+    "id": "TPL-EXP",
+    "templateName": "Exploration — Pre-Concept Feasibility Template",
+    "templateCode": "TPL-EXP",
+    "version": "1.0",
+    "projectType": "Exploration",
+    "defaultGateSequence": [
+      "Pre-KO",
+      "CVPA"
+    ],
+    "gates": [
+      {
+        "gateCode": "Pre-KO",
+        "defaultDeliverables": [
+          "D003",
+          "D004",
+          "D006",
+          "D008",
+          "D009"
+        ],
+        "mandatoryDeliverables": [
+          "D004"
+        ],
+        "optionalDeliverables": [
+          "D003",
+          "D006",
+          "D008",
+          "D009"
+        ],
+        "linkedForms": [
+          "PK-F04",
+          "PK-F01",
+          "PK-F03",
+          "PK-F02",
+          "PK-F05"
+        ],
+        "gateDuration": "2 weeks"
+      },
+      {
+        "gateCode": "CVPA",
+        "defaultDeliverables": [
+          "D018",
+          "D019",
+          "D024"
+        ],
+        "mandatoryDeliverables": [
+          "D018"
+        ],
+        "optionalDeliverables": [
+          "D019",
+          "D024"
+        ],
+        "linkedForms": [
+          "CV-F01",
+          "CV-F05",
+          "CV-F07"
+        ],
+        "gateDuration": "3 weeks"
+      }
+    ]
+  }
+]

@@ -45,10 +45,10 @@ const complianceStatusData = computeComplianceStatusData();
 //    month; this is the same formula and the same source data as the "month" drill-down table,
 //    so the chart and its drill-down can never disagree. Months with no reporting project (Feb,
 //    in this dataset) are left as a gap in the line (spanGaps handles the visual join) rather
-//    than a fabricated 0%. There's no independent prior-year or ML-forecast dataset in this app,
-//    so FY26 (comparison) and FY27 (AI Predicted) are derived deterministically from the real
-//    FY27 series (a fixed offset, not a random/static array) — clearly distinct, reproducible,
-//    and never independent of the real numbers. ──
+//    than a fabricated 0%. There's no independent prior-year dataset in this app, so FY26
+//    (comparison) is derived deterministically from the real FY27 series (a fixed offset, not a
+//    random/static array) — clearly distinct, reproducible, and never independent of the real
+//    numbers. Figma's design shows exactly two lines (FY26, FY27) — no AI-predicted 3rd line. ──
 function computeComplianceRateData() {
   const FY27 = monthOrder.map(mon => {
     const ps = projectPortfolioData.filter(p => p.month === mon);
@@ -61,20 +61,16 @@ function computeComplianceRateData() {
   const fallback = known.length ? Math.round(known.reduce((a,b) => a + b, 0) / known.length) : 60;
   const clamp   = v => Math.max(0, Math.min(100, v));
   const FY26    = FY27.map(v => clamp((v ?? fallback) - 4));
-  const FY27_AI = FY27.map(v => clamp((v ?? fallback) + 9));
-  return { FY27, FY26, FY27_AI };
+  return { FY27, FY26 };
 }
 const complianceRateData = computeComplianceRateData();
 
 // ==========================================================
 //  STATE
 // ==========================================================
-let openPanel  = null; // "row1" | "row2" | null
 let fsWidgetId = null; // ID of the currently fullscreened widget
-// { type, value } per row, kept separately from `openPanel` (a display string) because
-// typeGate values themselves contain "|" (e.g. "M2|Pre-KO"), which openPanel.split("|") can't
-// round-trip — refresh/export need the real, unambiguous filter, not a reparsed string.
-let currentFilter = { 1: null, 2: null };
+let openPanel = null;  // tracks currently open panel as "panelId|type|value"
+let currentFilter = { 1: null, 2: null }; // per-row active filter state
 
 // Chart instance registry — update data arrays above; no design changes needed
 const charts = {};
@@ -140,7 +136,21 @@ function statusBadgeClass(status) {
 projectPortfolioData.forEach(p => { p.status = delayBandFor(p.delayDays); });
 function avg(arr, key) { return arr.length ? Math.round(arr.reduce((s,p) => s + p[key], 0) / arr.length) : 0; }
 function mkBadge(txt, cls) { return "<span class='badge " + cls + "'>" + txt + "</span>"; }
-function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+// Escapes quotes too (not just &<>) — some callers (the Status hover tooltip) interpolate this
+// straight into a single-quoted HTML attribute, and real risk/issue text routinely contains
+// apostrophes ("the supplier's PPAP submission...") that would otherwise terminate the attribute early.
+function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
+
+// Single source of truth for which 3 reporting months make up each quarter — shared by the
+// Gate Status rings' totals (computeGateStatusByQuarter) AND their drill-down filter (the
+// "quarter" case below), so a ring's P/A numbers and what you see after clicking it can never
+// disagree again (previously the ring summed all 3 months but the click only filtered by the
+// quarter's first month, so Q1/Q3/Q4 routinely opened to "0 records matched").
+// Standard calendar quarters (Jan-start), not an Apr-start fiscal year — July is quarter 3.
+const QUARTER_MONTHS = {
+  Q1: ["Jan","Feb","Mar"], Q2: ["Apr","May","Jun"],
+  Q3: ["Jul","Aug","Sep"], Q4: ["Oct","Nov","Dec"],
+};
 
 // ==========================================================
 //  FILTER
@@ -166,6 +176,10 @@ function filterProjects(type, value) {
       const [mon] = value.split("-");
       return projectPortfolioData.filter(p => p.month === mon);
     }
+    case "quarter": {
+      const months = QUARTER_MONTHS[value] || [];
+      return projectPortfolioData.filter(p => months.includes(p.month));
+    }
     default: return projectPortfolioData;
   }
 }
@@ -173,49 +187,154 @@ function filterProjects(type, value) {
 // ==========================================================
 //  TABLE RENDERERS
 // ==========================================================
-// reasonDetails (the expandable-row copy, keyed by each project's `reason`) lives in mockData.js
 
+// Reason / Corrective Action / Mitigation Plan used to be their own table columns; the current
+// Figma drill-down (node 376:2162, "5 Project - Risk & AI Prediction") drops them in favor of
+// Process Compliance Score + Deliverables columns and surfaces that same detail as a hover
+// tooltip on the Status badge instead — see wireRiskTooltip().
+// thId/tbId each accept either an element id string (the row-2 fixed panel) or the element
+// itself (row-1's dynamically-created panels, which have no global id to collide across
+// multiple simultaneously-open instances).
 function renderProjectTable(thId, tbId, projects) {
-  document.getElementById(thId).innerHTML = "<tr><th>PROJECT NAME</th><th>GATE</th><th>TYPE</th><th>CLASSIFICATION</th><th>RISK SCORE</th><th>DELAY</th><th>REASON</th><th>CORRECTIVE ACTION</th><th>STATUS</th></tr>";
+  const theadEl = typeof thId === "string" ? document.getElementById(thId) : thId;
+  const tbodyEl = typeof tbId === "string" ? document.getElementById(tbId) : tbId;
+  theadEl.innerHTML = "<tr><th>PROJECT NAME</th><th>PROCESS COMPLIANCE SCORE</th><th>GATE</th><th>DELIVERABLES</th><th>TYPE</th><th>CLASSIFICATION</th><th>DELAY</th><th>STATUS</th></tr>";
   if (!projects.length) {
-    document.getElementById(tbId).innerHTML = "<tr><td colspan='9' class='dd-empty'>No records match this filter.</td></tr>";
+    tbodyEl.innerHTML = "<tr><td colspan='8' class='dd-empty'>No records match this filter.</td></tr>";
     return;
   }
-  document.getElementById(tbId).innerHTML = projects.map((p, i) => {
-    const delColor = p.delayDays > 60 ? "#dc2626" : p.delayDays > 15 ? "#d97706" : "#15803d";
-    const clsBadge = p.classification === "N-BB" ? mkBadge("N-BB","badge-nbb") : mkBadge("BB","badge-bb");
-    const bg     = i % 2 === 1 ? "#f8f9fb" : "#fff";
-    const detail = reasonDetails[p.reason] || reasonDetails["None"];
-    // Reason and Corrective Action each get their own small inline toggle rather than one
-    // whole-row chevron — clicking either reveals just that field's detail, independently.
-    return "<tr style='background:" + bg + "'>" +
-      "<td class='col-project'><a class='dd-project-link' href='pages/project-detail/index.html?id=" + encodeURIComponent(p.projectName) + "'>" + esc(p.projectName) + "</a></td>" +
-      "<td>" + esc(p.gate) + "</td><td>" + esc(p.type) + "</td><td>" + clsBadge + "</td>" +
-      "<td>" + mkBadge(p.riskScore, p.riskScore >= 70 ? "badge-critical" : "badge-high") + "</td>" +
-      "<td style='color:" + delColor + ";font-weight:600'>" + p.delayDays + "d</td>" +
-      "<td><div class='dd-field-cell'><span>" + esc(p.reason) + "</span>" +
-        "<button type='button' class='dd-field-toggle' data-detail='reason' aria-expanded='false' title='View risk & delay reason'>⌄</button></div></td>" +
-      "<td><div class='dd-field-cell'><span>" + esc(p.correctiveAction) + "</span>" +
-        "<button type='button' class='dd-field-toggle' data-detail='corrective' aria-expanded='false' title='View corrective action & mitigation plan'>⌄</button></div></td>" +
-      "<td>" + mkBadge(p.status, statusBadgeClass(p.status)) + "</td>" +
-    "</tr>" +
-    "<tr class='dd-expand-row dd-expand-reason' hidden style='background:" + bg + "'>" +
-      "<td colspan='9'>" +
-        "<div class='dd-expand-grid dd-expand-grid-2'>" +
-          "<div><span class='dd-expand-label'>Risk Reason</span><p>" + esc(detail.riskReason) + "</p></div>" +
-          "<div><span class='dd-expand-label'>Delay Reason</span><p>" + esc(detail.delayReason) + "</p></div>" +
-        "</div>" +
-      "</td>" +
-    "</tr>" +
-    "<tr class='dd-expand-row dd-expand-corrective' hidden style='background:" + bg + "'>" +
-      "<td colspan='9'>" +
-        "<div class='dd-expand-grid dd-expand-grid-2'>" +
-          "<div><span class='dd-expand-label'>Corrective Action</span><p>" + esc(detail.correctiveActionDetail) + "</p></div>" +
-          "<div><span class='dd-expand-label'>Mitigation Plan</span><p>" + esc(detail.mitigationPlan) + "</p></div>" +
-        "</div>" +
-      "</td>" +
+  tbodyEl.innerHTML = projects.map((p) => {
+    // On-track projects stay green; everything else is tiered by riskScore (same 70-point cut
+    // the compliance-score pill uses), matching Figma showing both Critical AND High rows within
+    // a single delay-band drilldown rather than one uniform label per band.
+    const onTrack  = p.status === "On Track";
+    const severe   = !onTrack && p.riskScore >= 70;
+    const statusLbl = onTrack ? "On Track" : severe ? "Critical" : "High";
+    const statusCls = onTrack ? "dd-status-ontrack" : severe ? "dd-status-critical" : "dd-status-high";
+    const scoreCls  = onTrack ? "dd-risk-ok" : severe ? "dd-risk-high" : "dd-risk-med";
+    const delayCls = p.delayDays > 30 ? "dd-delay-high" : p.delayDays > 0 ? "dd-delay-med" : "dd-delay-low";
+    const clsChip  = p.classification === "N-BB" ? "<span class='dd-chip-nbb'>N-BB</span>" : "<span class='dd-chip-bb'>BB</span>";
+    return "<tr>" +
+      "<td class='col-project'><a class='dd-project-link' href='pages/project-detail/index.html?id=" + encodeURIComponent(p.projectCode) + "'>" + esc(p.projectName) + "</a></td>" +
+      "<td><span class='dd-risk-pill " + scoreCls + "'>" + p.riskScore + "</span></td>" +
+      "<td><span class='dd-chip'>" + esc(p.gate) + "</span></td>" +
+      "<td>" + p.deliverablesCompleted + "/" + p.deliverablesTotal + "</td>" +
+      "<td><span class='dd-chip'>" + esc(p.type) + "</span></td><td>" + clsChip + "</td>" +
+      "<td class='" + delayCls + "'>" + p.delayDays + "d</td>" +
+      "<td><span class='dd-status-badge dd-has-tip " + statusCls + "'" +
+        " data-tip-code='" + esc(p.projectCode) + "'>" + statusLbl + "</span></td>" +
     "</tr>";
   }).join("");
+}
+
+// The nearest-due (or nearest-overdue) deliverable in a project's CURRENT gate — "current
+// deliverables" for a project means whatever's actually coming up next, not an arbitrary one.
+// Real record from _deliverables (app-config.js), matched by projectCode + the project's own
+// current gate code.
+function nearestDeliverableFor(projectCode, gateCode) {
+  const candidates = _deliverables.filter(d => d.projectCode === projectCode && d.gateCode === gateCode && d.targetDate);
+  if (!candidates.length) return "-";
+  const today = Date.now();
+  candidates.sort((a, b) => Math.abs(new Date(a.targetDate) - today) - Math.abs(new Date(b.targetDate) - today));
+  return candidates[0].deliverableName;
+}
+
+// "Overall Project Health" drives two different clickable surfaces that both route through
+// type:"health" — the BB/Non-BB/Total segmented bar and the On Track/Delayed/At Risk bar chart —
+// and each needs its own column set, not the generic 8-column table both used to share.
+function renderHealthTable(thId, tbId, value, projects) {
+  const theadEl = typeof thId === "string" ? document.getElementById(thId) : thId;
+  const tbodyEl = typeof tbId === "string" ? document.getElementById(tbId) : tbId;
+  const isDelayView = value === "On Track" || value === "Delayed" || value === "At Risk";
+
+  if (isDelayView) {
+    // PROJECT NAME | PROCESS COMPLIANCE SCORE | 0-15 / 15-60 / >60 day delay bands — counted in
+    // real deliverables (not projects), from each deliverable's own real delayDays.
+    theadEl.innerHTML = "<tr><th>PROJECT NAME</th><th>PROCESS COMPLIANCE SCORE</th><th>0-15 (No. of Deliverables)</th><th>15-60 (No. of Deliverables)</th><th>&gt;60 (No. of Deliverables)</th></tr>";
+    if (!projects.length) { tbodyEl.innerHTML = "<tr><td colspan='5' class='dd-empty'>No records match this filter.</td></tr>"; return; }
+    tbodyEl.innerHTML = projects.map(p => {
+      const deliv = _deliverables.filter(d => d.projectCode === p.projectCode);
+      const band = (lo, hi) => deliv.filter(d => { const days = d.delayDays || 0; return days > lo && days <= hi; }).length;
+      const scoreCls = p.riskScore >= 70 ? "dd-risk-high" : p.riskScore >= 40 ? "dd-risk-med" : "dd-risk-ok";
+      return "<tr>" +
+        "<td class='col-project'><a class='dd-project-link' href='pages/project-detail/index.html?id=" + encodeURIComponent(p.projectCode) + "'>" + esc(p.projectName) + "</a></td>" +
+        "<td><span class='dd-risk-pill " + scoreCls + "'>" + p.riskScore + "</span></td>" +
+        "<td>" + band(-Infinity, 15) + "</td><td>" + band(15, 60) + "</td><td>" + band(60, Infinity) + "</td>" +
+      "</tr>";
+    }).join("");
+  } else {
+    // PROJECT NAME | Platform | Current GATE | Current DELIVERABLES (nearest to today's date)
+    theadEl.innerHTML = "<tr><th>PROJECT NAME</th><th>PLATFORM</th><th>CURRENT GATE</th><th>CURRENT DELIVERABLES</th></tr>";
+    if (!projects.length) { tbodyEl.innerHTML = "<tr><td colspan='4' class='dd-empty'>No records match this filter.</td></tr>"; return; }
+    tbodyEl.innerHTML = projects.map(p => {
+      const nearest = nearestDeliverableFor(p.projectCode, p.gate);
+      return "<tr>" +
+        "<td class='col-project'><a class='dd-project-link' href='pages/project-detail/index.html?id=" + encodeURIComponent(p.projectCode) + "'>" + esc(p.projectName) + "</a></td>" +
+        "<td>" + esc(p.platform || "-") + "</td>" +
+        "<td><span class='dd-chip'>" + esc(p.gate) + "</span></td>" +
+        "<td>" + esc(nearest) + "</td>" +
+      "</tr>";
+    }).join("");
+  }
+}
+
+// Same gate-started + real-calendar-quarter logic as computeGateStatusByQuarter (Chart 2's
+// rings), grouped per project instead of summed across all of them, so this drill-down's rows
+// always reconcile with the ring totals that opened it.
+function computePerProjectQuarterBreakdown() {
+  const gateStatusById = Object.fromEntries(_gateInstances.map(g => [g.id, g.currentStatus]));
+  const quarters = currentFYQuarters();
+  return projectPortfolioData.map(p => {
+    const started = _deliverables.filter(d => {
+      if (d.projectCode !== p.projectCode) return false;
+      const s = gateStatusById[d.gateInstanceId];
+      return s === "Active" || s === "Completed";
+    });
+    const row = { projectCode: p.projectCode, projectName: p.projectName };
+    let totalPlanned = 0, totalActual = 0;
+    quarters.forEach(({ key, start, end }) => {
+      const inQ = started.filter(d => d.targetDate && new Date(d.targetDate + "T00:00:00") >= start && new Date(d.targetDate + "T00:00:00") <= end);
+      const planned = inQ.length;
+      const actual  = inQ.filter(d => d.status === "Completed").length;
+      row[key] = { planned, actual };
+      totalPlanned += planned; totalActual += actual;
+    });
+    row.total = { planned: totalPlanned, actual: totalActual };
+    return row;
+  });
+}
+
+function renderQuarterTable(thId, tbId, rows) {
+  const theadEl = typeof thId === "string" ? document.getElementById(thId) : thId;
+  const tbodyEl = typeof tbId === "string" ? document.getElementById(tbId) : tbId;
+  theadEl.innerHTML =
+    "<tr><th rowspan='2'>SR. NO</th><th rowspan='2'>PROJECT NAME</th>" +
+    ["Q1","Q2","Q3","Q4","TOTAL"].map(q => "<th colspan='2'>" + q + "</th>").join("") +
+    "</tr><tr>" + ["Q1","Q2","Q3","Q4","TOTAL"].map(() => "<th>Planned</th><th>Actual</th>").join("") + "</tr>";
+  if (!rows.length) {
+    tbodyEl.innerHTML = "<tr><td colspan='12' class='dd-empty'>No records match this filter.</td></tr>";
+    return;
+  }
+  tbodyEl.innerHTML = rows.map((r, i) => {
+    const qCells = ["Q1","Q2","Q3","Q4"].map(q => "<td>" + r[q].planned + "</td><td>" + r[q].actual + "</td>").join("");
+    return "<tr style='background:" + (i % 2 === 1 ? "#f8f9fb" : "#fff") + "'>" +
+      "<td>" + (i + 1) + "</td>" +
+      "<td class='col-project'><a class='dd-project-link' href='pages/project-detail/index.html?id=" + encodeURIComponent(r.projectCode) + "'>" + esc(r.projectName) + "</a></td>" +
+      qCells +
+      "<td style='font-weight:700'>" + r.total.planned + "</td><td style='font-weight:700'>" + r.total.actual + "</td>" +
+    "</tr>";
+  }).join("") + (function () {
+    const totalP = rows.reduce((s, r) => s + r.total.planned, 0);
+    const totalA = rows.reduce((s, r) => s + r.total.actual, 0);
+    const qTotals = ["Q1","Q2","Q3","Q4"].map(q => ({
+      p: rows.reduce((s, r) => s + r[q].planned, 0), a: rows.reduce((s, r) => s + r[q].actual, 0),
+    }));
+    return "<tr style='background:#f1f5f9;font-weight:700;border-top:2px solid #e2e8f0'>" +
+      "<td></td><td style='padding-left:12px;color:#1e3a5f'>TOTAL (" + rows.length + " projects)</td>" +
+      qTotals.map(q => "<td style='font-weight:800'>" + q.p + "</td><td style='font-weight:800'>" + q.a + "</td>").join("") +
+      "<td style='font-weight:800'>" + totalP + "</td><td style='font-weight:800'>" + totalA + "</td>" +
+    "</tr>";
+  })();
 }
 
 function renderComplianceTable(thId, tbId, type, value) {
@@ -257,7 +376,7 @@ function renderComplianceTable(thId, tbId, type, value) {
     const clsBadge = p.classification === "N-BB" ? mkBadge("N-BB","badge-nbb") : mkBadge("BB","badge-bb");
     const bg       = i % 2 === 1 ? "#f8f9fb" : "#fff";
     return "<tr style='background:" + bg + "'>" +
-      "<td class='col-project'><a class='dd-project-link' href='pages/project-detail/index.html?id=" + encodeURIComponent(p.projectName) + "'>" + esc(p.projectName) + "</a></td>" +
+      "<td class='col-project'><a class='dd-project-link' href='pages/project-detail/index.html?id=" + encodeURIComponent(p.projectCode) + "'>" + esc(p.projectName) + "</a></td>" +
       "<td>" + esc(p.type) + "</td>" +
       "<td>" + clsBadge + "</td>" +
       "<td style='font-weight:600" + (colHighlight === "Planned"    ? ";background:#eff6ff;color:#1d4ed8" : "") + "'>" + p.planned + "</td>" +
@@ -296,7 +415,7 @@ function renderMonthTable(thId, tbId, projects) {
     const pColor   = compPct >= 85 ? "#15803d" : compPct >= 70 ? "#d97706" : "#dc2626";
     const clsBadge = p.classification === "N-BB" ? mkBadge("N-BB","badge-nbb") : mkBadge("BB","badge-bb");
     return "<tr style='background:" + (i % 2 === 1 ? "#f8f9fb" : "#fff") + "'>" +
-      "<td class='col-project'><a class='dd-project-link' href='pages/project-detail/index.html?id=" + encodeURIComponent(p.projectName) + "'>" + esc(p.projectName) + "</a></td>" +
+      "<td class='col-project'><a class='dd-project-link' href='pages/project-detail/index.html?id=" + encodeURIComponent(p.projectCode) + "'>" + esc(p.projectName) + "</a></td>" +
       "<td>" + esc(p.gate) + "</td><td>" + esc(p.type) + "</td><td>" + clsBadge + "</td>" +
       "<td>" + esc(p.month) + "</td><td>" + p.planned + "</td><td>" + p.actual + "</td>" +
       "<td style='color:" + pColor + ";font-weight:700'>" + compPct + "%</td>" +
@@ -308,12 +427,24 @@ function renderMonthTable(thId, tbId, projects) {
 // ==========================================================
 //  DRILL-DOWN PANEL CONTROLLER
 // ==========================================================
+// Gate Status quarters are real calendar-year quarters (see currentFYQuarters) for the actual
+// current year \u2014 not a hardcoded "2026-2027" fiscal-year span.
+function quarterLabel(key) {
+  const months = QUARTER_MONTHS[key] || [];
+  const year = new Date().getFullYear();
+  return key + " (" + months[0] + "\u2013" + months[months.length - 1] + " " + year + ")";
+}
+
 const titleMap = {
   health:        v => "Overall Project Health \u2014 " + v,
   classification:v => "Classification \u2014 " + v + " Projects",
   typeGate:      v => "Classification " + v.replace("|"," / ") + " Projects",
   compliance:    v => "Process Compliance Status \u2014 " + (v.split("-")[0] === "Total" ? "All Projects" : v.split("-")[0] + " Projects"),
   month:         v => "Compliance Rate \u2014 " + v.replace("-"," "),
+  quarter:       v => "Gate Status \u2014 " + quarterLabel(v),
+};
+const filterLabelMap = {
+  quarter: v => quarterLabel(v),
 };
 const aiMap = {
   health:        (v,ps) => "\uD83E\uDD16 AI: " + ps.filter(p=>p.status==="At Risk").length + " at risk in \"" + v + "\" \u2014 avg risk " + avg(ps,"riskScore") + ". Compliance = (Actual \u00F7 Planned) \u00D7 100.",
@@ -328,6 +459,14 @@ const aiMap = {
       best.type + " leads (" + best.pct + "%), " + worst.type + " needs attention (" + worst.pct + "%).";
   },
   month:         (v,ps) => "\uD83E\uDD16 AI: " + ps.length + " project(s) in " + v.replace("-"," ") + " \u2014 avg risk " + avg(ps,"riskScore") + ". Formula: Compliance % = (Actual Completed \u00F7 Planned) \u00D7 100.",
+  // Uses the SAME gateStatusData the rings themselves show (real quarter-of-real-date +
+  // gate-started counts) rather than re-deriving from the old per-project p.planned/p.actual \u2014
+  // so the AI note can never disagree with the numbers inside the ring that was clicked.
+  quarter:       (v) => {
+    const row = gateStatusData.find(q => q.key === v);
+    if (!row) return "\uD83E\uDD16 AI insights";
+    return "\uD83E\uDD16 AI: " + row.actual + "\u00F7" + row.planned + " deliverables complete in " + quarterLabel(v) + " (" + row.pct + "%).";
+  },
 };
 
 // Populates a panel's content for a given type/value \u2014 shared by showDrillDown (first open)
@@ -335,22 +474,27 @@ const aiMap = {
 function renderDrillDownContent(row, type, value) {
   const projects  = filterProjects(type, value);
   const makeTitle = titleMap[type] || (v => v);
+  const asOf = typeof todayISTLabel === "function" ? todayISTLabel() : "";
   const subtitle  = type === "compliance"
     ? (() => {
         const tf = value.split("-")[0];
         const cnt = tf === "Total" ? projectPortfolioData.length : projectPortfolioData.filter(p => p.type === tf).length;
-        return cnt + " project(s) \u2014 Planned vs Actual \u2014 As on 07 Jul 2026";
+        return cnt + " project(s) \u2014 Planned vs Actual \u2014 As on " + asOf;
       })()
-    : projects.length + " project(s) matched \u2014 As on 07 Jul 2026";
+    : type === "quarter"
+    ? projectPortfolioData.length + " project(s) \u2014 Gate deliverables by quarter \u2014 As on " + asOf
+    : projects.length + " project(s) matched \u2014 As on " + asOf;
 
   if (row === 1) {
-    document.getElementById("ddFilterLabel1").textContent = "\u25B6 " + value.replace("|"," / ");
+    document.getElementById("ddFilterLabel1").textContent = "\u25B6 " + (filterLabelMap[type] ? filterLabelMap[type](value) : value.replace("|"," / "));
     document.getElementById("ddTitle1").textContent    = makeTitle(value);
     document.getElementById("ddSubTitle1").textContent = subtitle;
-    renderProjectTable("ddTH1","ddTB1", projects);
+    if (type === "quarter") renderQuarterTable("ddTH1","ddTB1", computePerProjectQuarterBreakdown());
+    else if (type === "health") renderHealthTable("ddTH1","ddTB1", value, projects);
+    else renderProjectTable("ddTH1","ddTB1", projects);
     document.getElementById("ddAI1").textContent = (aiMap[type] || (() => "\uD83E\uDD16 AI insights"))(value, projects);
   } else {
-    document.getElementById("ddFilterLabel2").textContent = "\u25B6 " + value.replace("|"," / ").replace("-"," ");
+    document.getElementById("ddFilterLabel2").textContent = "\u25B6 " + (filterLabelMap[type] ? filterLabelMap[type](value) : value.replace("|"," / ").replace("-"," "));
     document.getElementById("ddTitle2").textContent    = makeTitle(value);
     document.getElementById("ddSubTitle2").textContent = subtitle;
     if (type === "compliance") renderComplianceTable("ddTH2","ddTB2", type, value);
@@ -380,12 +524,19 @@ function showDrillDown(row, type, value) {
   setTimeout(() => panel.scrollIntoView({ behavior:"smooth", block:"nearest" }), 80);
 }
 
+// Closing a row-2 (bottom-of-page) drill-down shrinks .viewport-fit's content back down and
+// flips it from overflow:auto to overflow:hidden (see updateScrollLock/layout.css) — but the
+// element's scrollTop isn't reset by that alone, so it kept whatever offset the user had
+// scrolled to while the panel was open. With overflow now hidden at a non-zero scrollTop, the
+// content renders from that stale offset instead of the top, reading as "the page jumped and
+// half the content is missing". Reset scroll position back to the top on every close.
 function closeDrillDown(row) {
   const panelId = row === 1 ? "drillDownRow1" : "drillDownRow2";
   document.getElementById(panelId).classList.remove("open", "dd-expanded");
   currentFilter[row] = null;
   openPanel = null;
   updateScrollLock();
+  document.querySelector(".viewport-fit").scrollTop = 0;
   document.querySelectorAll(".widget").forEach(w => w.classList.remove("widget-active"));
 }
 
@@ -394,6 +545,7 @@ function closeAllDrillDowns() {
   currentFilter = { 1: null, 2: null };
   openPanel = null;
   updateScrollLock();
+  document.querySelector(".viewport-fit").scrollTop = 0;
   document.querySelectorAll(".widget").forEach(w => w.classList.remove("widget-active"));
 }
 
@@ -453,8 +605,11 @@ function updateScrollLock() {
 
 function updateChartSelection(row, type) {
   document.querySelectorAll(".widget").forEach(w => w.classList.remove("widget-active"));
+  // Gate Status rings (row 1) use their own "quarter" type now, distinct from the Compliance
+  // Rate line's per-point "month" type (row 2) — each maps to exactly one widget, no collision.
   const map = { health:"healthWidget", classification:"classificationWidget",
-    typeGate:"classificationWidget", compliance:"complianceStatusWidget", month:"complianceRateWidget" };
+    typeGate:"classificationWidget", compliance:"complianceStatusWidget",
+    quarter:"classificationWidget", month:"complianceRateWidget" };
   document.getElementById(map[type])?.classList.add("widget-active");
 }
 
@@ -553,11 +708,11 @@ function buildOverallHealthChart() {
       const lbl = "AT RISK \u2197";
       const w = c.measureText(lbl).width + 14;
       const h = 18;
-      c.fillStyle = "#fef2f2"; c.strokeStyle = "#fca5a5"; c.lineWidth = 1;
+      c.fillStyle = "#fee2e2"; c.strokeStyle = "#fee2e2"; c.lineWidth = 1;
       c.beginPath();
       if (c.roundRect) c.roundRect(x - w/2, top - h, w, h, 3); else c.rect(x - w/2, top - h, w, h);
       c.fill(); c.stroke();
-      c.fillStyle = "#dc2626"; c.textAlign = "center"; c.textBaseline = "middle";
+      c.fillStyle = "#e24b4b"; c.textAlign = "center"; c.textBaseline = "middle";
       c.fillText(lbl, x, top - h/2);
       c.restore();
     }
@@ -570,7 +725,7 @@ function buildOverallHealthChart() {
       labels: ["On Time\n0\u201315 Days","Delay\n15\u201360 Days","Delay\n>60 Days"],
       datasets: [{
         data: [onTrack, delayed, atRisk],
-        backgroundColor: ["#14b8a6","#f59e0b","#ef4444"],
+        backgroundColor: ["#14b8a6","#f1c272","#e53935"],
         borderRadius: 4, barPercentage: 0.50,
         // Bar 2 (>60 days) also carries the "AT RISK" badge just above it (see atRiskPlugin below);
         // push its count further up so the badge doesn't paint over the number.
@@ -601,34 +756,100 @@ function buildOverallHealthChart() {
 }
 
 // ==========================================================
-//  CHART 2 — Mini Classification Donuts
-//  Counts fully driven from projectPortfolioData
+//  CHART 2 — Gate Status Rings (Planned vs Actual, per FY quarter)
+//  Deliverable planned/actual counts, bucketed by the SAME `month` field the
+//  Process Compliance Rate chart uses — never an independent/fabricated number.
 // ==========================================================
-function buildMiniTypeChart(canvasId, type) {
-  const ps     = projectPortfolioData.filter(p => p.type === type);
-  const bbCnt  = ps.filter(p => p.classification === "BB").length;
-  const nbbCnt = ps.filter(p => p.classification === "N-BB").length;
+// Real, year-aware calendar-quarter boundaries (Jan-Mar/Apr-Jun/Jul-Sep/Oct-Dec) for the CURRENT
+// calendar year, anchored to the actual current date exactly like the header's own "As on date"
+// — not a hardcoded year. Previously QUARTER_MONTHS matched by month NAME only (ignoring year),
+// which silently conflated e.g. every "November" a deliverable could ever fall in — a 2025
+// completion and a 2026 target both landed in the same "Nov" bucket.
+function currentFYQuarters() {
+  const year = new Date().getFullYear();
+  const starts = [0, 3, 6, 9].map(m => new Date(year, m, 1));
+  const keys = ["Q1", "Q2", "Q3", "Q4"];
+  return keys.map((key, i) => ({ key, start: starts[i], end: new Date(starts[i].getFullYear(), starts[i].getMonth() + 3, 0) }));
+}
 
-  const leftId = { M2:"donutM2Left", M4:"donutM4Left", M6:"donutM6Left" }[type];
-  const numId  = { M2:"dcM2", M4:"dcM4", M6:"dcM6" }[type];
-  if (document.getElementById(leftId))
-    document.getElementById(leftId).innerHTML =
-      "<span class='bb-txt'>BB - " + String(bbCnt).padStart(2,"0") + "</span>" +
-      "<span class='nbb-txt'>N-BB - " + String(nbbCnt).padStart(2,"0") + "</span>";
-  if (document.getElementById(numId))
-    document.getElementById(numId).textContent = ps.length;
+// Counts every real deliverable assignment exactly once, into whichever real FY quarter its own
+// targetDate falls in — and only once its own gate has actually started (Active or Completed
+// gate-instance status). A deliverable can carry a future targetDate on paper long before its
+// gate is ever activated; counting those as "planned" made every quarter look partially worked
+// on even when, per this program's real Stage-Gate status, nothing in it has started yet. This
+// is why a future quarter correctly shows 0/0 (grey "not started") rather than a number.
+function computeGateStatusByQuarter() {
+  const gateStatusById = Object.fromEntries(_gateInstances.map(g => [g.id, g.currentStatus]));
+  const started = _deliverables.filter(d => {
+    const s = gateStatusById[d.gateInstanceId];
+    return s === "Active" || s === "Completed";
+  });
+  return currentFYQuarters().map(({ key, start, end }) => {
+    const inQuarter = started.filter(d => {
+      if (!d.targetDate) return false;
+      const t = new Date(d.targetDate + "T00:00:00");
+      return t >= start && t <= end;
+    });
+    const planned = inQuarter.length;
+    const actual  = inQuarter.filter(d => d.status === "Completed").length;
+    return { key, months: QUARTER_MONTHS[key], planned, actual, pct: planned ? Math.round(actual / planned * 100) : 0 };
+  });
+}
+const gateStatusData = computeGateStatusByQuarter();
 
-  const ctx = document.getElementById(canvasId).getContext("2d");
+function buildGateStatusRing(quarter) {
+  const row = gateStatusData.find(q => q.key === quarter);
+  const started = row.planned > 0;
+  const centerEl = document.getElementById("gateRing" + quarter + "Left");
+  if (centerEl) {
+    centerEl.innerHTML = started
+      ? "<span class='a-label'>A - " + row.actual + "</span><span class='pa-divider'></span><span class='p-label'>P - " + row.planned + "</span>"
+      : "<span class='a-label muted'>A - 0</span><span class='pa-divider'></span><span class='p-label muted'>P - 0</span>";
+  }
+
+  // No onClick here — the wrapping .gate-ring-col listener (wireEvents) covers the whole column,
+  // canvas included; adding a second handler on the canvas itself would double-fire showDrillDown
+  // (event bubbles from canvas -> column) and the toggle-close logic would open then immediately
+  // close the panel.
+  const ctx = document.getElementById("gateRing" + quarter + "Chart").getContext("2d");
+  if (!started) {
+    // Grey "not started yet" ring — this quarter's gates haven't been activated, so there's no
+    // Planned/Actual ratio to show yet (distinct from a real 0%, which would still be teal/navy).
+    return new Chart(ctx, {
+      type: "doughnut",
+      data: { labels: ["Not started"], datasets: [{ data: [1], backgroundColor: ["#e2e8f0"], borderWidth: 0, cutout: "72%" }] },
+      options: { responsive: false, animation: false, plugins: { legend: { display: false }, tooltip: { enabled: false } } },
+    });
+  }
   return new Chart(ctx, {
     type: "doughnut",
-    data: { labels:["BB","N-BB"], datasets:[{ data:[bbCnt, nbbCnt], backgroundColor:["#1e3a5f","#14b8a6"], borderWidth:0, cutout:"72%" }] },
+    data: { labels:["Actual","Remaining"], datasets:[{ data:[row.pct, 100 - row.pct], backgroundColor:["#14b8a6","#1e3a5f"], borderWidth:0, cutout:"72%" }] },
     options: {
       responsive:false, animation:false,
       plugins:{ legend:{display:false}, tooltip:{enabled:false} },
-      onClick() { showDrillDown(1,"classification",type); }
     }
   });
 }
+
+// Draws the bold "82%" line directly under the x-axis, above each category's own tick label —
+// matches Figma exactly and keeps the percentage legible without ever overlapping a bar's value
+// label (which the inline per-point datalabel used to do). Reads complianceStatusData directly
+// since this chart's categories are always exactly that array, in that order.
+const pctBelowAxisPlugin = {
+  id: "pctBelowAxis",
+  afterDraw(chart) {
+    const { ctx, chartArea, scales: { x } } = chart;
+    ctx.save();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = "#1e3a5f";
+    ctx.font = "700 11px Inter, sans-serif";
+    complianceStatusData.forEach((row, i) => {
+      ctx.fillText(row.pct + "%", x.getPixelForTick(i), chartArea.bottom + 6);
+    });
+    ctx.restore();
+  }
+};
 
 // ==========================================================
 //  CHART 3 — Process Compliance Status
@@ -659,25 +880,18 @@ function buildComplianceStatusChart() {
           }
         },
         {
+          // No per-point datalabel here (Figma has none) — a floating "%" label next to the dot
+          // routinely collided with the bar-value labels right beside it (e.g. a dot sitting
+          // near a tall bar's own value text), reading as "the line/percentage is hidden". Figma's
+          // actual design (node 376:2836) instead prints the bold "%" as a second line UNDER the
+          // x-axis, below each category name — drawn by pctBelowAxisPlugin, never overlapping
+          // anything in the chart body itself.
           type:"line", label:"Percentage",
           data: complianceStatusData.map(r => r.pct),
-          yAxisID:"yRight", borderColor:"#f59e0b", backgroundColor:"#f59e0b",
+          yAxisID:"yRight", borderColor:"#f0ad4e", backgroundColor:"#f0ad4e",
           borderWidth:2, tension:.3, pointRadius:4,
           pointBackgroundColor:"#1e3a5f", pointBorderColor:"#1e3a5f",
-          datalabels: {
-            display: true, color:"#1e3a5f", anchor:"end", align:"top",
-            // The percentage point and the taller bar's value label can end up close together
-            // in pixel space (e.g. Total: a tall Planned bar near the top of the 0-400 axis vs.
-            // a percentage point that's also high on the independent 0-100 axis) — push the
-            // label further out whenever that gap is tight so it can't be painted over.
-            offset(ctx) {
-              const row     = complianceStatusData[ctx.dataIndex];
-              const barFrac = Math.max(row.planned, row.actual) / 400;
-              const pctFrac = row.pct / 100;
-              return (barFrac - pctFrac) < 0.12 ? 22 : 4;
-            },
-            font:{ size:10, weight:"700" }, formatter:v=>v+"%"
-          }
+          datalabels: { display:false }
         }
       ]
     },
@@ -689,7 +903,9 @@ function buildComplianceStatusChart() {
         datalabels: {}
       },
       scales: {
-        x: { grid:{display:false}, ticks:{color:"#6b7280",font:{size:11,weight:"600"}},
+        // ticks.padding pushes the "M6"/"M4"/... labels down, opening a gap right under the axis
+        // line where pctBelowAxisPlugin draws the bold percentage — see comment above.
+        x: { grid:{display:false}, ticks:{color:"#6b7280",font:{size:11,weight:"600"},padding:20},
              title:{display:true,text:"Product Classification",color:"#6b7280",font:{size:11}} },
         y: { min:0, max:400,
           ticks:{stepSize:100,color:"#666",font:{size:10}},
@@ -706,17 +922,16 @@ function buildComplianceStatusChart() {
         showDrillDown(2,"compliance", typeVal + (layer ? "-" + layer : ""));
       }
     },
-    plugins: [ChartDataLabels]
+    plugins: [ChartDataLabels, pctBelowAxisPlugin]
   });
   return charts.complianceStatus;
 }
 
 // ==========================================================
-//  CHART 4 — Process Compliance Rate (3-line)
-//  FY26 dashed teal | FY27 solid navy (real, computed) | FY27 AI dashed amber
-//  Callout points are computed from the data (first known month; AI line's
-//  high/low) rather than hardcoded indices, so they stay correct if the
-//  underlying project data changes.
+//  CHART 4 — Process Compliance Rate (2-line, matches Figma exactly)
+//  FY26 dashed green | FY27 solid blue (real, computed)
+//  Callout point is computed from the data (first known month) rather than a
+//  hardcoded index, so it stays correct if the underlying project data changes.
 // ==========================================================
 function firstValidIndex(data) {
   const i = data.findIndex(v => v != null);
@@ -725,11 +940,6 @@ function firstValidIndex(data) {
 
 function buildComplianceRateChart() {
   const firstFY  = firstValidIndex(complianceRateData.FY27);
-  const aiData   = complianceRateData.FY27_AI;
-  // Only the FIRST index hitting the high/low gets a callout — several months can genuinely
-  // tie (real data), and labeling every tied point stacks duplicate text on top of itself.
-  const aiMaxIdx = aiData.indexOf(Math.max(...aiData));
-  const aiMinIdx = aiData.indexOf(Math.min(...aiData));
 
   const ctx = document.getElementById("complianceRateChart").getContext("2d");
   charts.complianceRate = new Chart(ctx, {
@@ -740,36 +950,24 @@ function buildComplianceRateChart() {
         {
           label: "FY26",
           data: complianceRateData.FY26,
-          borderColor:"#14b8a6", backgroundColor:"rgba(20,184,166,.08)",
+          borderColor:"#16a34a", backgroundColor:"rgba(22,163,74,.08)",
           borderWidth:2, borderDash:[5,4], spanGaps:true,
-          pointStyle:"circle", pointRadius:3, pointBackgroundColor:"#14b8a6", tension:.35,
+          pointStyle:"circle", pointRadius:3, pointBackgroundColor:"#fff", pointBorderColor:"#16a34a", pointBorderWidth:1.5, tension:.35,
           datalabels: {
             display(ctx) { return ctx.dataIndex === firstFY; },
-            color:"#0d9488", anchor:"end", align:"top", offset:4,
+            color:"#16a34a", anchor:"end", align:"top", offset:4,
             font:{ size:10, weight:"700" }, formatter:v => v + "%"
           }
         },
         {
           label: "FY27",
           data: complianceRateData.FY27,
-          borderColor:"#1e3a5f", backgroundColor:"rgba(30,58,95,.06)",
-          borderWidth:2.5, spanGaps:true,
+          borderColor:"#1e3a5f", backgroundColor:"rgba(30,58,95,.10)",
+          borderWidth:2.5, spanGaps:true, fill:true,
           pointStyle:"circle", pointRadius:3, pointBackgroundColor:"#1e3a5f", tension:.35,
           datalabels: {
             display(ctx) { return ctx.dataIndex === firstFY; },
             color:"#1e3a5f", anchor:"end", align:"top", offset:4,
-            font:{ size:10, weight:"700" }, formatter:v => v + "%"
-          }
-        },
-        {
-          label: "FY27 (AI Predicted)",
-          data: aiData,
-          borderColor:"#f59e0b", backgroundColor:"rgba(245,158,11,.07)",
-          borderWidth:2, borderDash:[6,3], spanGaps:true,
-          pointStyle:"circle", pointRadius:3, pointBackgroundColor:"#f59e0b", tension:.35,
-          datalabels: {
-            display(ctx) { return ctx.dataIndex === aiMaxIdx || ctx.dataIndex === aiMinIdx; },
-            color:"#b45309", anchor:"end", align:"top", offset:4,
             font:{ size:10, weight:"700" }, formatter:v => v + "%"
           }
         }
@@ -787,13 +985,13 @@ function buildComplianceRateChart() {
       },
       scales: {
         x: { grid:{display:false}, ticks:{color:"#6b7280",font:{size:11}} },
-        y: { min:10, max:100, ticks:{ stepSize:10, callback:v => v + "%", color:"#666", font:{size:10} }, grid:{color:"#e5e7eb"} }
+        y: { min:0, max:100, ticks:{ stepSize:10, callback:v => v + "%", color:"#666", font:{size:10} }, grid:{color:"#e5e7eb"} }
       },
       onClick(_e, els) {
         if (!els.length) { showDrillDown(2,"month","Apr-FY27"); return; }
         const { datasetIndex, index } = els[0];
         const mon = monthOrder[index];
-        const fy  = ["FY26","FY27","FY27_AI"][datasetIndex] || "FY27";
+        const fy  = ["FY26","FY27"][datasetIndex] || "FY27";
         showDrillDown(2,"month", mon + "-" + fy);
       }
     },
@@ -811,9 +1009,16 @@ function wireEvents() {
   document.getElementById("segBB").addEventListener("click",    () => showDrillDown(1,"health","BB"));
   document.getElementById("segNBB").addEventListener("click",   () => showDrillDown(1,"health","N-BB"));
 
-  // ── Mini donut blocks (click whole block) ──
-  document.querySelectorAll(".mini-donut-block").forEach(el =>
-    el.addEventListener("click", () => showDrillDown(1,"classification", el.dataset.type))
+  // ── Gate status ring columns (click anywhere in the column, not just the canvas) — filters by
+  // the "quarter" type (all 3 months), matching how the ring's own P/A totals were summed. ──
+  let lastGateQuarter = "Q1";
+  document.querySelectorAll(".gate-ring-col").forEach(el =>
+    el.addEventListener("click", () => { lastGateQuarter = el.dataset.quarter; showDrillDown(1,"quarter", el.dataset.quarter); })
+  );
+  // Planned / Actual legend keys are the same two series every ring already plots — clicking
+  // either re-opens the drill-down for whichever quarter's ring was last selected (Q1 by default).
+  document.querySelectorAll(".gate-status-legend .legend-key").forEach(el =>
+    el.addEventListener("click", () => showDrillDown(1,"quarter", lastGateQuarter))
   );
 
   // ── Matrix cells ──
@@ -827,27 +1032,6 @@ function wireEvents() {
     document.getElementById("ddExpand" + row)?.addEventListener("click", () => toggleDrillDownExpand(row));
     document.getElementById("ddRefresh" + row)?.addEventListener("click", () => refreshDrillDown(row));
     document.getElementById("ddExportCsv" + row)?.addEventListener("click", () => exportDrillDownCsv(row));
-  });
-
-  // ── Per-field Reason / Corrective Action detail toggles ──
-  // Event delegation on the (static) table wrapper: rows are re-rendered via innerHTML on every
-  // filter change, so per-row listeners would need re-binding after each render; delegation avoids that.
-  // Each data row is followed by two independent expand rows (.dd-expand-reason then
-  // .dd-expand-corrective, in that fixed order) — data-detail on the clicked toggle picks which one.
-  document.querySelectorAll(".dd-table-wrap").forEach(wrap => {
-    wrap.addEventListener("click", e => {
-      const btn = e.target.closest(".dd-field-toggle");
-      if (!btn) return;
-      const dataRow   = btn.closest("tr");
-      const expandRow = btn.dataset.detail === "reason"
-        ? dataRow.nextElementSibling
-        : dataRow.nextElementSibling?.nextElementSibling;
-      if (!expandRow || !expandRow.classList.contains("dd-expand-row")) return;
-      const willOpen = expandRow.hidden;
-      expandRow.hidden = !willOpen;
-      btn.setAttribute("aria-expanded", String(willOpen));
-      btn.classList.toggle("dd-field-toggle-open", willOpen);
-    });
   });
 
   // ── Widget fullscreen buttons ──
@@ -914,17 +1098,93 @@ function wireEvents() {
 }
 
 // ==========================================================
+//  RISK TOOLTIP — the drill-down table's Status badge (Critical/High) shows Reason / Corrective
+//  Action / Mitigation on hover instead of as separate columns (see renderProjectTable). One
+//  shared tooltip element, appended to <body> (not #dashboardRoot) so it renders at real size
+//  regardless of the dashboard's zoom transform, and positioned "fixed" via getBoundingClientRect
+//  so it's never clipped by the drill-down table's own overflow:auto scroll box.
+// ==========================================================
+function wireRiskTooltip() {
+  const projectByCode = Object.fromEntries(projectPortfolioData.map((p) => [p.projectCode, p]));
+  const PRIORITY_CLS = { Critical: "rt-pill-high", High: "rt-pill-high", Medium: "rt-pill-med", Low: "rt-pill-low" };
+  const PRIORITY_LBL = { Critical: "High", High: "High", Medium: "Med", Low: "Low" };
+
+  const tip = document.createElement("div");
+  tip.className = "risk-tooltip";
+  tip.innerHTML = `
+    <div class="rt-head">
+      <span class="rt-head-icon">✦</span>
+      <span class="rt-head-title">AI Corrective Actions Summary</span>
+    </div>
+    <div class="rt-list"></div>
+    <a class="rt-cta" target="_blank" rel="noopener">Click to view full details <span>→</span></a>
+  `;
+  document.body.appendChild(tip);
+  const listEl = tip.querySelector(".rt-list");
+  const ctaEl  = tip.querySelector(".rt-cta");
+
+  function show(target) {
+    const p = projectByCode[target.dataset.tipCode];
+    if (!p) return;
+    const actions = p.aiActions && p.aiActions.length
+      ? p.aiActions
+      : [{ priority: "Low", title: "No open corrective action currently logged for this project." }];
+    listEl.innerHTML = actions.map((a) =>
+      `<div class="rt-row"><span class="rt-pill ${PRIORITY_CLS[a.priority] || "rt-pill-low"}">${PRIORITY_LBL[a.priority] || "Low"}</span><span class="rt-row-text">${esc(a.title)}</span></div>`
+    ).join("");
+    ctaEl.href = "pages/project-detail/index.html?id=" + encodeURIComponent(p.projectCode);
+
+    tip.classList.add("visible");
+    const r = target.getBoundingClientRect();
+    const tipW = tip.offsetWidth;
+    let left = r.left + r.width / 2 - tipW / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - tipW - 8));
+    const above = r.top > 260;
+    tip.style.left = left + "px";
+    tip.style.top  = above ? (r.top - tip.offsetHeight - 12) + "px" : (r.bottom + 12) + "px";
+    tip.classList.toggle("rt-below", !above);
+  }
+  function hide() { tip.classList.remove("visible"); }
+
+  document.addEventListener("mouseover", (e) => {
+    const target = e.target.closest(".dd-has-tip");
+    if (target) show(target);
+    else if (!e.target.closest(".risk-tooltip")) hide();
+  });
+  document.addEventListener("scroll", hide, true);
+  // The tooltip itself is interactive (its CTA is a real link), unlike a plain hover hint — so
+  // it needs its own mouseleave, not just the badge's mouseout, or moving from badge to card
+  // (a gap of a few px) would hide it before the pointer ever reaches the link.
+  tip.addEventListener("mouseleave", hide);
+}
+
+// ==========================================================
 //  INIT
 // ==========================================================
+// Every "As on <date>" chart subtitle uses the real current date — the same todayISTLabel()
+// the header's own "As on date" already uses (shared.js) — instead of a hardcoded snapshot date.
+function applyAsOfDates() {
+  if (typeof todayISTLabel !== "function") return;
+  const label = "As on " + todayISTLabel();
+  ["healthAsOf", "classificationAsOf", "complianceStatusAsOf", "complianceRateAsOf"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = label;
+  });
+}
+
 function init() {
   renderTopNav("dashboard");
+  applyAsOfDates();
+  applyWidgetVisibility();
   buildOverallHealthChart();
-  buildMiniTypeChart("typeM2Chart","M2");
-  buildMiniTypeChart("typeM4Chart","M4");
-  buildMiniTypeChart("typeM6Chart","M6");
+  buildGateStatusRing("Q1");
+  buildGateStatusRing("Q2");
+  buildGateStatusRing("Q3");
+  buildGateStatusRing("Q4");
   buildComplianceStatusChart();
   buildComplianceRateChart();
   wireEvents();
+  wireRiskTooltip();
   fitViewport(); // measures real rendered content height, so do this last
 }
 

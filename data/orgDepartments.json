@@ -1,0 +1,170 @@
+[
+  {
+    "id": "DEPT-01",
+    "code": "PMO",
+    "name": "PMO",
+    "head": "Vijay Grewal",
+    "description": "Program Management Office — governs the stage-gate process, program schedules and cross-functional coordination.",
+    "active": true
+  },
+  {
+    "id": "DEPT-02",
+    "code": "RND",
+    "name": "R&D",
+    "head": "Rohan Agarwal",
+    "description": "Research & Development — concept engineering, design and platform strategy.",
+    "active": true
+  },
+  {
+    "id": "DEPT-03",
+    "code": "MECH",
+    "name": "Mechanical Engineering",
+    "head": "Rashmi Banerjee",
+    "description": "Mechanical design, structures and powertrain mechanical systems.",
+    "active": true
+  },
+  {
+    "id": "DEPT-04",
+    "code": "ELEC",
+    "name": "Electrical Engineering",
+    "head": "Kavita Sood",
+    "description": "Vehicle electrical architecture, wiring and embedded electronics.",
+    "active": true
+  },
+  {
+    "id": "DEPT-05",
+    "code": "HYD",
+    "name": "Hydraulics",
+    "head": "Aarav Chatterjee",
+    "description": "Hydraulic systems design for implements, steering and lift circuits.",
+    "active": true
+  },
+  {
+    "id": "DEPT-06",
+    "code": "TRANS",
+    "name": "Transmission",
+    "head": "Ajay Rathore",
+    "description": "Transmission and driveline engineering.",
+    "active": true
+  },
+  {
+    "id": "DEPT-07",
+    "code": "MFG",
+    "name": "Manufacturing",
+    "head": "Ashok Rathore",
+    "description": "Production engineering, line design and shop-floor operations.",
+    "active": true
+  },
+  {
+    "id": "DEPT-08",
+    "code": "IE",
+    "name": "Industrial Engineering",
+    "head": "Gaurav Mehta",
+    "description": "Process planning, line balancing and manufacturing productivity.",
+    "active": true
+  },
+  {
+    "id": "DEPT-09",
+    "code": "SCM",
+    "name": "Supply Chain",
+    "head": "Harish Iyengar",
+    "description": "End-to-end supply chain planning and logistics.",
+    "active": true
+  },
+  {
+    "id": "DEPT-10",
+    "code": "PROC",
+    "name": "Procurement",
+    "head": "Vivaan Reddy",
+    "description": "Sourcing, supplier contracts and purchasing.",
+    "active": true
+  },
+  {
+    "id": "DEPT-11",
+    "code": "SQ",
+    "name": "Supplier Quality",
+    "head": "Radhika Roy",
+    "description": "Supplier PPAP, audits and incoming quality.",
+    "active": true
+  },
+  {
+    "id": "DEPT-12",
+    "code": "QA",
+    "name": "Quality Assurance",
+    "head": "Vivaan Grover",
+    "description": "Product quality systems, non-conformance and audits.",
+    "active": true
+  },
+  {
+    "id": "DEPT-13",
+    "code": "VAL",
+    "name": "Validation",
+    "head": "Rakesh Bansal",
+    "description": "Design verification, CAE and simulation validation.",
+    "active": true
+  },
+  {
+    "id": "DEPT-14",
+    "code": "TEST",
+    "name": "Testing",
+    "head": "Sarita Dave",
+    "description": "Physical test campaigns, durability and field trials.",
+    "active": true
+  },
+  {
+    "id": "DEPT-15",
+    "code": "COMM",
+    "name": "Commercial",
+    "head": "Vishal Chadha",
+    "description": "Program business case, pricing and commercial planning.",
+    "active": true
+  },
+  {
+    "id": "DEPT-16",
+    "code": "MKT",
+    "name": "Marketing",
+    "head": "Sandeep Bose",
+    "description": "Market research, positioning and launch marketing.",
+    "active": true
+  },
+  {
+    "id": "DEPT-17",
+    "code": "FIN",
+    "name": "Finance",
+    "head": "Tejas Reddy",
+    "description": "Program budgeting, cost control and financial reporting.",
+    "active": true
+  },
+  {
+    "id": "DEPT-18",
+    "code": "LEGAL",
+    "name": "Legal",
+    "head": "Shweta Kapoor",
+    "description": "Contracts, compliance and regulatory legal support.",
+    "active": true
+  },
+  {
+    "id": "DEPT-19",
+    "code": "IT",
+    "name": "IT",
+    "head": "Nisha Khanna",
+    "description": "Enterprise systems, PLM and engineering IT infrastructure.",
+    "active": true
+  },
+  {
+    "id": "DEPT-20",
+    "code": "HR",
+    "name": "HR",
+    "head": "Priya Kapoor",
+    "description": "Talent, workforce planning and employee relations.",
+    "active": true
+  },
+  {
+    "id": "DEPT-21",
+    "code": "CORP",
+    "name": "Corporate Strategy",
+    "head": "Sonia Gupta",
+    "description": "Long-range planning, portfolio strategy and executive office.",
+    "active": true
+  }
+]

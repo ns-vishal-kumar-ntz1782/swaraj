@@ -1,0 +1,12 @@
+/* ═══════════════════════════════════════════
+   DESIGN SYSTEM — THEME
+   Resets and base element theming applied everywhere. Extracted from base.css
+   verbatim — no values changed.
+═══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; }
+html { overflow: hidden; }
+body {
+  margin: 0; width: 100%; height: 100%; overflow: hidden;
+  font-family: "Inter", sans-serif; background: var(--bg); color: var(--title);
+}
+button { font-family: inherit; }

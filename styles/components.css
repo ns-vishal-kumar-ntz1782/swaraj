@@ -1,0 +1,124 @@
+/* ═══════════════════════════════════════════
+   DESIGN SYSTEM — COMPONENTS
+   Common, reusable, additive components — available on every page via styles.css,
+   not yet adopted by any existing page's own bespoke rules. Extracted from
+   components/{buttons,pills,cards,tables,modal}.css verbatim — no values changed.
+═══════════════════════════════════════════ */
+
+/* ---- Buttons ----
+   Class names (.btn, .btn-primary, etc.) don't collide with anything already in use
+   anywhere in the root app (verified), so importing this changes no existing page.
+   Available for new/updated screens (e.g. Overall Budget) without having to invent
+   a fifth bespoke button system — pages/admin/admin-console.css already proved this
+   exact shape works well, so it's reused here rather than reinvented. */
+.btn {
+  display: inline-flex; align-items: center; gap: var(--space-6);
+  border-radius: var(--radius-sm); padding: var(--space-8) var(--space-14);
+  font-size: var(--fs-13); font-weight: var(--fw-600); font-family: inherit;
+  cursor: pointer; border: 1px solid transparent; white-space: nowrap;
+  transition: var(--transition-2);
+}
+.btn-primary { background: var(--brand-blue); color: var(--panel); }
+.btn-primary:hover { opacity: .92; }
+.btn-secondary { background: var(--navy); color: var(--panel); }
+.btn-secondary:hover { opacity: .92; }
+.btn-danger { background: var(--danger); color: var(--panel); }
+.btn-danger:hover { opacity: .92; }
+.btn-ghost { background: var(--panel); border-color: var(--border); color: var(--title); }
+.btn-ghost:hover { background: var(--panel-alt); }
+.btn-ghost.danger { color: var(--danger); }
+.btn-sm { padding: var(--space-5) var(--space-10); font-size: var(--fs-12); }
+.btn-block { width: 100%; justify-content: center; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ---- Status pills ----
+   The root app currently has three independent status/badge systems (.badge-* in
+   dashboard.css, .pd-b-* in project-detail.css, ad-hoc inline styles in portfolio.js)
+   that render inconsistent colors for the same concept. None of them are touched
+   here; this is a fourth, common option available going forward without forcing a
+   rewrite of the existing three. */
+.pill {
+  display: inline-block; padding: var(--space-2) var(--space-9); border-radius: var(--radius-20);
+  font-size: var(--fs-10-5); font-weight: var(--fw-700); text-transform: uppercase; letter-spacing: .02em;
+  white-space: nowrap;
+}
+.pill-slate  { background: var(--color-overlay-3); color: var(--color-slate-800); }
+.pill-blue   { background: var(--color-overlay-4);   color: var(--color-blue-580); }
+.pill-amber  { background: var(--color-overlay-5);   color: var(--warning); }
+.pill-green  { background: var(--color-overlay-6);   color: var(--color-green-730); }
+.pill-red    { background: var(--color-overlay-7);   color: var(--danger); }
+
+/* ---- Cards ----
+   A plain content card and a small stat/KPI card, generalized from the visual
+   language index.html's .widget and portfolio.css's .pt-kpi-card already use
+   (white panel, soft shadow, rounded corners) without touching either. */
+.card {
+  background: var(--panel); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: var(--space-20);
+}
+.card-title { font-size: var(--fs-16); font-weight: var(--fw-700); color: var(--title); margin: 0 0 var(--space-4); }
+.card-subtitle { font-size: var(--fs-12); color: var(--muted); margin: 0; }
+
+.kpi-card {
+  background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: var(--space-16) var(--space-20); display: flex; flex-direction: column; gap: var(--space-4);
+}
+.kpi-card-label {
+  font-size: var(--fs-11); font-weight: var(--fw-700); text-transform: uppercase; letter-spacing: .03em;
+  color: var(--muted);
+}
+.kpi-card-value { font-size: var(--fs-26); font-weight: var(--fw-800); color: var(--title); line-height: 1; }
+.kpi-card-sub { font-size: var(--fs-11); color: var(--muted); }
+
+/* ---- Table ----
+   Class-scoped (.table, never a bare `table` element selector) specifically so it
+   can never collide with or override the existing page-specific table rules
+   (.classification-table, .pd-data-table, .pt-matrix, .dd-table, etc.), all of
+   which stay exactly as they are. */
+.table-wrap {
+  background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow);
+  overflow: auto; border: 1px solid var(--border);
+}
+.table { width: 100%; border-collapse: collapse; font-size: var(--fs-12-5); }
+.table thead th {
+  text-align: left; padding: var(--space-10) var(--space-14); background: var(--panel-alt);
+  font-size: var(--fs-11); font-weight: var(--fw-700); color: var(--navy); text-transform: uppercase;
+  letter-spacing: .02em; border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.table tbody td { padding: var(--space-10) var(--space-14); border-bottom: 1px solid var(--border); color: var(--title); }
+.table tbody tr:last-child td { border-bottom: 0; }
+.table tbody tr:hover { background: var(--panel-alt); }
+.table .empty-row { text-align: center; color: var(--muted); font-style: italic; padding: var(--space-24) !important; }
+
+/* ---- Modal ----
+   Pairs with assets/js/lib/modal.js's openModal()/closeModal(). No existing page
+   currently has a modal (project-detail's/portfolio's "AI insights"/"Notes" buttons
+   are present but not wired up), so this introduces the capability without changing
+   any current page's behavior. */
+.modal-backdrop {
+  position: fixed; inset: 0; background: var(--color-overlay-8); z-index: 9000;
+  display: grid; place-items: center; padding: var(--space-20);
+  animation: modalFadeIn .15s ease;
+}
+@keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal {
+  width: 480px; max-width: 100%; max-height: 88vh; overflow-y: auto;
+  background: var(--panel); border-radius: var(--radius-12); box-shadow: var(--shadow-lg);
+}
+.modal.modal-lg { width: 720px; }
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-16) var(--space-20); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--panel);
+}
+.modal-header h3 { margin: 0; font-size: var(--fs-16); color: var(--title); }
+.modal-close {
+  border: 0; background: transparent; font-size: var(--fs-15); cursor: pointer;
+  color: var(--muted); width: 28px; height: 28px; border-radius: var(--radius-sm);
+}
+.modal-close:hover { background: var(--panel-alt); }
+.modal-body { padding: var(--space-18) var(--space-20); color: var(--title); }
+.modal-footer {
+  display: flex; justify-content: flex-end; gap: var(--space-8);
+  padding: var(--space-14) var(--space-20); border-top: 1px solid var(--border);
+}

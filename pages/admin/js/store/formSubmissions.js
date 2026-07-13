@@ -3,7 +3,8 @@ import { load, save, seedOnce, ENTITY_KEYS } from "./db.js";
 import { uid, nowIso } from "../utils.js";
 import { addAuditEntry } from "./audit.js";
 import { notify } from "./notifications.js";
-import { BUSINESS_ROLES, can } from "../rbac.js";
+import { can } from "../rbac.js";
+import { listRoleNames } from "./roles.js";
 import { listUsers } from "./users.js";
 
 function userIdByName(name) {
@@ -34,7 +35,7 @@ export function getSubmission(id) {
 }
 
 function rolesWithButton(buttonId) {
-  return BUSINESS_ROLES.filter((role) => can(role, buttonId));
+  return listRoleNames().filter((role) => can(role, buttonId));
 }
 
 export function saveDraft(data, actor, actorRole) {

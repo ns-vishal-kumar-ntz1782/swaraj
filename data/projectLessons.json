@@ -1,0 +1,62 @@
+[
+  {
+    "lessonId": "LL-0001",
+    "projectCode": "PJ01004",
+    "category": "Testing",
+    "title": "Field trial telemetry gaps delayed root-causing",
+    "description": "A logger fault caused a data gap during field trials, delaying root-cause analysis of a reported issue.",
+    "recommendation": "Add a redundant logger on all field trial units going forward.",
+    "submittedByUserId": "USR-0002",
+    "submittedDate": "2026-07-10"
+  },
+  {
+    "lessonId": "LL-0002",
+    "projectCode": "PJ01004",
+    "category": "Design",
+    "title": "Early DFMEA engagement reduced late design changes",
+    "description": "Involving DFMEA review from the concept stage caught two high-RPN failure modes before tooling commitment, avoiding a costly late change.",
+    "recommendation": "Mandate a DFMEA checkpoint at Pre-KO for all future programs of this class.",
+    "submittedByUserId": "USR-0002",
+    "submittedDate": "2026-07-10"
+  },
+  {
+    "lessonId": "LL-0003",
+    "projectCode": "PJ01004",
+    "category": "Quality",
+    "title": "Supplier PPAP tracking dashboard improved on-time submission",
+    "description": "A shared PPAP tracker with the supplier improved submission timeliness and reduced follow-up effort.",
+    "recommendation": "Roll out the PPAP tracker as a standard tool for all tier-1 suppliers.",
+    "submittedByUserId": "USR-0002",
+    "submittedDate": "2026-07-10"
+  },
+  {
+    "lessonId": "LL-0004",
+    "projectCode": "PJ01004",
+    "category": "Supplier",
+    "title": "Single-source risk materialized during ramp-up",
+    "description": "A single-source casting supplier could not meet a volume ramp, causing a short supply gap.",
+    "recommendation": "Qualify a second source for any single-point critical casting before SOP on future programs.",
+    "submittedByUserId": "USR-0002",
+    "submittedDate": "2026-07-10"
+  },
+  {
+    "lessonId": "LL-0005",
+    "projectCode": "PJ01004",
+    "category": "Program Management",
+    "title": "Cross-functional weekly review improved risk visibility",
+    "description": "A consolidated weekly review across Engineering, Quality and Manufacturing surfaced risks earlier than the previous cadence.",
+    "recommendation": "Adopt the consolidated weekly review format as the program management standard.",
+    "submittedByUserId": "USR-0002",
+    "submittedDate": "2026-07-10"
+  },
+  {
+    "lessonId": "LL-0006",
+    "projectCode": "PJ01004",
+    "category": "Manufacturing",
+    "title": "Tooling trial buffer prevented SOP slip",
+    "description": "Building a two-week buffer after the first tooling trial absorbed a dimensional correction without impacting the SOP date.",
+    "recommendation": "Standardize a tooling trial buffer in the master schedule template.",
+    "submittedByUserId": "USR-0002",
+    "submittedDate": "2026-07-10"
+  }
+]

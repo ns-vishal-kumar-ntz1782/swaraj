@@ -1,0 +1,454 @@
+{
+  "rolesCatalog": [
+    {
+      "key": "CEO",
+      "label": "CEO",
+      "description": "Executive-level access to all portfolio and compliance dashboards."
+    },
+    {
+      "key": "PMO",
+      "label": "PMO Manager",
+      "description": "Manages project portfolio tracking, budgets, and compliance reporting."
+    },
+    {
+      "key": "RD",
+      "label": "R&D Head",
+      "description": "Oversees product development stage-gates and technical risk."
+    },
+    {
+      "key": "SA",
+      "label": "Super Admin",
+      "description": "Full system access, including user and role management."
+    }
+  ],
+  "pagesCatalog": [
+    {
+      "key": "dashboard",
+      "label": "Dashboard",
+      "path": "index.html"
+    },
+    {
+      "key": "portfolio-tracker",
+      "label": "Portfolio Tracker",
+      "path": "pages/portfolio-tracker/index.html"
+    },
+    {
+      "key": "overall-budget",
+      "label": "Overall Budget",
+      "path": "pages/overall-budget/index.html"
+    },
+    {
+      "key": "admin-console",
+      "label": "Admin Console",
+      "path": "pages/admin/index.html"
+    }
+  ],
+  "businessRoles": [
+    "R&D Head",
+    "PMO Manager",
+    "CEO",
+    "Finance Manager",
+    "System Administrator",
+    "Engineer"
+  ],
+  "allMenus": [
+    "gate-master",
+    "gates",
+    "deliverables",
+    "forms",
+    "project-templates",
+    "projects",
+    "users",
+    "rbac-admin",
+    "audit",
+    "actions"
+  ],
+  "extraPages": {
+    "form-builder": {
+      "parentMenu": "forms",
+      "requiresButton": "form.builder.use"
+    }
+  },
+  "adminMenuIds": [
+    "project-templates",
+    "gate-master",
+    "users",
+    "rbac-admin"
+  ],
+  "allWidgets": [
+    "healthWidget",
+    "classificationWidget",
+    "complianceStatusWidget",
+    "complianceRateWidget"
+  ],
+  "widgetLabels": {
+    "healthWidget": "Overall Project Health",
+    "classificationWidget": "Project Classification vs Stage Mapping",
+    "complianceStatusWidget": "Process Compliance Status",
+    "complianceRateWidget": "Process Compliance Rate"
+  },
+  "allPdTabs": [
+    "snapshot",
+    "pre-ko",
+    "deliverables",
+    "gate-checklist",
+    "approvals",
+    "action-register",
+    "gantt"
+  ],
+  "pdTabLabels": {
+    "snapshot": "Snapshot & Timeline",
+    "pre-ko": "Pre-KO (Product Requirement Form)",
+    "deliverables": "Deliverables (incl. linked forms)",
+    "gate-checklist": "Gate Checklist (gate drill-down)",
+    "approvals": "Approvals",
+    "gantt": "Gantt Chart",
+    "action-register": "Action Register (linked to Admin's master list)"
+  },
+  "buttonGroups": {
+    "Gate Master": [
+      "gatemaster.manage"
+    ],
+    "Projects": [
+      "project.manage"
+    ],
+    "Deliverable Library": [
+      "deliverable.create",
+      "deliverable.edit",
+      "deliverable.complete",
+      "deliverable.library.manage",
+      "deliverable.import",
+      "deliverable.export"
+    ],
+    "Forms Library / Builder": [
+      "form.library.manage",
+      "form.builder.use",
+      "form.duplicate",
+      "form.archive",
+      "form.export",
+      "form.submission.approve",
+      "form.submission.fill"
+    ],
+    "Action Register": [
+      "action.manage",
+      "action.export"
+    ],
+    "Users & Roles": [
+      "orguser.manage",
+      "orgrole.manage",
+      "user.manage",
+      "role.manage"
+    ],
+    "RBAC": [
+      "rbac.manage"
+    ],
+    "Activity Log": [
+      "audit.export"
+    ]
+  },
+  "allButtons": [
+    "gatechecklisttpl.manage",
+    "projecttemplate.manage",
+    "gatemaster.manage",
+    "project.manage",
+    "deliverable.create",
+    "deliverable.edit",
+    "deliverable.complete",
+    "deliverable.library.manage",
+    "deliverable.import",
+    "deliverable.export",
+    "form.library.manage",
+    "form.builder.use",
+    "form.duplicate",
+    "form.archive",
+    "form.export",
+    "form.submission.approve",
+    "form.submission.fill",
+    "action.manage",
+    "action.export",
+    "orguser.manage",
+    "orgrole.manage",
+    "user.manage",
+    "role.manage",
+    "rbac.manage",
+    "audit.export"
+  ],
+  "menuLabels": {
+    "gates": "Gate Checklist",
+    "project-templates": "Project Templates",
+    "projects": "Projects",
+    "gate-master": "Gate Master",
+    "deliverables": "Deliverable Library",
+    "forms": "Forms Library",
+    "form-builder": "Form Builder",
+    "actions": "Action Register",
+    "audit": "Activity Log",
+    "users": "Users & Roles",
+    "rbac-admin": "RBAC Matrix"
+  },
+  "buttonLabels": {
+    "gatechecklisttpl.manage": "Manage Gate Checklist Templates (master) \u2014 admin-only, not role-configurable",
+    "projecttemplate.manage": "Manage Project Templates (master) \u2014 admin-only, not role-configurable",
+    "gatemaster.manage": "Manage Gate Master (master)",
+    "project.manage": "Create / Clone / Archive Projects",
+    "deliverable.create": "Create Deliverable",
+    "deliverable.edit": "Edit Deliverable",
+    "deliverable.complete": "Complete Deliverable (owner)",
+    "deliverable.library.manage": "Manage Deliverable Library (import/link)",
+    "deliverable.import": "Bulk Import Deliverables",
+    "deliverable.export": "Export Deliverable Library",
+    "form.library.manage": "Manage Forms Library (import/archive)",
+    "form.builder.use": "Use Form Builder",
+    "form.duplicate": "Duplicate Form",
+    "form.archive": "Archive / Unarchive Form",
+    "form.export": "Export Forms Library",
+    "form.submission.approve": "Approve Form Submission",
+    "form.submission.fill": "Fill / Submit Form",
+    "action.manage": "Manage Action Items",
+    "action.export": "Export Action Register",
+    "orguser.manage": "Manage Enterprise Users",
+    "orgrole.manage": "Manage Enterprise Roles",
+    "user.manage": "Manage Console Login Accounts",
+    "role.manage": "Manage Console Permission Roles (create/rename/delete)",
+    "rbac.manage": "Manage RBAC Matrix",
+    "audit.export": "Export Activity Log"
+  },
+  "defaultMatrix": {
+    "System Administrator": {
+      "menus": [
+        "gate-master",
+        "gates",
+        "deliverables",
+        "forms",
+        "project-templates",
+        "projects",
+        "users",
+        "rbac-admin",
+        "audit",
+        "actions"
+      ],
+      "outerPages": [
+        "dashboard",
+        "portfolio-tracker",
+        "overall-budget",
+        "admin-console"
+      ],
+      "widgets": [
+        "healthWidget",
+        "classificationWidget",
+        "complianceStatusWidget",
+        "complianceRateWidget"
+      ],
+      "pdTabs": [
+        "snapshot",
+        "pre-ko",
+        "deliverables",
+        "gate-checklist",
+        "approvals",
+        "action-register",
+        "gantt"
+      ],
+      "buttons": [
+        "gatechecklisttpl.manage",
+        "projecttemplate.manage",
+        "gatemaster.manage",
+        "project.manage",
+        "deliverable.create",
+        "deliverable.edit",
+        "deliverable.complete",
+        "deliverable.library.manage",
+        "deliverable.import",
+        "deliverable.export",
+        "form.library.manage",
+        "form.builder.use",
+        "form.duplicate",
+        "form.archive",
+        "form.export",
+        "form.submission.approve",
+        "form.submission.fill",
+        "action.manage",
+        "action.export",
+        "orguser.manage",
+        "orgrole.manage",
+        "user.manage",
+        "role.manage",
+        "rbac.manage",
+        "audit.export"
+      ]
+    },
+    "CEO": {
+      "menus": [
+        "gates",
+        "deliverables",
+        "forms",
+        "projects",
+        "actions",
+        "audit"
+      ],
+      "outerPages": [
+        "dashboard",
+        "portfolio-tracker",
+        "overall-budget"
+      ],
+      "widgets": [
+        "healthWidget",
+        "classificationWidget",
+        "complianceStatusWidget",
+        "complianceRateWidget"
+      ],
+      "pdTabs": [
+        "snapshot",
+        "pre-ko",
+        "deliverables",
+        "gate-checklist",
+        "approvals",
+        "action-register",
+        "gantt"
+      ],
+      "buttons": [
+        "form.submission.approve"
+      ]
+    },
+    "R&D Head": {
+      "menus": [
+        "gates",
+        "deliverables",
+        "forms",
+        "projects",
+        "actions",
+        "audit"
+      ],
+      "outerPages": [
+        "dashboard",
+        "portfolio-tracker"
+      ],
+      "widgets": [
+        "healthWidget",
+        "classificationWidget",
+        "complianceStatusWidget",
+        "complianceRateWidget"
+      ],
+      "pdTabs": [
+        "snapshot",
+        "pre-ko",
+        "deliverables",
+        "gate-checklist",
+        "approvals",
+        "action-register",
+        "gantt"
+      ],
+      "buttons": [
+        "deliverable.edit",
+        "deliverable.complete",
+        "form.submission.approve",
+        "form.submission.fill",
+        "action.manage"
+      ]
+    },
+    "PMO Manager": {
+      "menus": [
+        "gates",
+        "deliverables",
+        "forms",
+        "projects",
+        "actions",
+        "audit"
+      ],
+      "outerPages": [
+        "dashboard",
+        "portfolio-tracker",
+        "overall-budget"
+      ],
+      "widgets": [
+        "healthWidget",
+        "classificationWidget",
+        "complianceStatusWidget",
+        "complianceRateWidget"
+      ],
+      "pdTabs": [
+        "snapshot",
+        "pre-ko",
+        "deliverables",
+        "gate-checklist",
+        "approvals",
+        "action-register",
+        "gantt"
+      ],
+      "buttons": [
+        "deliverable.create",
+        "deliverable.edit",
+        "form.builder.use",
+        "form.submission.approve",
+        "form.submission.fill",
+        "action.manage",
+        "project.manage"
+      ]
+    },
+    "Finance Manager": {
+      "menus": [
+        "gates",
+        "deliverables",
+        "forms",
+        "projects",
+        "actions",
+        "audit"
+      ],
+      "outerPages": [
+        "dashboard",
+        "portfolio-tracker",
+        "overall-budget"
+      ],
+      "widgets": [
+        "healthWidget",
+        "classificationWidget",
+        "complianceStatusWidget",
+        "complianceRateWidget"
+      ],
+      "pdTabs": [
+        "snapshot",
+        "pre-ko",
+        "deliverables",
+        "gate-checklist",
+        "approvals",
+        "action-register",
+        "gantt"
+      ],
+      "buttons": [
+        "form.submission.approve",
+        "form.submission.fill",
+        "action.manage"
+      ]
+    },
+    "Engineer": {
+      "menus": [
+        "gates",
+        "deliverables",
+        "forms",
+        "projects",
+        "actions"
+      ],
+      "outerPages": [
+        "dashboard"
+      ],
+      "widgets": [
+        "healthWidget",
+        "classificationWidget",
+        "complianceStatusWidget",
+        "complianceRateWidget"
+      ],
+      "pdTabs": [
+        "snapshot",
+        "pre-ko",
+        "deliverables",
+        "gate-checklist",
+        "action-register",
+        "gantt"
+      ],
+      "buttons": [
+        "deliverable.complete",
+        "form.submission.fill",
+        "action.manage"
+      ]
+    }
+  }
+}

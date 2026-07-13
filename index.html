@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/styles.css" />
-  <script src="assets/js/mockData.js"></script>
+  <script src="assets/js/data/app-config.js"></script>
   <script src="assets/js/auth.js"></script>
   <script>guardPage("dashboard");</script>
 </head>
@@ -33,7 +33,7 @@
           <div class="widget-header">
             <div class="title-block">
               <h2>Overall Project Health</h2>
-              <p>As on 07 Jul 2026</p>
+              <p id="healthAsOf">As on 07 Jul 2026</p>
             </div>
             <div class="widget-icons">
               <button class="widget-icon-btn expand-btn" data-target="healthWidget" type="button" title="Expand">
@@ -53,11 +53,11 @@
               <span class="seg-val" id="segTotalVal">15</span>
             </button>
             <button class="seg-bb" id="segBB" type="button">
-              <span class="seg-label">BB</span>
+              <span class="seg-label">Block Buster:</span>
               <span class="seg-val" id="segBBVal">9</span>
             </button>
             <button class="seg-nbb" id="segNBB" type="button">
-              <span class="seg-label">N-BB</span>
+              <span class="seg-label">Non-Block Buster:</span>
               <span class="seg-val" id="segNBBVal">6</span>
             </button>
           </div>
@@ -66,13 +66,6 @@
           <div class="health-chart-area">
             <canvas id="overallHealthChart"></canvas>
           </div>
-
-          <!-- Footer -->
-          <div class="health-footer">
-            <span id="healthFooterTotal">Total Projects: 15</span>
-            <span id="healthFooterUpdated">Last updated: 07 Jul 2026</span>
-          </div>
-
         </article>
 
         <!-- WIDGET 2: Project Classification VS Stage Mapping -->
@@ -81,8 +74,8 @@
           <!-- Header -->
           <div class="widget-header">
             <div class="title-block">
-              <h2>Project Classification VS Stage Mapping</h2>
-              <p>As on 07 Jul 2026</p>
+              <h2>Project Classification Stage Mapping &amp; Gate Status</h2>
+              <p id="classificationAsOf">As on 07 Jul 2026</p>
             </div>
             <div class="widget-icons">
               <button class="widget-icon-btn expand-btn" data-target="classificationWidget" type="button" title="Expand">
@@ -94,49 +87,6 @@
               </button>
             </div>
           </div>
-
-          <!-- Mini donuts -->
-          <div class="classification-donuts">
-            <div class="mini-donut-col" data-type="M2" id="donutM2">
-              <div class="donut-labels" id="donutM2Left">
-                <span class="bb-txt">BB - 04</span>
-                <span class="nbb-txt">N-BB - 00</span>
-              </div>
-              <div class="donut-canvas-wrap">
-                <canvas id="typeM2Chart" width="80" height="80"></canvas>
-                <div class="donut-center-label">
-                  <span class="dc-label" id="dcM2">M2<br>4</span>
-                </div>
-              </div>
-            </div>
-            <div class="mini-donut-col" data-type="M4" id="donutM4">
-              <div class="donut-labels" id="donutM4Left">
-                <span class="bb-txt">BB - 15</span>
-                <span class="nbb-txt">N-BB - 02</span>
-              </div>
-              <div class="donut-canvas-wrap">
-                <canvas id="typeM4Chart" width="80" height="80"></canvas>
-                <div class="donut-center-label">
-                  <span class="dc-label" id="dcM4">M4<br>7</span>
-                </div>
-              </div>
-            </div>
-            <div class="mini-donut-col" data-type="M6" id="donutM6">
-              <div class="donut-labels" id="donutM6Left">
-                <span class="bb-txt">BB - 02</span>
-                <span class="nbb-txt">N-BB - 02</span>
-              </div>
-              <div class="donut-canvas-wrap">
-                <canvas id="typeM6Chart" width="80" height="80"></canvas>
-                <div class="donut-center-label">
-                  <span class="dc-label" id="dcM6">M6<br>4</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Separator -->
-          <div class="classif-separator"></div>
 
           <!-- Classification × Stage table -->
           <div class="classification-table-wrap">
@@ -190,6 +140,48 @@
             </table>
           </div>
 
+          <!-- Separator -->
+          <div class="classif-separator"></div>
+
+          <!-- Gate Status rings — Planned vs Actual per quarter. A/P counts render INSIDE the
+               ring (populated by buildGateStatusRing in dashboard.js); the quarter label sits
+               outside, to the right. -->
+          <div class="gate-status-rings">
+            <div class="gate-ring-col" data-quarter="Q1" id="gateRingQ1">
+              <div class="gate-ring-canvas-wrap">
+                <canvas id="gateRingQ1Chart" width="64" height="64"></canvas>
+                <div class="gate-ring-center" id="gateRingQ1Left"><span class="a-label">A - 0</span><span class="pa-divider"></span><span class="p-label">P - 0</span></div>
+              </div>
+              <span class="gate-ring-qlabel">Q1</span>
+            </div>
+            <div class="gate-ring-col" data-quarter="Q2" id="gateRingQ2">
+              <div class="gate-ring-canvas-wrap">
+                <canvas id="gateRingQ2Chart" width="64" height="64"></canvas>
+                <div class="gate-ring-center" id="gateRingQ2Left"><span class="a-label">A - 0</span><span class="pa-divider"></span><span class="p-label">P - 0</span></div>
+              </div>
+              <span class="gate-ring-qlabel">Q2</span>
+            </div>
+            <div class="gate-ring-col" data-quarter="Q3" id="gateRingQ3">
+              <div class="gate-ring-canvas-wrap">
+                <canvas id="gateRingQ3Chart" width="64" height="64"></canvas>
+                <div class="gate-ring-center" id="gateRingQ3Left"><span class="a-label">A - 0</span><span class="pa-divider"></span><span class="p-label">P - 0</span></div>
+              </div>
+              <span class="gate-ring-qlabel">Q3</span>
+            </div>
+            <div class="gate-ring-col" data-quarter="Q4" id="gateRingQ4">
+              <div class="gate-ring-canvas-wrap">
+                <canvas id="gateRingQ4Chart" width="64" height="64"></canvas>
+                <div class="gate-ring-center" id="gateRingQ4Left"><span class="a-label">A - 0</span><span class="pa-divider"></span><span class="p-label">P - 0</span></div>
+              </div>
+              <span class="gate-ring-qlabel">Q4</span>
+            </div>
+          </div>
+          <div class="gate-status-legend">
+            <span>Gate Status: 2026-2027</span>
+            <span class="legend-key" data-series="planned"><span class="legend-swatch sw-planned"></span>Planned</span>
+            <span class="legend-key" data-series="actual"><span class="legend-swatch sw-actual"></span>Actual</span>
+          </div>
+
         </article>
       </section>
 
@@ -228,7 +220,7 @@
           <div class="widget-header">
             <div class="title-block">
               <h2>Process Compliance Status</h2>
-              <p>As on 07 Jul 2026</p>
+              <p id="complianceStatusAsOf">As on 07 Jul 2026</p>
             </div>
             <div class="widget-icons">
               <button class="widget-icon-btn expand-btn" data-target="complianceStatusWidget" type="button" title="Expand">
@@ -250,7 +242,7 @@
           <div class="widget-header">
             <div class="title-block">
               <h2>Process Compliance Rate</h2>
-              <p>As on 07 Jul 2026</p>
+              <p id="complianceRateAsOf">As on 07 Jul 2026</p>
             </div>
             <div class="widget-icons">
               <button class="widget-icon-btn expand-btn" data-target="complianceRateWidget" type="button" title="Expand">
@@ -303,6 +295,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 <script src="assets/js/shared.js"></script>
-<script src="assets/js/script.js"></script>
+<script src="assets/js/dashboard.js"></script>
 </body>
 </html>

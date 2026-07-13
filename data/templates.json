@@ -1,0 +1,11 @@
+{
+  "gateCodes": ["Pre-KO", "CVPA", "VV", "PC", "PR", "PPO"],
+  "gateNames": {
+    "Pre-KO": "Pre-Kickoff",
+    "CVPA": "Concept & Vehicle Program Approval",
+    "VV": "Virtual Validation",
+    "PC": "Prototype Certification",
+    "PR": "Production Readiness",
+    "PPO": "Post Production Optimization"
+  }
+}

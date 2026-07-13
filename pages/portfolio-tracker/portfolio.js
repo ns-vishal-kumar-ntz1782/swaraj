@@ -45,22 +45,24 @@
   const STAGES = ["Pre-KO","CVPA","VV","PC","PR","PPO","SOP"];
 
   // ── Build KPI row from mock data ──────────────────────────────
-  function buildKpi(projects) {
-    const total  = projects.length;
-    const m6     = projects.filter(p => p.category === "M6").length;
-    const m4     = projects.filter(p => p.category === "M4").length;
-    const m2     = projects.filter(p => p.category === "M2").length;
-    const atRisk = projects.filter(p => p.rygStatus !== "Green").length;
-    const crit   = projects.filter(p => p.priority === "Critical").length;
+  function loadKpiCardConfig() {
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", APP_ROOT + "data/portfolio.json", false);
+    xhr.send(null);
+    return JSON.parse(xhr.responseText).kpiCards;
+  }
 
-    const cards = [
-      { num: total, label: "TOTAL PROGRAMS", delta: "▲ 2", up: true, accent: "#006a4e", numColor: "#334155", alert: false },
-      { num: m6,    label: "M6 - NEW",        delta: "▲ 1", up: true,  accent: "#3b82f6", numColor: "#1e40af", alert: false },
-      { num: m4,    label: "M4 - MAJOR",      delta: "▲ 1", up: true,  accent: "#60a5fa", numColor: "#1d4ed8", alert: false },
-      { num: m2,    label: "M2 - MINOR",      delta: "▼ 1", up: false, accent: "#2dd4bf", numColor: "#334155", alert: false },
-      { num: atRisk, label: "AT RISK",         delta: "▲ 1", up: false, accent: "#f97316", numColor: "#ea580c", alert: true },
-      { num: crit,  label: "CRITICAL",         delta: "▲ 1", up: false, accent: "#dc2626", numColor: "#b91c1c", alert: true },
-    ];
+  function buildKpi(projects) {
+    const metrics = {
+      total:  projects.length,
+      m6:     projects.filter(p => p.category === "M6").length,
+      m4:     projects.filter(p => p.category === "M4").length,
+      m2:     projects.filter(p => p.category === "M2").length,
+      atRisk: projects.filter(p => p.rygStatus !== "Green").length,
+      crit:   projects.filter(p => p.priority === "Critical").length,
+    };
+
+    const cards = loadKpiCardConfig().map(c => ({ ...c, num: metrics[c.metric] }));
 
     return cards.map(c => `
       <div class="pt-kpi-card${c.alert ? " alert" : ""}">
@@ -140,7 +142,7 @@
     const approvedDate = approvedGate ? approvedGate.actual : null;
 
     return `
-      <div class="pt-proj-card" data-project="${esc(proj.projectName)}" title="${esc(proj.projectName)} — ${esc(proj.vehicleSeries)}">
+      <div class="pt-proj-card" data-project="${esc(proj.projectCode)}" title="${esc(proj.projectName)} — ${esc(proj.vehicleSeries)}">
         <div class="pt-proj-card-header">
           <div class="pt-proj-card-name">${esc(proj.projectName)}</div>
           <div class="pt-proj-card-priority" style="background:${pColor}" title="Priority: ${esc(proj.priority)}">P</div>
@@ -248,8 +250,8 @@
       // Card click → navigate to project detail
       matrixEl && matrixEl.querySelectorAll(".pt-proj-card").forEach(card => {
         card.addEventListener("click", () => {
-          const name = card.dataset.project;
-          if (name) window.location.href = `../../project-detail.html?id=${encodeURIComponent(name)}`;
+          const code = card.dataset.project;
+          if (code) window.location.href = `../project-detail/index.html?id=${encodeURIComponent(code)}`;
         });
       });
     }

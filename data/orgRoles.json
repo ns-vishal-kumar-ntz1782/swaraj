@@ -1,0 +1,186 @@
+[
+  {
+    "id": "ROLE-01",
+    "code": "CEO",
+    "name": "CEO",
+    "department": "Corporate Strategy",
+    "hierarchyLevel": 1,
+    "description": "Chief Executive Officer — overall accountability for the business."
+  },
+  {
+    "id": "ROLE-02",
+    "code": "CTO",
+    "name": "CTO",
+    "department": "R&D",
+    "hierarchyLevel": 1,
+    "description": "Chief Technology Officer — owns engineering and product technology direction."
+  },
+  {
+    "id": "ROLE-03",
+    "code": "PGD",
+    "name": "Program Director",
+    "department": "PMO",
+    "hierarchyLevel": 2,
+    "description": "Owns the full program portfolio and gate governance."
+  },
+  {
+    "id": "ROLE-04",
+    "code": "PMO",
+    "name": "PMO",
+    "department": "PMO",
+    "hierarchyLevel": 3,
+    "description": "Runs day-to-day program management office operations for assigned projects."
+  },
+  {
+    "id": "ROLE-05",
+    "code": "PM",
+    "name": "Project Manager",
+    "department": "PMO",
+    "hierarchyLevel": 3,
+    "description": "Owns delivery of a single project end-to-end."
+  },
+  {
+    "id": "ROLE-06",
+    "code": "EM",
+    "name": "Engineering Manager",
+    "department": "R&D",
+    "hierarchyLevel": 2,
+    "description": "Leads an engineering discipline team and its technical deliverables."
+  },
+  {
+    "id": "ROLE-07",
+    "code": "MECHE",
+    "name": "Mechanical Engineer",
+    "department": "Mechanical Engineering",
+    "hierarchyLevel": 5,
+    "description": "Designs and releases mechanical systems and components."
+  },
+  {
+    "id": "ROLE-08",
+    "code": "ELECE",
+    "name": "Electrical Engineer",
+    "department": "Electrical Engineering",
+    "hierarchyLevel": 5,
+    "description": "Designs vehicle electrical architecture and wiring systems."
+  },
+  {
+    "id": "ROLE-09",
+    "code": "MFGE",
+    "name": "Manufacturing Engineer",
+    "department": "Manufacturing",
+    "hierarchyLevel": 5,
+    "description": "Plans and industrializes the production process."
+  },
+  {
+    "id": "ROLE-10",
+    "code": "SQE",
+    "name": "Supplier Quality Engineer",
+    "department": "Supplier Quality",
+    "hierarchyLevel": 5,
+    "description": "Manages supplier PPAP, audits and quality escalations."
+  },
+  {
+    "id": "ROLE-11",
+    "code": "TSTE",
+    "name": "Testing Engineer",
+    "department": "Testing",
+    "hierarchyLevel": 5,
+    "description": "Executes physical test campaigns and reports results."
+  },
+  {
+    "id": "ROLE-12",
+    "code": "VALE",
+    "name": "Validation Engineer",
+    "department": "Validation",
+    "hierarchyLevel": 5,
+    "description": "Runs CAE/simulation validation against design requirements."
+  },
+  {
+    "id": "ROLE-13",
+    "code": "FINC",
+    "name": "Finance Controller",
+    "department": "Finance",
+    "hierarchyLevel": 2,
+    "description": "Owns program budget control and financial reporting."
+  },
+  {
+    "id": "ROLE-14",
+    "code": "PROCL",
+    "name": "Procurement Lead",
+    "department": "Procurement",
+    "hierarchyLevel": 3,
+    "description": "Leads sourcing and supplier commercial negotiations."
+  },
+  {
+    "id": "ROLE-15",
+    "code": "QH",
+    "name": "Quality Head",
+    "department": "Quality Assurance",
+    "hierarchyLevel": 2,
+    "description": "Owns the program's overall quality system and gate quality sign-off."
+  },
+  {
+    "id": "ROLE-16",
+    "code": "DE",
+    "name": "Design Engineer",
+    "department": "R&D",
+    "hierarchyLevel": 5,
+    "description": "Owns concept and detail design for assigned systems."
+  },
+  {
+    "id": "ROLE-17",
+    "code": "PE",
+    "name": "Prototype Engineer",
+    "department": "Manufacturing",
+    "hierarchyLevel": 5,
+    "description": "Builds and instruments validation-prototype units."
+  },
+  {
+    "id": "ROLE-18",
+    "code": "DC",
+    "name": "Document Controller",
+    "department": "PMO",
+    "hierarchyLevel": 6,
+    "description": "Maintains gate documentation, drawing and revision control."
+  },
+  {
+    "id": "ROLE-19",
+    "code": "HRM",
+    "name": "HR Manager",
+    "department": "HR",
+    "hierarchyLevel": 2,
+    "description": "Owns workforce planning and employee relations for the business unit."
+  },
+  {
+    "id": "ROLE-20",
+    "code": "LGC",
+    "name": "Legal Counsel",
+    "department": "Legal",
+    "hierarchyLevel": 2,
+    "description": "Provides contracts and regulatory compliance support."
+  },
+  {
+    "id": "ROLE-21",
+    "code": "ITM",
+    "name": "IT Manager",
+    "department": "IT",
+    "hierarchyLevel": 2,
+    "description": "Owns engineering IT systems, PLM and infrastructure."
+  },
+  {
+    "id": "ROLE-22",
+    "code": "MKTM",
+    "name": "Marketing Manager",
+    "department": "Marketing",
+    "hierarchyLevel": 2,
+    "description": "Owns market research and go-to-market planning."
+  },
+  {
+    "id": "ROLE-23",
+    "code": "COMM",
+    "name": "Commercial Manager",
+    "department": "Commercial",
+    "hierarchyLevel": 2,
+    "description": "Owns program business case and commercial planning."
+  }
+]

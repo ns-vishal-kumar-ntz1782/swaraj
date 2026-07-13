@@ -1,0 +1,387 @@
+/* ═══════════════════════════════════════════
+   DASHBOARD — everything specific to index.html's widget canvas (health, classification,
+   compliance widgets, drill-down panel, badges, fullscreen). Extracted from styles.css
+   verbatim — no values changed. Nothing outside index.html uses these selectors.
+═══════════════════════════════════════════ */
+.dashboard { width: 1440px; min-height: 712px; background: var(--bg); transform-origin: top center; }
+
+/* ═══════════════════════════════════════════
+   MAIN CONTENT — Figma: padding top 10px, rows gap 10px
+═══════════════════════════════════════════ */
+.main-content {
+  width: 100%; padding: var(--space-10) var(--space-20) var(--space-10);
+  display: flex; flex-direction: column; gap: var(--space-10);
+}
+.row { display: flex; gap: var(--space-20); width: 100%; }
+
+/* ═══════════════════════════════════════════
+   WIDGET BASE — Figma: bg white, border-radius 10px,
+   shadow 0px 1px 2px rgba(0,0,0,0.08), padding 20px, gap 16px
+═══════════════════════════════════════════ */
+.widget {
+  flex: 1; min-width: 0; background: var(--panel);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-1);
+  padding: var(--space-20); display: flex; flex-direction: column; gap: 0;
+  overflow: hidden;
+  transition: var(--transition-3);
+}
+.widget.widget-active {
+  outline: 2px solid var(--dd-border);
+  box-shadow: var(--shadow-2);
+}
+
+/* Widget heights from Figma: 341px each */
+.widget-health           { height: 360px; }
+.widget-classification   { height: 360px; }
+.widget-compliance-status{ height: 360px; }
+.widget-compliance-rate  { height: 360px; }
+
+/* ── Widget header — Figma: h 55px, items spaced, px 20px ── */
+.widget-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding-bottom: var(--space-10); flex-shrink: 0;
+}
+/* Title: 16px bold #1f2937 + subtitle 10px #666, gap 4px */
+.title-block h2 { margin: 0; font-size: var(--fs-16); font-weight: var(--fw-700); color: var(--title); line-height: 1.3; }
+.title-block p  { margin: var(--space-4) 0 0; font-size: var(--fs-10); color: var(--muted); }
+/* Icon buttons — 24px, gap 14px */
+.widget-icons { display: flex; gap: var(--space-14); align-items: center; }
+.widget-icon-btn {
+  border: 0; background: transparent; color: var(--color-slate-700);
+  width: 24px; height: 24px; display: grid; place-items: center;
+  cursor: pointer; padding: 0; flex-shrink: 0;
+}
+.widget-icon-btn:hover { color: var(--navy); }
+.widget-icon-btn svg { pointer-events: none; }
+.expand-btn .icon-compress { display: none; }
+.widget-fullscreen .expand-btn .icon-expand  { display: none; }
+.widget-fullscreen .expand-btn .icon-compress{ display: block; }
+.drag-handle { cursor: grab; }
+.drag-handle:active { cursor: grabbing; }
+.widget-fullscreen .drag-handle { display: none; }
+.widget.dragging     { opacity: .45; }
+.widget.drag-over-before { box-shadow: inset 4px 0 0 0 var(--brand-blue); }
+.widget.drag-over-after  { box-shadow: inset -4px 0 0 0 var(--brand-blue); }
+
+/* ═══════════════════════════════════════════
+   WIDGET 1: OVERALL PROJECT HEALTH
+   Figma: KPI seg bar + bar chart + footer
+═══════════════════════════════════════════ */
+
+/* Seg bar — Figma: bordered container #b6c6dc, 3 fixed-width segments (157/296/197 = 650px) */
+.health-seg-bar {
+  display: flex; align-items: stretch;
+  border: 1px solid #b6c6dc; border-radius: var(--radius-0);
+  overflow: hidden; height: 38px; flex-shrink: 0; margin-bottom: var(--space-12);
+}
+.seg-total {
+  background: var(--color-slate-200); width: 157px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; gap: var(--space-10);
+  border: 0; cursor: pointer; font-family: inherit;
+}
+.seg-bb {
+  background: var(--navy); width: 296px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; gap: var(--space-10);
+  border: 0; cursor: pointer; font-family: inherit;
+}
+.seg-nbb {
+  background: var(--teal); width: 197px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; gap: var(--space-10);
+  border: 0; cursor: pointer; font-family: inherit;
+}
+/* Figma: label 14px semi-bold, value 22px bold */
+.seg-label { font-size: var(--fs-14); font-weight: var(--fw-600); color: var(--navy); }
+.seg-bb .seg-label, .seg-nbb .seg-label { color: var(--panel); }
+.seg-val { font-size: var(--fs-22); font-weight: var(--fw-700); color: var(--navy); line-height: 1; }
+.seg-bb .seg-val, .seg-nbb .seg-val { color: var(--panel); }
+
+/* Chart area */
+.health-chart-area { flex: 1; min-height: 0; cursor: pointer; overflow: hidden; }
+.health-chart-area canvas { display: block; width: 100% !important; height: 100% !important; }
+
+/* Footer — Figma: 12px regular #666, flex space-between, padding 16px */
+.health-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: var(--fs-12); color: var(--muted); padding-top: var(--space-12); flex-shrink: 0;
+  border-top: 0;
+}
+
+/* ═══════════════════════════════════════════
+   WIDGET 2: PROJECT CLASSIFICATION STAGE MAPPING & GATE STATUS
+   Figma: table + separator + 4 "GATES Qn" progress rings (Planned/Actual)
+═══════════════════════════════════════════ */
+/* Legacy mini-donut classes (bb-txt/nbb-txt/dc-label) stay defined — still reused by the
+   Gate-status rings below (same visual language: right-aligned P/A labels + centered value). */
+.bb-txt  { font-size: var(--fs-12); font-weight: var(--fw-700); color: var(--navy); white-space: nowrap; }
+.nbb-txt { font-size: var(--fs-12); font-weight: var(--fw-700); color: var(--teal); white-space: nowrap; }
+.dc-label {
+  font-size: var(--fs-16); font-weight: var(--fw-700); color: var(--title); line-height: 1.2;
+  text-align: center;
+}
+
+/* Separator */
+.classif-separator { background: var(--border); margin-bottom: var(--space-10); flex-shrink: 0; }
+
+/* Gate-status rings row — 4 columns (Q1-Q4), each a small Planned/Actual progress ring +
+   "P-xx / A-xx" labels, matching Figma's donut-m2/m4/m6-style rings repurposed per-quarter. */
+.gate-status-rings { display: flex; justify-content: space-around; align-items: center; padding: var(--space-6) 0; flex-shrink: 0; }
+.gate-ring-col { display: flex; align-items: center; gap: var(--space-10); cursor: pointer; }
+.gate-ring-canvas-wrap { position: relative; width: 64px; height: 64px; flex-shrink: 0; }
+.gate-ring-canvas-wrap canvas { display: block; width: 64px !important; height: 64px !important; }
+/* A-xx / P-xx render INSIDE the ring, centered in the doughnut's cutout hole, separated by a
+   short neutral divider rule — the quarter's own Actual/Planned counts, not a static "Gates/Qn"
+   label (that moved outside the ring, see .gate-ring-qlabel below). */
+.gate-ring-center {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  pointer-events: none; text-align: center; line-height: 1.15; gap: 1px;
+}
+.gate-ring-center .a-label { font-size: var(--fs-9); font-weight: var(--fw-800); color: var(--teal); }
+.gate-ring-center .p-label { font-size: var(--fs-9); font-weight: var(--fw-800); color: var(--navy); }
+.gate-ring-center .a-label.muted, .gate-ring-center .p-label.muted { color: var(--color-slate-530); }
+.gate-ring-center .pa-divider { width: 16px; height: 1px; background: var(--color-slate-380); margin: 1px 0; }
+.gate-ring-qlabel { font-size: var(--fs-15); font-weight: var(--fw-800); color: var(--title); }
+.gate-status-legend { display: flex; gap: var(--space-20); align-items: center; justify-content: center; font-size: var(--fs-11); font-weight: var(--fw-500); color: var(--muted); padding-top: var(--space-6); flex-shrink: 0; }
+.gate-status-legend .legend-swatch { width: 11px; height: 11px; border-radius: 2px; display: inline-block; margin-right: var(--space-6); vertical-align: -1px; }
+.gate-status-legend .sw-planned { background: var(--navy); }
+.gate-status-legend .sw-actual  { background: var(--teal); }
+/* The Planned/Actual legend keys map 1:1 to the two datasets every gate ring already visualizes
+   (there's no separate month/quarter to drill into for a legend key on its own), so clicking a
+   key re-triggers the currently-selected quarter's drill-down — same target, discoverable affordance. */
+.gate-status-legend .legend-key { cursor: pointer; }
+.gate-status-legend .legend-key:hover { color: var(--title); }
+
+/* Table */
+.classification-table-wrap { flex: 1; min-height: 0; overflow: hidden; }
+.classification-table {
+  width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden;
+}
+/* Header: bg #f1f5f9, 12px semi-bold uppercase #1e3a5f */
+.classification-table thead tr { background: var(--color-blue-90); }
+.classification-table th {
+  height: 24px; font-size: var(--fs-10); font-weight: var(--fw-700); color: var(--navy);
+  text-transform: uppercase; border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border); padding: 0 var(--space-6); text-align: center;
+}
+.th-classif { text-align: left; padding-left: var(--space-10); width: 100px; }
+.classification-table th:last-child { border-right: 0; }
+/* Data rows — compact so the table + rings + legend fit the widget's fixed height with no scroll */
+.classification-table td { height: 26px; font-size: var(--fs-11); border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); text-align: center; }
+.classification-table td:last-child { border-right: 0; }
+.classification-table tbody tr:last-child td { border-bottom: 0; }
+/* Odd rows: white, even rows: #f8fafc */
+.tr-odd  { background: var(--panel); }
+.tr-even { background: var(--panel-alt); }
+/* Row label (first col): 12px semi-bold #1f2937 */
+.td-label { text-align: left; padding-left: var(--space-10); font-weight: var(--fw-600); color: var(--title); border-right: 1px solid var(--border); }
+/* Value cells (non-dash): bg #eff6ff, color #1d4ed8, 12px medium */
+.td-val { background: var(--color-blue-50); }
+.td-dash { color: var(--color-blue-580); font-weight: var(--fw-500); }
+/* Row totals: 12px bold #1f2937 */
+.td-total { font-weight: var(--fw-700); color: var(--title); border-right: 0; }
+/* Total row: bg #f1f5f9 */
+.tr-total-row { background: var(--color-blue-90); }
+.td-total-label { text-align: left; padding-left: var(--space-10); font-weight: var(--fw-700); color: var(--navy); border-right: 1px solid var(--border); }
+.td-total-val   { font-weight: var(--fw-700); color: var(--title); }
+.td-total-muted { font-weight: var(--fw-700); color: var(--muted); }
+.td-grand-total { font-weight: var(--fw-700); color: var(--navy); border-right: 0; }
+
+/* Matrix clickable buttons */
+.matrix-btn {
+  border: 0; background: transparent; color: var(--color-blue-580);
+  font-size: var(--fs-11); font-weight: var(--fw-500); cursor: pointer;
+  width: 100%; height: 26px; display: block;
+}
+.matrix-btn:hover { background: var(--color-blue-250); }
+
+/* ═══════════════════════════════════════════
+   WIDGETS 3 & 4: COMPLIANCE STATUS / RATE
+   Chart.js fills the chart area
+═══════════════════════════════════════════ */
+.widget-chart-area { flex: 1; min-height: 0; cursor: pointer; overflow: hidden; }
+.widget-chart-area canvas { display: block; width: 100% !important; height: 100% !important; }
+
+/* ═══════════════════════════════════════════
+   DRILL-DOWN PANEL
+═══════════════════════════════════════════ */
+.drill-down {
+  width: 100%; background: var(--panel); border-radius: var(--radius) var(--radius) 0 0;
+  border: 5px solid var(--dd-border);
+  box-shadow: 0 12px 40px rgba(0,0,0,.15);
+  overflow: hidden; max-height: 0; opacity: 0; pointer-events: none;
+  transition: var(--transition-4);
+}
+.drill-down.open     { max-height: 520px; opacity: 1; pointer-events: auto; }
+.drill-down.dd-expanded { max-height: 700px; }
+.drill-down.dd-expanded .dd-table-wrap { max-height: 440px; }
+.dd-inner { padding: var(--space-16) var(--space-20) var(--space-12); display: flex; flex-direction: column; gap: var(--space-10); }
+.dd-header { display: flex; align-items: flex-start; justify-content: space-between; }
+.dd-filter-label {
+  display: inline-block; background: var(--color-blue-50); color: var(--color-blue-580);
+  border: 1px solid var(--color-blue-380); border-radius: var(--radius-20); padding: var(--space-2) var(--space-10);
+  font-size: var(--fs-11); font-weight: var(--fw-600); margin-bottom: var(--space-4);
+}
+.dd-title-block h3 { margin: 0; font-size: var(--fs-16); font-weight: var(--fw-700); color: var(--title); }
+.dd-title-block p  { margin: var(--space-3) 0 0; font-size: var(--fs-10); color: var(--muted); }
+.dd-header-right { display: flex; align-items: center; gap: var(--space-10); }
+.dd-close-btn, .dd-icon-btn {
+  border: 0; background: var(--color-blue-90); border-radius: var(--radius-sm);
+  width: 28px; height: 28px; font-size: var(--fs-16); cursor: pointer;
+  display: grid; place-items: center; color: var(--color-slate-680); padding: 0;
+}
+.dd-close-btn:hover, .dd-icon-btn:hover { background: var(--color-blue-340); }
+.dd-expand-toggle { font-size: var(--fs-14); }
+.drill-down.dd-expanded .dd-expand-toggle { color: var(--brand-blue); background: var(--color-blue-50); transform: rotate(180deg); }
+.dd-table-wrap {
+  max-height: 260px; overflow: auto;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.dd-table { width: 100%; border-collapse: collapse; }
+.dd-table thead th {
+  position: sticky; top: 0; z-index: 1; height: 40px;
+  background: var(--color-blue-90); border-bottom: 1px solid var(--border);
+  color: var(--muted); font-size: var(--fs-10); font-weight: var(--fw-700); padding: 0 var(--space-12);
+  text-align: left; white-space: nowrap; letter-spacing: .03em; text-transform: uppercase;
+}
+.dd-table tbody td {
+  height: 65px; border-bottom: 1px solid var(--border);
+  font-size: var(--fs-13); color: var(--color-blue-950); padding: 0 var(--space-12); white-space: nowrap;
+}
+/* Figma zebra: white / #f8f9fb, applied via nth-child since rows are plain <tr> with no dd-expand-row siblings anymore */
+.dd-table tbody tr:nth-child(even) td { background: #f8f9fb; }
+.dd-table td.col-project { font-weight: var(--fw-600); }
+.dd-project-link { color: #1565c0; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; font-weight: var(--fw-600); }
+.dd-project-link:hover { color: var(--color-blue-700); }
+.dd-empty { text-align: center !important; padding: var(--space-20) !important; color: var(--color-slate-680); font-style: italic; }
+
+/* Gate / Type pills — flat gray chip, dark slate text */
+.dd-chip { display: inline-block; background: var(--color-blue-90); color: var(--color-blue-950); border-radius: var(--radius-4); padding: var(--space-3) var(--space-8); font-size: var(--fs-12); font-weight: var(--fw-700); }
+/* Classification — BB flat gray, N-BB soft green (reuses the app's existing green-500/teal-950 tokens) */
+.dd-chip-bb  { display: inline-block; background: var(--color-blue-90); color: var(--color-blue-950); border-radius: var(--radius-4); padding: var(--space-3) var(--space-8); font-size: var(--fs-12); font-weight: var(--fw-700); }
+.dd-chip-nbb { display: inline-block; background: var(--color-green-500); color: var(--color-teal-950); border-radius: var(--radius-4); padding: var(--space-3) var(--space-8); font-size: var(--fs-12); font-weight: var(--fw-700); }
+/* Risk score — rounded pill, red (critical/high) or amber (medium) */
+.dd-risk-pill { display: inline-block; border-radius: var(--radius-100); padding: var(--space-4) var(--space-10); font-size: var(--fs-13); font-weight: var(--fw-700); }
+.dd-risk-high { background: var(--color-red-50); color: var(--color-red-750); }
+.dd-risk-med  { background: var(--color-amber-230); color: var(--color-amber-770); }
+.dd-risk-ok   { background: var(--color-green-50); color: var(--color-green-730); }
+/* Delay — colored text only, no pill */
+.dd-delay-high { color: var(--color-red-750); font-weight: var(--fw-600); }
+.dd-delay-med  { color: var(--color-amber-770); font-weight: var(--fw-600); }
+.dd-delay-low  { color: var(--muted); font-weight: var(--fw-600); }
+/* Reason — colored dot + flat text (no expand toggle, matches Figma exactly) */
+.dd-reason-cell { display: inline-flex; align-items: center; gap: var(--space-8); white-space: normal; }
+.dd-reason-dot { width: 12px; height: 12px; border-radius: var(--radius-4); flex-shrink: 0; }
+.dd-reason-dot.dot-high { background: var(--color-red-750); }
+.dd-reason-dot.dot-med  { background: var(--color-amber-770); }
+/* Corrective action — bordered white pill/button (display-only, not interactive) */
+.dd-action-pill { display: inline-block; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-5) var(--space-10); font-size: var(--fs-12); font-weight: var(--fw-600); color: var(--color-blue-950); white-space: normal; }
+/* Status — CRITICAL/HIGH badge, uppercase */
+.dd-status-badge { display: inline-block; border-radius: var(--radius-4); padding: var(--space-3) var(--space-8); font-size: var(--fs-11); font-weight: var(--fw-700); text-transform: uppercase; }
+.dd-status-critical { background: var(--color-red-50); color: var(--color-red-750); }
+.dd-status-high     { background: var(--color-amber-230); color: var(--color-amber-770); }
+.dd-status-ontrack  { background: var(--color-green-50); color: var(--color-green-730); }
+.dd-has-tip { cursor: help; }
+
+/* Shared floating "AI Corrective Actions Summary" card for the Status badge — appended to
+   <body>, positioned "fixed" via JS (see wireRiskTooltip in dashboard.js) so it escapes the
+   drill-down table's own scroll clipping and stays legible regardless of the dashboard's zoom
+   transform. Themed in the app's AI-feature purple (--color-purple-500, same family as the
+   topnav AI button) rather than severity red/amber/green — this card is an AI-generated
+   recommendation, not a status reflection, so it gets its own consistent brand color. */
+.risk-tooltip {
+  position: fixed; z-index: 500; width: 340px;
+  background: var(--panel); color: var(--color-blue-950);
+  border: 2px solid var(--color-purple-500);
+  border-radius: var(--radius-16); padding: var(--space-18) var(--space-20);
+  font-size: var(--fs-13); line-height: 1.5; box-shadow: 0 16px 40px rgba(0,0,0,.18);
+  opacity: 0; transform: translateY(4px); pointer-events: none; transition: opacity .12s, transform .12s;
+}
+.risk-tooltip.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.risk-tooltip .rt-head { display: flex; align-items: center; gap: var(--space-10); padding-bottom: var(--space-12); margin-bottom: var(--space-12); border-bottom: 1px solid var(--border); }
+.risk-tooltip .rt-head-icon {
+  display: grid; place-items: center; flex-shrink: 0; width: 30px; height: 30px;
+  background: var(--color-purple-500); color: var(--panel); border-radius: var(--radius-8); font-size: 15px;
+}
+.risk-tooltip .rt-head-title { font-size: var(--fs-16); font-weight: var(--fw-700); color: var(--title); }
+.risk-tooltip .rt-list { display: flex; flex-direction: column; gap: var(--space-12); }
+.risk-tooltip .rt-row { display: flex; align-items: baseline; gap: var(--space-10); }
+.risk-tooltip .rt-row-text { color: var(--color-blue-950); }
+.risk-tooltip .rt-pill {
+  flex-shrink: 0; display: inline-block; border-radius: var(--radius-4); padding: var(--space-3) var(--space-10);
+  font-size: var(--fs-12); font-weight: var(--fw-700);
+}
+.risk-tooltip .rt-pill-high { background: var(--color-red-50); color: var(--color-red-750); }
+.risk-tooltip .rt-pill-med  { background: var(--color-amber-230); color: var(--color-amber-770); }
+.risk-tooltip .rt-pill-low  { background: var(--color-blue-90); color: var(--muted); }
+.risk-tooltip .rt-cta {
+  display: block; margin-top: var(--space-14); font-size: var(--fs-13); font-weight: var(--fw-600);
+  color: var(--color-purple-500); text-decoration: none;
+}
+.risk-tooltip .rt-cta:hover { text-decoration: underline; }
+.risk-tooltip .rt-cta span { display: inline-block; transition: transform .12s; }
+.risk-tooltip .rt-cta:hover span { transform: translateX(3px); }
+/* Pointer connecting the card back to the badge it belongs to — classic two-triangle technique
+   (a slightly larger purple triangle behind a slightly smaller white one) rather than a rotated
+   square, so the border color reads cleanly all the way around the point instead of just two edges.
+   Default: tooltip sits ABOVE the badge, so the arrow points down, at the tooltip's bottom edge. */
+.risk-tooltip::before, .risk-tooltip::after {
+  content: ""; position: absolute; left: 50%; margin-left: -8px; border: 8px solid transparent;
+}
+.risk-tooltip::before { bottom: -16px; border-top-color: var(--color-purple-500); border-bottom: 0; }
+.risk-tooltip::after  { bottom: -13px; margin-left: -6px; border-width: 6px; border-top-color: var(--panel); border-bottom: 0; }
+/* .rt-below: tooltip sits BELOW the badge instead (not enough room above) — arrow flips to point
+   up, at the tooltip's top edge. */
+.risk-tooltip.rt-below::before { top: -16px; bottom: auto; border-bottom-color: var(--color-purple-500); border-top: 0; }
+.risk-tooltip.rt-below::after  { top: -13px; bottom: auto; border-bottom-color: var(--panel); border-top: 0; }
+
+.dd-footer { display: flex; align-items: center; justify-content: space-between; padding-top: var(--space-14); border-top: 1px solid var(--border); }
+.dd-ai-note { display: flex; align-items: center; gap: var(--space-8); font-size: var(--fs-13); font-weight: var(--fw-500); color: var(--color-blue-950); max-width: 760px; line-height: 1.4; }
+.dd-footer-btns { display: flex; gap: var(--space-20); }
+.dd-footer-btn {
+  border: 0; background: transparent; display: inline-flex; align-items: center; gap: var(--space-6);
+  color: var(--muted); font-size: var(--fs-12); font-weight: var(--fw-600); padding: 0; cursor: pointer;
+}
+.dd-footer-btn:hover { color: var(--navy); }
+
+/* ── BADGES ── */
+.badge { display: inline-block; border-radius: var(--radius-4); padding: var(--space-2) var(--space-8); font-size: var(--fs-11); font-weight: var(--fw-700); text-transform: uppercase; }
+.badge-critical { color: var(--color-red-750); background: var(--color-red-50); }
+.badge-high     { color: var(--color-amber-770); background: var(--color-amber-230); }
+.badge-ontrack  { color: var(--color-green-730); background: var(--color-green-50); }
+.badge-nbb      { color: var(--color-teal-950); background: var(--color-green-500); }
+.badge-bb       { color: var(--navy); background: var(--color-blue-300); }
+.badge-delayed  { color: var(--warning); background: var(--color-amber-50); }
+.at-risk-tag {
+  display: inline-flex; align-items: center; gap: var(--space-3);
+  background: var(--color-red-250); border: 0; border-radius: var(--radius-4);
+  padding: var(--space-2) var(--space-6); font-size: var(--fs-10); font-weight: var(--fw-700); color: var(--color-red-550);
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════
+   FULLSCREEN
+═══════════════════════════════════════════ */
+.fs-backdrop { position: fixed; inset: 0; background: var(--color-overlay-8); z-index: 8999; animation: fsIn .22s ease; }
+@keyframes fsIn { from { opacity: 0; } to { opacity: 1; } }
+.widget-fullscreen {
+  position: fixed !important; inset: 20px !important; z-index: 9000 !important;
+  width: calc(100vw - 40px) !important; height: calc(100vh - 40px) !important;
+  border-radius: var(--radius-16) !important; box-shadow: var(--shadow-4) !important;
+  overflow: auto !important; transition: var(--transition-5) !important;
+  display: flex !important; flex-direction: column !important;
+}
+.widget-fullscreen .health-chart-area { flex: 1; }
+.widget-fullscreen .widget-chart-area { flex: 1; }
+
+/* ═══════════════════════════════════════════
+   TABLET ≤ 1024px
+═══════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .dashboard { width: 100%; min-height: 0; }
+  .main-content { width: 100%; padding: var(--space-16); gap: var(--space-16); }
+  .row { flex-direction: column; gap: var(--space-16); }
+  .widget { width: 100%; }
+  .drill-down { width: 100%; }
+  .classification-table-wrap { overflow-x: auto; }
+}

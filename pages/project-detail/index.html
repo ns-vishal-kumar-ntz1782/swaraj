@@ -8,8 +8,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../assets/css/styles.css" />
-  <link rel="stylesheet" href="../../assets/css/project-detail.css" />
-  <script src="../../assets/js/mockData.js"></script>
+  <link rel="stylesheet" href="project-detail.css" />
+  <script src="../../assets/js/data/app-config.js"></script>
   <script src="../../assets/js/auth.js"></script>
   <script>guardPage("dashboard");</script>
 </head>
@@ -29,18 +29,14 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
         </a>
         <button class="pd-tab pd-tab-active" data-tab="snapshot" type="button">Snapshot</button>
+        <button class="pd-tab" data-tab="pre-ko" type="button">Pre-KO</button>
         <button class="pd-tab" data-tab="deliverables" type="button">Deliverables</button>
         <button class="pd-tab" data-tab="gate-checklist" type="button">Gate Checklist</button>
         <button class="pd-tab" data-tab="approvals" type="button">Approvals</button>
+        <button class="pd-tab" data-tab="action-register" type="button">Action Register</button>
         <button class="pd-tab" data-tab="gantt" type="button">Gantt Chart</button>
       </div>
       <div class="pd-actions">
-        <button class="pd-icon-btn" id="aiBtn" type="button" title="AI insights" aria-label="AI insights">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.6L18.5 9.5 13.9 11.4 12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z"/><path d="M19 14l.9 2.1L22 17l-2.1.9L19 20l-.9-2.1L16 17l2.1-.9L19 14z"/></svg>
-        </button>
-        <button class="pd-icon-btn" id="notesBtn" type="button" title="Notes" aria-label="Notes">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-        </button>
         <button class="pd-pdf-btn" id="downloadPdfBtn" type="button">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Download PDF
@@ -110,7 +106,6 @@
           <div class="pd-timeline-head">
             <div>
               <span class="pd-section-title">Project Timeline</span>
-              <span class="pd-acc-badge" id="timelineBadge" style="margin-left:8px"></span>
             </div>
             <p class="pd-asof" id="timelineAsOf">As on 07 Jul 2026</p>
           </div>
@@ -122,28 +117,114 @@
       </div>
     </section>
 
-    <!-- DELIVERABLES tab -->
-    <section class="pd-tabpanel pd-tab-content-panel" id="tab-deliverables" hidden>
+    <!-- PRE-KO tab — Product Requirement Form content, one sub-tab per PRF section -->
+    <section class="pd-tabpanel pd-tab-content-panel" id="tab-pre-ko" hidden>
+      <div class="pd-preko-subtabs" id="prekoSubtabs">
+        <button class="pd-preko-subtab active" data-subtab="background" type="button">Background &amp; Objective</button>
+        <button class="pd-preko-subtab" data-subtab="specs" type="button">Product Specifications</button>
+        <button class="pd-preko-subtab" data-subtab="features" type="button">Features &amp; CVP</button>
+        <button class="pd-preko-subtab" data-subtab="applications" type="button">Target Applications &amp; FI Targets</button>
+        <button class="pd-preko-subtab" data-subtab="variants" type="button">Variants &amp; Volume</button>
+        <button class="pd-preko-subtab" data-subtab="cost" type="button">Product Cost &amp; Budget</button>
+        <button class="pd-preko-subtab" data-subtab="competitors" type="button">Competitor Analysis &amp; Benchmark</button>
+      </div>
       <div class="pd-detail-scroll">
-        <div class="pd-generic-card pd-generic-card-fill">
-          <div class="pd-generic-head">
-            <h3>Deliverables</h3>
-          </div>
-          <div class="pd-table-scroll"><table class="pd-data-table" id="deliverableTable"></table></div>
-        </div>
+        <div class="pd-preko-subpanel" data-subpanel="background" id="prekoBackground"></div>
+        <div class="pd-preko-subpanel" data-subpanel="specs" id="prekoSpecs" hidden></div>
+        <div class="pd-preko-subpanel" data-subpanel="features" id="prekoFeatures" hidden></div>
+        <div class="pd-preko-subpanel" data-subpanel="applications" id="prekoApplications" hidden></div>
+        <div class="pd-preko-subpanel" data-subpanel="variants" id="prekoVariants" hidden></div>
+        <div class="pd-preko-subpanel" data-subpanel="cost" id="prekoCost" hidden></div>
+        <div class="pd-preko-subpanel" data-subpanel="competitors" id="prekoCompetitors" hidden></div>
       </div>
     </section>
 
-    <!-- GATE CHECKLIST tab -->
-    <section class="pd-tabpanel pd-tab-content-panel" id="tab-gate-checklist" hidden>
-      <div class="pd-detail-scroll">
-        <div class="pd-generic-card">
-          <div class="pd-generic-head">
-            <h3>Gate Checklist</h3>
-          </div>
-          <div id="gateDetails"></div>
-        </div>
+    <!-- DELIVERABLES tab -->
+    <section class="pd-tabpanel pd-tab-content-panel" id="tab-deliverables" hidden>
+
+      <!-- Gate Progress Bar -->
+      <div class="dlv-gate-bar" id="dlvGateBar"></div>
+
+      <!-- Legend row -->
+      <div class="dlv-legend-row">
+        <span class="dlv-leg-item"><i class="dlv-leg-dot dlv-leg-green"></i>On Time (0–15 days)</span>
+        <span class="dlv-leg-item"><i class="dlv-leg-dot dlv-leg-amber"></i>Delay (16–60 days)</span>
+        <span class="dlv-leg-item"><i class="dlv-leg-dot dlv-leg-red"></i>Delayed (&gt;60 days)</span>
       </div>
+
+      <!-- Future-gate info banner (hidden when gate is active/completed) -->
+      <div class="dlv-future-banner" id="dlvFutureBanner" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        This gate has not started yet. Deliverables will become available once the previous gate is completed and this gate becomes Active.
+      </div>
+
+      <!-- Deliverables table -->
+      <div class="dlv-table-wrap">
+        <table class="pd-data-table dlv-table" id="deliverableTable">
+          <thead>
+            <tr>
+              <th style="width:42px">S.NO</th>
+              <th style="width:100px">CODE</th>
+              <th>DELIVERABLE</th>
+              <th style="width:160px">RESPONSIBLE</th>
+              <th style="width:140px">PLANNED START</th>
+              <th style="width:140px">PLANNED END</th>
+              <th style="width:120px">ACTUAL CLOSURE</th>
+              <th style="width:70px">OUTLOOK</th>
+              <th style="width:130px">STATUS</th>
+              <th style="width:170px">REMARKS</th>
+              <th style="width:96px">DOCUMENTS</th>
+              <th style="width:70px">ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody id="dlvTableBody"></tbody>
+        </table>
+      </div>
+
+    </section>
+
+    <!-- GATE CHECKLIST tab — same gate-stepper + table pattern as Deliverables; the checklist
+         ITEM LIST comes from the Admin Console's Gate Checklist Template for that gate (see
+         assets/js/data/project-detail-seed.js), never a hardcoded/random list. -->
+    <section class="pd-tabpanel pd-tab-content-panel" id="tab-gate-checklist" hidden>
+
+      <!-- Gate Progress Bar -->
+      <div class="dlv-gate-bar" id="gcGateBar"></div>
+
+      <!-- Legend row -->
+      <div class="dlv-legend-row">
+        <span class="dlv-leg-item"><i class="dlv-leg-dot dlv-leg-green"></i>On Time (0–15 days)</span>
+        <span class="dlv-leg-item"><i class="dlv-leg-dot dlv-leg-amber"></i>Delay (16–60 days)</span>
+        <span class="dlv-leg-item"><i class="dlv-leg-dot dlv-leg-red"></i>Delayed (&gt;60 days)</span>
+      </div>
+
+      <!-- Future-gate info banner -->
+      <div class="dlv-future-banner" id="gcFutureBanner" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        This gate's checklist isn't open yet — it becomes available once the previous gate's approval is complete.
+      </div>
+
+      <!-- Checklist table -->
+      <div class="dlv-table-wrap">
+        <table class="pd-data-table dlv-table" id="checklistTable">
+          <thead>
+            <tr>
+              <th style="width:42px">S.NO</th>
+              <th>CHECKLIST ITEM</th>
+              <th style="width:160px">RESPONSIBLE</th>
+              <th style="width:70px">OUTLOOK</th>
+              <th style="width:110px">STATUS</th>
+              <th style="width:200px">REMARKS</th>
+              <th style="width:80px">DOWNLOAD</th>
+            </tr>
+          </thead>
+          <tbody id="gcTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Gate approval workflow — appears once every checklist item above is Completed -->
+      <div id="gcApprovalSection"></div>
+
     </section>
 
     <!-- APPROVALS tab -->
@@ -154,6 +235,38 @@
             <h3>Approvals</h3>
           </div>
           <div class="pd-inner-scroll"><table class="pd-data-table" id="approvalsTable"></table></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ACTION REGISTER tab — shares the exact same localStorage-backed store the Admin Console's
+         Action Register reads/writes (spd.action_register.v1), scoped to this project's code, so
+         an action logged here shows up in Admin's master list immediately, and vice versa. -->
+    <section class="pd-tabpanel pd-tab-content-panel" id="tab-action-register" hidden>
+      <div class="pd-detail-scroll">
+        <div class="pd-generic-card">
+          <div class="pd-generic-head ar-head">
+            <h3>Action Register</h3>
+            <button class="pd-pdf-btn" id="arNewBtn" type="button">+ New Action</button>
+          </div>
+          <div id="arFormWrap" hidden></div>
+          <div class="pd-inner-scroll">
+            <table class="pd-data-table ar-table">
+              <thead>
+                <tr>
+                  <th style="width:36px">S.NO</th>
+                  <th style="width:130px">MEETING TYPE</th>
+                  <th>ACTION TO BE TAKEN</th>
+                  <th style="width:130px">RESPONSIBILITY</th>
+                  <th style="width:90px">PRIORITY</th>
+                  <th style="width:100px">MEETING / TARGET DATE</th>
+                  <th style="width:130px">STATUS</th>
+                  <th style="width:180px">REMARKS</th>
+                </tr>
+              </thead>
+              <tbody id="arTableBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>
@@ -212,9 +325,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="../../assets/js/shared.js"></script>
-<script src="../../assets/js/mock-data.js"></script>
-<script src="../../assets/js/charts.js"></script>
-<script src="../../assets/js/timeline.js"></script>
-<script src="../../assets/js/project-detail.js"></script>
+<script src="../../assets/js/data/project-detail-seed.js"></script>
+<script src="../../assets/js/data/preko-seed.js"></script>
+<script src="charts.js"></script>
+<script src="timeline.js"></script>
+<!-- ES module — deferred by spec, finishes before DOMContentLoaded, so window.PDWorkspace is
+     ready before project-detail.js's own DOMContentLoaded-gated init() runs. Gives the
+     Deliverables tab real persistence by reusing the Admin Console's store layer directly. -->
+<script type="module" src="../../assets/js/data/pd-workspace-bridge.js"></script>
+<script src="project-detail.js"></script>
 </body>
 </html>

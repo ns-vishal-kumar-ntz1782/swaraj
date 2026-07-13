@@ -1,0 +1,2736 @@
+[
+  {
+    "commentId": "PCM-0001",
+    "projectCode": "PJ01001",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0008",
+    "userId": "USR-0095",
+    "comment": "Awaiting sign-off from Finance on the revised budget breakdown.",
+    "timestamp": "2025-10-21",
+    "mentions": [
+      "USR-0005",
+      "USR-0240"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0002",
+    "projectCode": "PJ01001",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0010",
+    "userId": "USR-0175",
+    "comment": "Field trial feedback flagged a minor hydraulics leak — root cause in progress.",
+    "timestamp": "2025-10-23",
+    "mentions": [],
+    "attachments": [
+      "PK-10_Analysis.pptx"
+    ]
+  },
+  {
+    "commentId": "PCM-0003",
+    "projectCode": "PJ01001",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0007",
+    "userId": "USR-0136",
+    "comment": "Casting supplier confirmed capacity for the ramp-up volume.",
+    "timestamp": "2025-10-21",
+    "mentions": [
+      "USR-0096",
+      "USR-0005"
+    ],
+    "attachments": [
+      "PK-07_Report.pdf"
+    ]
+  },
+  {
+    "commentId": "PCM-0004",
+    "projectCode": "PJ01001",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0023",
+    "userId": "USR-0240",
+    "comment": "Need updated DFMEA before we can close this action.",
+    "timestamp": "2025-12-17",
+    "mentions": [
+      "USR-0193"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0005",
+    "projectCode": "PJ01001",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0095",
+    "comment": "Homologation submission is queued with the test agency this week.",
+    "timestamp": "2025-12-05",
+    "mentions": [
+      "USR-0007"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0006",
+    "projectCode": "PJ01001",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0025",
+    "userId": "USR-0136",
+    "comment": "Concept sketch finalized after the styling review.",
+    "timestamp": "2025-12-08",
+    "mentions": [
+      "USR-0023"
+    ],
+    "attachments": [
+      "CV-11_Signoff.xlsx"
+    ]
+  },
+  {
+    "commentId": "PCM-0007",
+    "projectCode": "PJ01001",
+    "gateCode": "VV",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0211",
+    "comment": "DVP&R plan looks good, one clarification on the durability cycle count.",
+    "timestamp": "2025-12-30",
+    "mentions": [
+      "USR-0240"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0008",
+    "projectCode": "PJ01001",
+    "gateCode": "VV",
+    "deliverableAssignmentId": "PDA-0039",
+    "userId": "USR-0007",
+    "comment": "Dealer feedback from the pilot batch has been logged for review.",
+    "timestamp": "2026-01-30",
+    "mentions": [
+      "USR-0023"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0009",
+    "projectCode": "PJ01001",
+    "gateCode": "VV",
+    "deliverableAssignmentId": "PDA-0032",
+    "userId": "USR-0023",
+    "comment": "Emission certification test slot confirmed for next month.",
+    "timestamp": "2026-01-16",
+    "mentions": [],
+    "attachments": [
+      "VV-04_Report.pdf"
+    ]
+  },
+  {
+    "commentId": "PCM-0010",
+    "projectCode": "PJ01001",
+    "gateCode": "PC",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0028",
+    "comment": "Supplier audit completed with two minor NCs, CAPA in progress.",
+    "timestamp": "2026-04-01",
+    "mentions": [
+      "USR-0193",
+      "USR-0005"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0011",
+    "projectCode": "PJ01001",
+    "gateCode": "PC",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0008",
+    "comment": "Waiting for the validation report before sign-off.",
+    "timestamp": "2026-03-19",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0012",
+    "projectCode": "PJ01001",
+    "gateCode": "PC",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0023",
+    "comment": "Need updated DFMEA before we can close this action.",
+    "timestamp": "2026-03-01",
+    "mentions": [
+      "USR-0028"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0013",
+    "projectCode": "PJ01001",
+    "gateCode": "PC",
+    "deliverableAssignmentId": "PDA-0043",
+    "userId": "USR-0175",
+    "comment": "Cost estimate revised after the latest supplier quote.",
+    "timestamp": "2026-02-10",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0014",
+    "projectCode": "PJ01001",
+    "gateCode": "PR",
+    "deliverableAssignmentId": "PDA-0057",
+    "userId": "USR-0151",
+    "comment": "Waiting for the validation report before sign-off.",
+    "timestamp": "2026-06-17",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0015",
+    "projectCode": "PJ01001",
+    "gateCode": "PR",
+    "deliverableAssignmentId": "PDA-0056",
+    "userId": "USR-0211",
+    "comment": "Three-point linkage load test results are within the target spec.",
+    "timestamp": "2026-05-24",
+    "mentions": [
+      "USR-0191",
+      "USR-0010"
+    ],
+    "attachments": [
+      "PR-01_TestData.csv"
+    ]
+  },
+  {
+    "commentId": "PCM-0016",
+    "projectCode": "PJ01001",
+    "gateCode": "PR",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0008",
+    "comment": "Awaiting sign-off from Finance on the revised budget breakdown.",
+    "timestamp": "2026-06-20",
+    "mentions": [
+      "USR-0005"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0017",
+    "projectCode": "PJ01001",
+    "gateCode": "PR",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0005",
+    "comment": "Supplier audit completed with two minor NCs, CAPA in progress.",
+    "timestamp": "2026-05-15",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0018",
+    "projectCode": "PJ01001",
+    "gateCode": "PR",
+    "deliverableAssignmentId": "PDA-0063",
+    "userId": "USR-0007",
+    "comment": "Casting supplier confirmed capacity for the ramp-up volume.",
+    "timestamp": "2026-06-26",
+    "mentions": [],
+    "attachments": [
+      "PR-08_TestData.csv"
+    ]
+  },
+  {
+    "commentId": "PCM-0019",
+    "projectCode": "PJ01001",
+    "gateCode": "PR",
+    "deliverableAssignmentId": "PDA-0058",
+    "userId": "USR-0193",
+    "comment": "Please update the CAD revision — BOM still references the old rev.",
+    "timestamp": "2026-07-09",
+    "mentions": [
+      "USR-0191"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0020",
+    "projectCode": "PJ01001",
+    "gateCode": "PR",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0109",
+    "comment": "PFMEA review identified two additional failure modes to mitigate.",
+    "timestamp": "2026-05-05",
+    "mentions": [
+      "USR-0151"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0021",
+    "projectCode": "PJ01002",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0091",
+    "userId": "USR-0093",
+    "comment": "Supplier audit completed with two minor NCs, CAPA in progress.",
+    "timestamp": "2025-02-17",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0022",
+    "projectCode": "PJ01002",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0095",
+    "userId": "USR-0093",
+    "comment": "Hydraulics circuit pressure test passed on the first attempt.",
+    "timestamp": "2025-03-04",
+    "mentions": [
+      "USR-0005"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0023",
+    "projectCode": "PJ01002",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0124",
+    "comment": "Updated GD&T applied per the review — please re-check the drawing.",
+    "timestamp": "2025-03-01",
+    "mentions": [
+      "USR-0108",
+      "USR-0009"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0024",
+    "projectCode": "PJ01002",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0092",
+    "comment": "Transmission NVH levels within target after the latest tuning.",
+    "timestamp": "2025-03-09",
+    "mentions": [
+      "USR-0175"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0025",
+    "projectCode": "PJ01002",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0091",
+    "userId": "USR-0032",
+    "comment": "Requesting an extension on this deliverable — dependency on the CAE report.",
+    "timestamp": "2025-02-19",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0026",
+    "projectCode": "PJ01002",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0095",
+    "userId": "USR-0151",
+    "comment": "Emission certification test slot confirmed for next month.",
+    "timestamp": "2025-02-18",
+    "mentions": [
+      "USR-0110",
+      "USR-0001"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0027",
+    "projectCode": "PJ01002",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0107",
+    "userId": "USR-0214",
+    "comment": "Casting supplier confirmed capacity for the ramp-up volume.",
+    "timestamp": "2025-06-09",
+    "mentions": [
+      "USR-0108",
+      "USR-0032"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0028",
+    "projectCode": "PJ01002",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0098",
+    "userId": "USR-0003",
+    "comment": "Please update the CAD revision — BOM still references the old rev.",
+    "timestamp": "2026-06-23",
+    "mentions": [
+      "USR-0092",
+      "USR-0032"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0029",
+    "projectCode": "PJ01002",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0175",
+    "comment": "Tooling trial #2 scheduled after the correction to the die.",
+    "timestamp": "2026-05-18",
+    "mentions": [
+      "USR-0037"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0030",
+    "projectCode": "PJ01002",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0096",
+    "userId": "USR-0214",
+    "comment": "Warranty data from the previous platform reviewed for lessons learned.",
+    "timestamp": "2026-03-28",
+    "mentions": [
+      "USR-0124"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0031",
+    "projectCode": "PJ01002",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0103",
+    "userId": "USR-0037",
+    "comment": "BIS certification documentation submitted for review.",
+    "timestamp": "2026-03-28",
+    "mentions": [
+      "USR-0151",
+      "USR-0009"
+    ],
+    "attachments": [
+      "CV-08_Report.pdf"
+    ]
+  },
+  {
+    "commentId": "PCM-0032",
+    "projectCode": "PJ01002",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0172",
+    "comment": "Field trial feedback flagged a minor hydraulics leak — root cause in progress.",
+    "timestamp": "2026-01-11",
+    "mentions": [
+      "USR-0108"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0033",
+    "projectCode": "PJ01003",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0164",
+    "userId": "USR-0238",
+    "comment": "Requesting an extension on this deliverable — dependency on the CAE report.",
+    "timestamp": "2025-11-24",
+    "mentions": [],
+    "attachments": [
+      "PK-02_Checklist.pdf"
+    ]
+  },
+  {
+    "commentId": "PCM-0034",
+    "projectCode": "PJ01003",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0001",
+    "comment": "Three-point linkage load test results are within the target spec.",
+    "timestamp": "2025-11-22",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0035",
+    "projectCode": "PJ01003",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0166",
+    "userId": "USR-0214",
+    "comment": "Prototype build is on track; sub-assembly fit checks complete.",
+    "timestamp": "2025-11-13",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0036",
+    "projectCode": "PJ01003",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0176",
+    "userId": "USR-0146",
+    "comment": "Test rig availability confirmed for the durability validation.",
+    "timestamp": "2025-11-15",
+    "mentions": [
+      "USR-0005",
+      "USR-0214"
+    ],
+    "attachments": [
+      "PK-14_Checklist.pdf"
+    ]
+  },
+  {
+    "commentId": "PCM-0037",
+    "projectCode": "PJ01003",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0001",
+    "comment": "DVP&R plan looks good, one clarification on the durability cycle count.",
+    "timestamp": "2025-11-25",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0038",
+    "projectCode": "PJ01003",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0168",
+    "userId": "USR-0109",
+    "comment": "Test rig availability confirmed for the durability validation.",
+    "timestamp": "2025-12-08",
+    "mentions": [],
+    "attachments": [
+      "PK-06_TestData.csv"
+    ]
+  },
+  {
+    "commentId": "PCM-0039",
+    "projectCode": "PJ01003",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0146",
+    "comment": "Updated GD&T applied per the review — please re-check the drawing.",
+    "timestamp": "2025-12-08",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0040",
+    "projectCode": "PJ01003",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0183",
+    "userId": "USR-0112",
+    "comment": "Cost target achieved after the latest value engineering pass.",
+    "timestamp": "2025-12-12",
+    "mentions": [],
+    "attachments": [
+      "CV-07_Checklist.pdf"
+    ]
+  },
+  {
+    "commentId": "PCM-0041",
+    "projectCode": "PJ01003",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0183",
+    "userId": "USR-0101",
+    "comment": "Cost estimate revised after the latest supplier quote.",
+    "timestamp": "2026-01-30",
+    "mentions": [
+      "USR-0146"
+    ],
+    "attachments": [
+      "CV-07_Checklist.pdf"
+    ]
+  },
+  {
+    "commentId": "PCM-0042",
+    "projectCode": "PJ01003",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0238",
+    "comment": "Waiting for the validation report before sign-off.",
+    "timestamp": "2025-12-22",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0043",
+    "projectCode": "PJ01003",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0185",
+    "userId": "USR-0106",
+    "comment": "Homologation submission is queued with the test agency this week.",
+    "timestamp": "2025-12-24",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0044",
+    "projectCode": "PJ01003",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0190",
+    "userId": "USR-0214",
+    "comment": "Transmission NVH levels within target after the latest tuning.",
+    "timestamp": "2025-12-12",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0045",
+    "projectCode": "PJ01003",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0005",
+    "comment": "Awaiting sign-off from Finance on the revised budget breakdown.",
+    "timestamp": "2026-01-11",
+    "mentions": [
+      "USR-0109",
+      "USR-0032"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0046",
+    "projectCode": "PJ01003",
+    "gateCode": "VV",
+    "deliverableAssignmentId": "PDA-0203",
+    "userId": "USR-0136",
+    "comment": "Design review comments have been closed out in the latest CAD package.",
+    "timestamp": "2026-03-09",
+    "mentions": [],
+    "attachments": [
+      "VV-13_Review-MoM.docx"
+    ]
+  },
+  {
+    "commentId": "PCM-0047",
+    "projectCode": "PJ01003",
+    "gateCode": "VV",
+    "deliverableAssignmentId": "PDA-0194",
+    "userId": "USR-0008",
+    "comment": "Tooling trial #2 scheduled after the correction to the die.",
+    "timestamp": "2026-02-03",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0048",
+    "projectCode": "PJ01003",
+    "gateCode": "VV",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0175",
+    "comment": "Tooling trial #2 scheduled after the correction to the die.",
+    "timestamp": "2026-02-26",
+    "mentions": [
+      "USR-0008"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0049",
+    "projectCode": "PJ01003",
+    "gateCode": "VV",
+    "deliverableAssignmentId": "PDA-0196",
+    "userId": "USR-0005",
+    "comment": "Casting supplier confirmed capacity for the ramp-up volume.",
+    "timestamp": "2026-01-26",
+    "mentions": [],
+    "attachments": [
+      "VV-06_Signoff.xlsx"
+    ]
+  },
+  {
+    "commentId": "PCM-0050",
+    "projectCode": "PJ01003",
+    "gateCode": "VV",
+    "deliverableAssignmentId": "PDA-0202",
+    "userId": "USR-0238",
+    "comment": "Please update the CAD revision — BOM still references the old rev.",
+    "timestamp": "2026-03-13",
+    "mentions": [
+      "USR-0001",
+      "USR-0101"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0051",
+    "projectCode": "PJ01003",
+    "gateCode": "PC",
+    "deliverableAssignmentId": "PDA-0206",
+    "userId": "USR-0136",
+    "comment": "Cost target achieved after the latest value engineering pass.",
+    "timestamp": "2026-05-28",
+    "mentions": [
+      "USR-0106"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0052",
+    "projectCode": "PJ01003",
+    "gateCode": "PC",
+    "deliverableAssignmentId": "PDA-0210",
+    "userId": "USR-0238",
+    "comment": "Updated GD&T applied per the review — please re-check the drawing.",
+    "timestamp": "2026-05-14",
+    "mentions": [],
+    "attachments": [
+      "PC-07_TestData.csv"
+    ]
+  },
+  {
+    "commentId": "PCM-0053",
+    "projectCode": "PJ01003",
+    "gateCode": "PC",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0101",
+    "comment": "Three-point linkage load test results are within the target spec.",
+    "timestamp": "2026-05-27",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0054",
+    "projectCode": "PJ01003",
+    "gateCode": "PC",
+    "deliverableAssignmentId": "PDA-0213",
+    "userId": "USR-0175",
+    "comment": "Waiting for the validation report before sign-off.",
+    "timestamp": "2026-05-29",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0055",
+    "projectCode": "PJ01003",
+    "gateCode": "PC",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0005",
+    "comment": "Casting supplier confirmed capacity for the ramp-up volume.",
+    "timestamp": "2026-04-24",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0056",
+    "projectCode": "PJ01003",
+    "gateCode": "PC",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0106",
+    "comment": "Need updated DFMEA before we can close this action.",
+    "timestamp": "2026-05-20",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0057",
+    "projectCode": "PJ01003",
+    "gateCode": "PR",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0112",
+    "comment": "Awaiting sign-off from Finance on the revised budget breakdown.",
+    "timestamp": "2026-06-29",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0058",
+    "projectCode": "PJ01003",
+    "gateCode": "PR",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0005",
+    "comment": "Please update the CAD revision — BOM still references the old rev.",
+    "timestamp": "2026-07-25",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0059",
+    "projectCode": "PJ01003",
+    "gateCode": "PR",
+    "deliverableAssignmentId": "PDA-0218",
+    "userId": "USR-0172",
+    "comment": "Need updated DFMEA before we can close this action.",
+    "timestamp": "2026-07-11",
+    "mentions": [
+      "USR-0109"
+    ],
+    "attachments": [
+      "PR-01_TestData.csv"
+    ]
+  },
+  {
+    "commentId": "PCM-0060",
+    "projectCode": "PJ01003",
+    "gateCode": "PPO",
+    "deliverableAssignmentId": "PDA-0242",
+    "userId": "USR-0172",
+    "comment": "Updated GD&T applied per the review — please re-check the drawing.",
+    "timestamp": "2026-07-25",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0061",
+    "projectCode": "PJ01003",
+    "gateCode": "PPO",
+    "deliverableAssignmentId": "PDA-0233",
+    "userId": "USR-0175",
+    "comment": "Cost target achieved after the latest value engineering pass.",
+    "timestamp": "2026-07-24",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0062",
+    "projectCode": "PJ01003",
+    "gateCode": "PPO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0214",
+    "comment": "Supplier audit completed with two minor NCs, CAPA in progress.",
+    "timestamp": "2026-07-25",
+    "mentions": [
+      "USR-0007"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0063",
+    "projectCode": "PJ01003",
+    "gateCode": "PPO",
+    "deliverableAssignmentId": "PDA-0231",
+    "userId": "USR-0136",
+    "comment": "Design review comments have been closed out in the latest CAD package.",
+    "timestamp": "2026-07-24",
+    "mentions": [
+      "USR-0172"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0064",
+    "projectCode": "PJ01004",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0156",
+    "comment": "Test rig availability confirmed for the durability validation.",
+    "timestamp": "2025-12-15",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0065",
+    "projectCode": "PJ01004",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0244",
+    "userId": "USR-0175",
+    "comment": "Prototype build is on track; sub-assembly fit checks complete.",
+    "timestamp": "2025-11-23",
+    "mentions": [
+      "USR-0011",
+      "USR-0118"
+    ],
+    "attachments": [
+      "PK-01_TestData.csv"
+    ]
+  },
+  {
+    "commentId": "PCM-0066",
+    "projectCode": "PJ01004",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0244",
+    "userId": "USR-0241",
+    "comment": "Prototype build is on track; sub-assembly fit checks complete.",
+    "timestamp": "2025-12-06",
+    "mentions": [
+      "USR-0011",
+      "USR-0174"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0067",
+    "projectCode": "PJ01004",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0174",
+    "comment": "Design review comments have been closed out in the latest CAD package.",
+    "timestamp": "2025-12-23",
+    "mentions": [
+      "USR-0195"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0068",
+    "projectCode": "PJ01004",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0249",
+    "userId": "USR-0241",
+    "comment": "Three-point linkage load test results are within the target spec.",
+    "timestamp": "2025-12-12",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0069",
+    "projectCode": "PJ01004",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0195",
+    "comment": "Warranty data from the previous platform reviewed for lessons learned.",
+    "timestamp": "2025-12-22",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0070",
+    "projectCode": "PJ01004",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0268",
+    "userId": "USR-0011",
+    "comment": "Requesting an extension on this deliverable — dependency on the CAE report.",
+    "timestamp": "2026-01-17",
+    "mentions": [
+      "USR-0121",
+      "USR-0156"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0071",
+    "projectCode": "PJ01004",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0260",
+    "userId": "USR-0156",
+    "comment": "Hydraulics circuit pressure test passed on the first attempt.",
+    "timestamp": "2026-01-27",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0072",
+    "projectCode": "PJ01004",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0195",
+    "comment": "Three-point linkage load test results are within the target spec.",
+    "timestamp": "2026-01-02",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0073",
+    "projectCode": "PJ01004",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0118",
+    "comment": "Homologation submission is queued with the test agency this week.",
+    "timestamp": "2025-12-23",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0074",
+    "projectCode": "PJ01004",
+    "gateCode": "VV",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0240",
+    "comment": "Emission certification test slot confirmed for next month.",
+    "timestamp": "2026-02-18",
+    "mentions": [
+      "USR-0005",
+      "USR-0098"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0075",
+    "projectCode": "PJ01004",
+    "gateCode": "VV",
+    "deliverableAssignmentId": "PDA-0283",
+    "userId": "USR-0241",
+    "comment": "PPAP pending from the tier-1 supplier; following up today.",
+    "timestamp": "2026-04-01",
+    "mentions": [],
+    "attachments": [
+      "VV-12_Checklist.pdf"
+    ]
+  },
+  {
+    "commentId": "PCM-0076",
+    "projectCode": "PJ01004",
+    "gateCode": "VV",
+    "deliverableAssignmentId": "PDA-0280",
+    "userId": "USR-0175",
+    "comment": "Supplier confirmed tooling completion — trial samples expected next week.",
+    "timestamp": "2026-03-27",
+    "mentions": [],
+    "attachments": [
+      "VV-09_Analysis.pptx"
+    ]
+  },
+  {
+    "commentId": "PCM-0077",
+    "projectCode": "PJ01004",
+    "gateCode": "VV",
+    "deliverableAssignmentId": "PDA-0280",
+    "userId": "USR-0028",
+    "comment": "PFMEA review identified two additional failure modes to mitigate.",
+    "timestamp": "2026-02-03",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0078",
+    "projectCode": "PJ01004",
+    "gateCode": "VV",
+    "deliverableAssignmentId": "PDA-0275",
+    "userId": "USR-0098",
+    "comment": "Cost target achieved after the latest value engineering pass.",
+    "timestamp": "2026-02-13",
+    "mentions": [
+      "USR-0213"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0079",
+    "projectCode": "PJ01004",
+    "gateCode": "PC",
+    "deliverableAssignmentId": "PDA-0292",
+    "userId": "USR-0098",
+    "comment": "PTO durability test extended by one week due to a facility conflict.",
+    "timestamp": "2026-03-29",
+    "mentions": [
+      "USR-0005"
+    ],
+    "attachments": [
+      "PC-08_Review-MoM.docx"
+    ]
+  },
+  {
+    "commentId": "PCM-0080",
+    "projectCode": "PJ01004",
+    "gateCode": "PC",
+    "deliverableAssignmentId": "PDA-0296",
+    "userId": "USR-0156",
+    "comment": "Casting supplier confirmed capacity for the ramp-up volume.",
+    "timestamp": "2026-06-02",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0081",
+    "projectCode": "PJ01004",
+    "gateCode": "PC",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0175",
+    "comment": "Supplier confirmed tooling completion — trial samples expected next week.",
+    "timestamp": "2026-04-02",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0082",
+    "projectCode": "PJ01004",
+    "gateCode": "PC",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0002",
+    "comment": "Waiting for the validation report before sign-off.",
+    "timestamp": "2026-04-05",
+    "mentions": [
+      "USR-0118",
+      "USR-0005"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0083",
+    "projectCode": "PJ01004",
+    "gateCode": "PC",
+    "deliverableAssignmentId": "PDA-0288",
+    "userId": "USR-0240",
+    "comment": "Updated GD&T applied per the review — please re-check the drawing.",
+    "timestamp": "2026-05-16",
+    "mentions": [
+      "USR-0118"
+    ],
+    "attachments": [
+      "PC-04_Report.pdf"
+    ]
+  },
+  {
+    "commentId": "PCM-0084",
+    "projectCode": "PJ01004",
+    "gateCode": "PC",
+    "deliverableAssignmentId": "PDA-0294",
+    "userId": "USR-0032",
+    "comment": "PTO durability test extended by one week due to a facility conflict.",
+    "timestamp": "2026-04-21",
+    "mentions": [],
+    "attachments": [
+      "PC-10_TestData.csv"
+    ]
+  },
+  {
+    "commentId": "PCM-0085",
+    "projectCode": "PJ01004",
+    "gateCode": "PR",
+    "deliverableAssignmentId": "PDA-0305",
+    "userId": "USR-0028",
+    "comment": "Please update the CAD revision — BOM still references the old rev.",
+    "timestamp": "2026-07-27",
+    "mentions": [
+      "USR-0174",
+      "USR-0121"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0086",
+    "projectCode": "PJ01004",
+    "gateCode": "PR",
+    "deliverableAssignmentId": "PDA-0307",
+    "userId": "USR-0102",
+    "comment": "Concept sketch finalized after the styling review.",
+    "timestamp": "2026-06-30",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0087",
+    "projectCode": "PJ01004",
+    "gateCode": "PR",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0174",
+    "comment": "Hydraulics circuit pressure test passed on the first attempt.",
+    "timestamp": "2026-07-27",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0088",
+    "projectCode": "PJ01004",
+    "gateCode": "PR",
+    "deliverableAssignmentId": "PDA-0304",
+    "userId": "USR-0102",
+    "comment": "Hydraulics circuit pressure test passed on the first attempt.",
+    "timestamp": "2026-07-24",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0089",
+    "projectCode": "PJ01004",
+    "gateCode": "PPO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0174",
+    "comment": "PPAP pending from the tier-1 supplier; following up today.",
+    "timestamp": "2026-08-24",
+    "mentions": [
+      "USR-0098"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0090",
+    "projectCode": "PJ01004",
+    "gateCode": "PPO",
+    "deliverableAssignmentId": "PDA-0324",
+    "userId": "USR-0174",
+    "comment": "Emission certification test slot confirmed for next month.",
+    "timestamp": "2026-08-22",
+    "mentions": [],
+    "attachments": [
+      "PP-13_Checklist.pdf"
+    ]
+  },
+  {
+    "commentId": "PCM-0091",
+    "projectCode": "PJ01004",
+    "gateCode": "PPO",
+    "deliverableAssignmentId": "PDA-0323",
+    "userId": "USR-0213",
+    "comment": "BIS certification documentation submitted for review.",
+    "timestamp": "2026-08-09",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0092",
+    "projectCode": "PJ01004",
+    "gateCode": "PPO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0121",
+    "comment": "Requesting an extension on this deliverable — dependency on the CAE report.",
+    "timestamp": "2026-08-22",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0093",
+    "projectCode": "PJ01005",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0328",
+    "userId": "USR-0141",
+    "comment": "Homologation submission is queued with the test agency this week.",
+    "timestamp": "2026-05-24",
+    "mentions": [],
+    "attachments": [
+      "PK-04_Report.pdf"
+    ]
+  },
+  {
+    "commentId": "PCM-0094",
+    "projectCode": "PJ01005",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0141",
+    "comment": "Tooling trial #2 scheduled after the correction to the die.",
+    "timestamp": "2026-05-01",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0095",
+    "projectCode": "PJ01005",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0012",
+    "comment": "DVP&R plan looks good, one clarification on the durability cycle count.",
+    "timestamp": "2026-06-20",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0096",
+    "projectCode": "PJ01005",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0338",
+    "userId": "USR-0100",
+    "comment": "Supplier confirmed tooling completion — trial samples expected next week.",
+    "timestamp": "2026-06-21",
+    "mentions": [
+      "USR-0238"
+    ],
+    "attachments": [
+      "PK-14_Analysis.pptx"
+    ]
+  },
+  {
+    "commentId": "PCM-0097",
+    "projectCode": "PJ01005",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0330",
+    "userId": "USR-0140",
+    "comment": "Test rig availability confirmed for the durability validation.",
+    "timestamp": "2026-03-18",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0098",
+    "projectCode": "PJ01005",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0327",
+    "userId": "USR-0238",
+    "comment": "Requesting an extension on this deliverable — dependency on the CAE report.",
+    "timestamp": "2026-04-27",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0099",
+    "projectCode": "PJ01006",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0110",
+    "comment": "DVP&R plan looks good, one clarification on the durability cycle count.",
+    "timestamp": "2026-06-08",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0100",
+    "projectCode": "PJ01006",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0418",
+    "userId": "USR-0012",
+    "comment": "Quality has signed off on the incoming inspection plan.",
+    "timestamp": "2026-02-14",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0101",
+    "projectCode": "PJ01006",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0172",
+    "comment": "Need updated DFMEA before we can close this action.",
+    "timestamp": "2026-05-16",
+    "mentions": [
+      "USR-0131"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0102",
+    "projectCode": "PJ01007",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0492",
+    "userId": "USR-0005",
+    "comment": "PFMEA review identified two additional failure modes to mitigate.",
+    "timestamp": "2025-10-02",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0103",
+    "projectCode": "PJ01007",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0489",
+    "userId": "USR-0007",
+    "comment": "Cost estimate revised after the latest supplier quote.",
+    "timestamp": "2025-09-18",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0104",
+    "projectCode": "PJ01007",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0487",
+    "userId": "USR-0109",
+    "comment": "Awaiting sign-off from Finance on the revised budget breakdown.",
+    "timestamp": "2025-09-23",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0105",
+    "projectCode": "PJ01007",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0174",
+    "comment": "BIS certification documentation submitted for review.",
+    "timestamp": "2025-10-03",
+    "mentions": [
+      "USR-0032"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0106",
+    "projectCode": "PJ01007",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0500",
+    "userId": "USR-0106",
+    "comment": "DVP&R plan looks good, one clarification on the durability cycle count.",
+    "timestamp": "2025-09-17",
+    "mentions": [
+      "USR-0032"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0107",
+    "projectCode": "PJ01007",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0497",
+    "userId": "USR-0109",
+    "comment": "Prototype build is on track; sub-assembly fit checks complete.",
+    "timestamp": "2025-09-16",
+    "mentions": [],
+    "attachments": [
+      "PK-11_Analysis.pptx"
+    ]
+  },
+  {
+    "commentId": "PCM-0108",
+    "projectCode": "PJ01007",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0499",
+    "userId": "USR-0183",
+    "comment": "Three-point linkage load test results are within the target spec.",
+    "timestamp": "2025-09-19",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0109",
+    "projectCode": "PJ01007",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0507",
+    "userId": "USR-0005",
+    "comment": "Cost target achieved after the latest value engineering pass.",
+    "timestamp": "2026-02-19",
+    "mentions": [
+      "USR-0007"
+    ],
+    "attachments": [
+      "CV-07_Signoff.xlsx"
+    ]
+  },
+  {
+    "commentId": "PCM-0110",
+    "projectCode": "PJ01007",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0186",
+    "comment": "Dealer feedback from the pilot batch has been logged for review.",
+    "timestamp": "2025-11-24",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0111",
+    "projectCode": "PJ01007",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0106",
+    "comment": "Need updated DFMEA before we can close this action.",
+    "timestamp": "2026-07-10",
+    "mentions": [
+      "USR-0156",
+      "USR-0129"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0112",
+    "projectCode": "PJ01007",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0508",
+    "userId": "USR-0129",
+    "comment": "Homologation submission is queued with the test agency this week.",
+    "timestamp": "2026-02-05",
+    "mentions": [],
+    "attachments": [
+      "CV-08_Signoff.xlsx"
+    ]
+  },
+  {
+    "commentId": "PCM-0113",
+    "projectCode": "PJ01007",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0502",
+    "userId": "USR-0183",
+    "comment": "Dealer feedback from the pilot batch has been logged for review.",
+    "timestamp": "2026-06-07",
+    "mentions": [],
+    "attachments": [
+      "CV-02_Signoff.xlsx"
+    ]
+  },
+  {
+    "commentId": "PCM-0114",
+    "projectCode": "PJ01007",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0506",
+    "userId": "USR-0174",
+    "comment": "Requesting an extension on this deliverable — dependency on the CAE report.",
+    "timestamp": "2025-10-17",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0115",
+    "projectCode": "PJ01008",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0579",
+    "userId": "USR-0017",
+    "comment": "Concept sketch finalized after the styling review.",
+    "timestamp": "2025-10-26",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0116",
+    "projectCode": "PJ01008",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0574",
+    "userId": "USR-0159",
+    "comment": "Supplier audit completed with two minor NCs, CAPA in progress.",
+    "timestamp": "2025-11-21",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0117",
+    "projectCode": "PJ01008",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0095",
+    "comment": "Dealer feedback from the pilot batch has been logged for review.",
+    "timestamp": "2025-11-25",
+    "mentions": [
+      "USR-0175"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0118",
+    "projectCode": "PJ01008",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0024",
+    "comment": "Test rig availability confirmed for the durability validation.",
+    "timestamp": "2025-11-11",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0119",
+    "projectCode": "PJ01008",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0100",
+    "comment": "Prototype build is on track; sub-assembly fit checks complete.",
+    "timestamp": "2026-05-13",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0120",
+    "projectCode": "PJ01008",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0095",
+    "comment": "Concept sketch finalized after the styling review.",
+    "timestamp": "2026-05-05",
+    "mentions": [
+      "USR-0175"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0121",
+    "projectCode": "PJ01008",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0592",
+    "userId": "USR-0172",
+    "comment": "PPAP pending from the tier-1 supplier; following up today.",
+    "timestamp": "2026-06-11",
+    "mentions": [
+      "USR-0024"
+    ],
+    "attachments": [
+      "CV-11_Signoff.xlsx"
+    ]
+  },
+  {
+    "commentId": "PCM-0122",
+    "projectCode": "PJ01008",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0588",
+    "userId": "USR-0140",
+    "comment": "Hydraulics circuit pressure test passed on the first attempt.",
+    "timestamp": "2026-06-16",
+    "mentions": [],
+    "attachments": [
+      "CV-07_TestData.csv"
+    ]
+  },
+  {
+    "commentId": "PCM-0123",
+    "projectCode": "PJ01008",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0589",
+    "userId": "USR-0095",
+    "comment": "Dealer feedback from the pilot batch has been logged for review.",
+    "timestamp": "2026-02-28",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0124",
+    "projectCode": "PJ01008",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0193",
+    "comment": "Quality has signed off on the incoming inspection plan.",
+    "timestamp": "2026-01-06",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0125",
+    "projectCode": "PJ01009",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0118",
+    "comment": "Dealer feedback from the pilot batch has been logged for review.",
+    "timestamp": "2025-06-17",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0126",
+    "projectCode": "PJ01009",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0100",
+    "comment": "Updated GD&T applied per the review — please re-check the drawing.",
+    "timestamp": "2025-06-11",
+    "mentions": [
+      "USR-0217"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0127",
+    "projectCode": "PJ01009",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0650",
+    "userId": "USR-0011",
+    "comment": "Awaiting sign-off from Finance on the revised budget breakdown.",
+    "timestamp": "2025-06-27",
+    "mentions": [],
+    "attachments": [
+      "PK-02_TestData.csv"
+    ]
+  },
+  {
+    "commentId": "PCM-0128",
+    "projectCode": "PJ01009",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0660",
+    "userId": "USR-0118",
+    "comment": "BIS certification documentation submitted for review.",
+    "timestamp": "2025-06-03",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0129",
+    "projectCode": "PJ01009",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0662",
+    "userId": "USR-0188",
+    "comment": "Prototype build is on track; sub-assembly fit checks complete.",
+    "timestamp": "2025-06-06",
+    "mentions": [
+      "USR-0097",
+      "USR-0024"
+    ],
+    "attachments": [
+      "PK-14_Review-MoM.docx"
+    ]
+  },
+  {
+    "commentId": "PCM-0130",
+    "projectCode": "PJ01009",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0005",
+    "comment": "Transmission NVH levels within target after the latest tuning.",
+    "timestamp": "2025-07-02",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0131",
+    "projectCode": "PJ01009",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0174",
+    "comment": "Emission certification test slot confirmed for next month.",
+    "timestamp": "2025-08-17",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0132",
+    "projectCode": "PJ01009",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0131",
+    "comment": "Cost target achieved after the latest value engineering pass.",
+    "timestamp": "2025-07-28",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0133",
+    "projectCode": "PJ01009",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0663",
+    "userId": "USR-0188",
+    "comment": "Casting supplier confirmed capacity for the ramp-up volume.",
+    "timestamp": "2025-08-05",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0134",
+    "projectCode": "PJ01009",
+    "gateCode": "VV",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0011",
+    "comment": "Awaiting sign-off from Finance on the revised budget breakdown.",
+    "timestamp": "2025-09-18",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0135",
+    "projectCode": "PJ01009",
+    "gateCode": "VV",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0217",
+    "comment": "Quality has signed off on the incoming inspection plan.",
+    "timestamp": "2025-10-07",
+    "mentions": [
+      "USR-0195",
+      "USR-0240"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0136",
+    "projectCode": "PJ01009",
+    "gateCode": "VV",
+    "deliverableAssignmentId": "PDA-0685",
+    "userId": "USR-0174",
+    "comment": "BIS certification documentation submitted for review.",
+    "timestamp": "2025-09-17",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0137",
+    "projectCode": "PJ01009",
+    "gateCode": "VV",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0010",
+    "comment": "Awaiting sign-off from Finance on the revised budget breakdown.",
+    "timestamp": "2025-09-03",
+    "mentions": [
+      "USR-0195"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0138",
+    "projectCode": "PJ01009",
+    "gateCode": "VV",
+    "deliverableAssignmentId": "PDA-0683",
+    "userId": "USR-0024",
+    "comment": "PFMEA review identified two additional failure modes to mitigate.",
+    "timestamp": "2025-09-19",
+    "mentions": [
+      "USR-0118",
+      "USR-0011"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0139",
+    "projectCode": "PJ01009",
+    "gateCode": "VV",
+    "deliverableAssignmentId": "PDA-0678",
+    "userId": "USR-0030",
+    "comment": "Hydraulics circuit pressure test passed on the first attempt.",
+    "timestamp": "2025-08-15",
+    "mentions": [
+      "USR-0100"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0140",
+    "projectCode": "PJ01009",
+    "gateCode": "VV",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0165",
+    "comment": "Please update the CAD revision — BOM still references the old rev.",
+    "timestamp": "2025-09-29",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0141",
+    "projectCode": "PJ01009",
+    "gateCode": "PC",
+    "deliverableAssignmentId": "PDA-0698",
+    "userId": "USR-0165",
+    "comment": "Waiting for the validation report before sign-off.",
+    "timestamp": "2026-04-24",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0142",
+    "projectCode": "PJ01009",
+    "gateCode": "PC",
+    "deliverableAssignmentId": "PDA-0690",
+    "userId": "USR-0030",
+    "comment": "Field trial feedback flagged a minor hydraulics leak — root cause in progress.",
+    "timestamp": "2026-06-13",
+    "mentions": [
+      "USR-0172",
+      "USR-0097"
+    ],
+    "attachments": [
+      "PC-01_Analysis.pptx"
+    ]
+  },
+  {
+    "commentId": "PCM-0143",
+    "projectCode": "PJ01009",
+    "gateCode": "PC",
+    "deliverableAssignmentId": "PDA-0697",
+    "userId": "USR-0188",
+    "comment": "Prototype build is on track; sub-assembly fit checks complete.",
+    "timestamp": "2026-02-23",
+    "mentions": [
+      "USR-0172"
+    ],
+    "attachments": [
+      "PC-08_TestData.csv"
+    ]
+  },
+  {
+    "commentId": "PCM-0144",
+    "projectCode": "PJ01009",
+    "gateCode": "PC",
+    "deliverableAssignmentId": "PDA-0697",
+    "userId": "USR-0217",
+    "comment": "Please update the CAD revision — BOM still references the old rev.",
+    "timestamp": "2026-05-02",
+    "mentions": [
+      "USR-0097",
+      "USR-0009"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0145",
+    "projectCode": "PJ01009",
+    "gateCode": "PC",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0195",
+    "comment": "Transmission NVH levels within target after the latest tuning.",
+    "timestamp": "2026-06-06",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0146",
+    "projectCode": "PJ01009",
+    "gateCode": "PC",
+    "deliverableAssignmentId": "PDA-0701",
+    "userId": "USR-0005",
+    "comment": "Dealer feedback from the pilot batch has been logged for review.",
+    "timestamp": "2025-10-14",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0147",
+    "projectCode": "PJ01009",
+    "gateCode": "PC",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0097",
+    "comment": "Concept sketch finalized after the styling review.",
+    "timestamp": "2026-03-12",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0148",
+    "projectCode": "PJ01010",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0184",
+    "comment": "Please update the CAD revision — BOM still references the old rev.",
+    "timestamp": "2025-06-12",
+    "mentions": [
+      "USR-0175",
+      "USR-0123"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0149",
+    "projectCode": "PJ01010",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0735",
+    "userId": "USR-0028",
+    "comment": "Dealer feedback from the pilot batch has been logged for review.",
+    "timestamp": "2025-06-13",
+    "mentions": [],
+    "attachments": [
+      "PK-06_Checklist.pdf"
+    ]
+  },
+  {
+    "commentId": "PCM-0150",
+    "projectCode": "PJ01010",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0742",
+    "userId": "USR-0123",
+    "comment": "Supplier audit completed with two minor NCs, CAPA in progress.",
+    "timestamp": "2025-06-09",
+    "mentions": [
+      "USR-0023"
+    ],
+    "attachments": [
+      "PK-13_Signoff.xlsx"
+    ]
+  },
+  {
+    "commentId": "PCM-0151",
+    "projectCode": "PJ01010",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0184",
+    "comment": "PFMEA review identified two additional failure modes to mitigate.",
+    "timestamp": "2025-05-21",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0152",
+    "projectCode": "PJ01010",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0742",
+    "userId": "USR-0102",
+    "comment": "Three-point linkage load test results are within the target spec.",
+    "timestamp": "2025-06-08",
+    "mentions": [],
+    "attachments": [
+      "PK-13_TestData.csv"
+    ]
+  },
+  {
+    "commentId": "PCM-0153",
+    "projectCode": "PJ01010",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0175",
+    "comment": "Tooling trial #2 scheduled after the correction to the die.",
+    "timestamp": "2025-06-09",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0154",
+    "projectCode": "PJ01010",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0104",
+    "comment": "Please update the CAD revision — BOM still references the old rev.",
+    "timestamp": "2025-07-07",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0155",
+    "projectCode": "PJ01010",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0750",
+    "userId": "USR-0006",
+    "comment": "Tooling trial #2 scheduled after the correction to the die.",
+    "timestamp": "2025-06-20",
+    "mentions": [
+      "USR-0028"
+    ],
+    "attachments": [
+      "CV-07_Signoff.xlsx"
+    ]
+  },
+  {
+    "commentId": "PCM-0156",
+    "projectCode": "PJ01010",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0745",
+    "userId": "USR-0214",
+    "comment": "Homologation submission is queued with the test agency this week.",
+    "timestamp": "2025-07-03",
+    "mentions": [],
+    "attachments": [
+      "CV-02_Checklist.pdf"
+    ]
+  },
+  {
+    "commentId": "PCM-0157",
+    "projectCode": "PJ01010",
+    "gateCode": "VV",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0111",
+    "comment": "Design review comments have been closed out in the latest CAD package.",
+    "timestamp": "2025-09-10",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0158",
+    "projectCode": "PJ01010",
+    "gateCode": "VV",
+    "deliverableAssignmentId": "PDA-0765",
+    "userId": "USR-0006",
+    "comment": "Updated GD&T applied per the review — please re-check the drawing.",
+    "timestamp": "2025-07-29",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0159",
+    "projectCode": "PJ01010",
+    "gateCode": "VV",
+    "deliverableAssignmentId": "PDA-0761",
+    "userId": "USR-0123",
+    "comment": "BIS certification documentation submitted for review.",
+    "timestamp": "2025-08-10",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0160",
+    "projectCode": "PJ01010",
+    "gateCode": "VV",
+    "deliverableAssignmentId": "PDA-0760",
+    "userId": "USR-0241",
+    "comment": "Casting supplier confirmed capacity for the ramp-up volume.",
+    "timestamp": "2025-08-19",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0161",
+    "projectCode": "PJ01010",
+    "gateCode": "PC",
+    "deliverableAssignmentId": "PDA-0773",
+    "userId": "USR-0184",
+    "comment": "Design review comments have been closed out in the latest CAD package.",
+    "timestamp": "2025-11-19",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0162",
+    "projectCode": "PJ01010",
+    "gateCode": "PC",
+    "deliverableAssignmentId": "PDA-0783",
+    "userId": "USR-0023",
+    "comment": "Homologation submission is queued with the test agency this week.",
+    "timestamp": "2025-11-20",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0163",
+    "projectCode": "PJ01010",
+    "gateCode": "PC",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0175",
+    "comment": "Homologation submission is queued with the test agency this week.",
+    "timestamp": "2025-09-28",
+    "mentions": [
+      "USR-0172"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0164",
+    "projectCode": "PJ01010",
+    "gateCode": "PC",
+    "deliverableAssignmentId": "PDA-0777",
+    "userId": "USR-0175",
+    "comment": "Test rig availability confirmed for the durability validation.",
+    "timestamp": "2025-10-03",
+    "mentions": [],
+    "attachments": [
+      "PC-07_Checklist.pdf"
+    ]
+  },
+  {
+    "commentId": "PCM-0165",
+    "projectCode": "PJ01010",
+    "gateCode": "PC",
+    "deliverableAssignmentId": "PDA-0774",
+    "userId": "USR-0172",
+    "comment": "Tooling trial #2 scheduled after the correction to the die.",
+    "timestamp": "2025-09-27",
+    "mentions": [
+      "USR-0175"
+    ],
+    "attachments": [
+      "PC-04_Analysis.pptx"
+    ]
+  },
+  {
+    "commentId": "PCM-0166",
+    "projectCode": "PJ01010",
+    "gateCode": "PC",
+    "deliverableAssignmentId": "PDA-0778",
+    "userId": "USR-0214",
+    "comment": "DVP&R plan looks good, one clarification on the durability cycle count.",
+    "timestamp": "2025-10-04",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0167",
+    "projectCode": "PJ01010",
+    "gateCode": "PR",
+    "deliverableAssignmentId": "PDA-0792",
+    "userId": "USR-0006",
+    "comment": "Cost estimate revised after the latest supplier quote.",
+    "timestamp": "2026-01-15",
+    "mentions": [],
+    "attachments": [
+      "PR-08_Checklist.pdf"
+    ]
+  },
+  {
+    "commentId": "PCM-0168",
+    "projectCode": "PJ01010",
+    "gateCode": "PR",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0023",
+    "comment": "Hydraulics circuit pressure test passed on the first attempt.",
+    "timestamp": "2026-03-22",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0169",
+    "projectCode": "PJ01010",
+    "gateCode": "PR",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0184",
+    "comment": "Cost target achieved after the latest value engineering pass.",
+    "timestamp": "2026-05-31",
+    "mentions": [
+      "USR-0161",
+      "USR-0004"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0170",
+    "projectCode": "PJ01010",
+    "gateCode": "PR",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0161",
+    "comment": "PFMEA review identified two additional failure modes to mitigate.",
+    "timestamp": "2025-12-28",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0171",
+    "projectCode": "PJ01010",
+    "gateCode": "PR",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0111",
+    "comment": "Hydraulics circuit pressure test passed on the first attempt.",
+    "timestamp": "2026-03-20",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0172",
+    "projectCode": "PJ01010",
+    "gateCode": "PR",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0240",
+    "comment": "Need updated DFMEA before we can close this action.",
+    "timestamp": "2026-06-04",
+    "mentions": [
+      "USR-0172",
+      "USR-0004"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0173",
+    "projectCode": "PJ01010",
+    "gateCode": "PR",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0023",
+    "comment": "Concept sketch finalized after the styling review.",
+    "timestamp": "2026-04-11",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0174",
+    "projectCode": "PJ01011",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0819",
+    "userId": "USR-0238",
+    "comment": "Dealer feedback from the pilot batch has been logged for review.",
+    "timestamp": "2025-05-14",
+    "mentions": [],
+    "attachments": [
+      "PK-09_Report.pdf"
+    ]
+  },
+  {
+    "commentId": "PCM-0175",
+    "projectCode": "PJ01011",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0813",
+    "userId": "USR-0175",
+    "comment": "BIS certification documentation submitted for review.",
+    "timestamp": "2025-05-05",
+    "mentions": [
+      "USR-0193"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0176",
+    "projectCode": "PJ01011",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0238",
+    "comment": "Emission certification test slot confirmed for next month.",
+    "timestamp": "2025-04-18",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0177",
+    "projectCode": "PJ01011",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0193",
+    "comment": "Supplier audit completed with two minor NCs, CAPA in progress.",
+    "timestamp": "2025-04-18",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0178",
+    "projectCode": "PJ01011",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0820",
+    "userId": "USR-0011",
+    "comment": "Prototype build is on track; sub-assembly fit checks complete.",
+    "timestamp": "2025-05-14",
+    "mentions": [
+      "USR-0175"
+    ],
+    "attachments": [
+      "PK-10_Review-MoM.docx"
+    ]
+  },
+  {
+    "commentId": "PCM-0179",
+    "projectCode": "PJ01011",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0811",
+    "userId": "USR-0147",
+    "comment": "Concept sketch finalized after the styling review.",
+    "timestamp": "2025-05-19",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0180",
+    "projectCode": "PJ01011",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0821",
+    "userId": "USR-0106",
+    "comment": "Please update the CAD revision — BOM still references the old rev.",
+    "timestamp": "2025-04-16",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0181",
+    "projectCode": "PJ01011",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0193",
+    "comment": "Homologation submission is queued with the test agency this week.",
+    "timestamp": "2025-06-28",
+    "mentions": [
+      "USR-0023"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0182",
+    "projectCode": "PJ01011",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0838",
+    "userId": "USR-0028",
+    "comment": "Tooling trial #2 scheduled after the correction to the die.",
+    "timestamp": "2025-06-20",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0183",
+    "projectCode": "PJ01011",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0106",
+    "comment": "Test rig availability confirmed for the durability validation.",
+    "timestamp": "2025-06-24",
+    "mentions": [
+      "USR-0103",
+      "USR-0009"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0184",
+    "projectCode": "PJ01011",
+    "gateCode": "VV",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0193",
+    "comment": "Supplier confirmed tooling completion — trial samples expected next week.",
+    "timestamp": "2025-08-14",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0185",
+    "projectCode": "PJ01011",
+    "gateCode": "VV",
+    "deliverableAssignmentId": "PDA-0844",
+    "userId": "USR-0213",
+    "comment": "Supplier confirmed tooling completion — trial samples expected next week.",
+    "timestamp": "2025-08-01",
+    "mentions": [],
+    "attachments": [
+      "VV-06_Analysis.pptx"
+    ]
+  },
+  {
+    "commentId": "PCM-0186",
+    "projectCode": "PJ01011",
+    "gateCode": "VV",
+    "deliverableAssignmentId": "PDA-0846",
+    "userId": "USR-0172",
+    "comment": "Supplier audit completed with two minor NCs, CAPA in progress.",
+    "timestamp": "2025-07-26",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0187",
+    "projectCode": "PJ01011",
+    "gateCode": "VV",
+    "deliverableAssignmentId": "PDA-0846",
+    "userId": "USR-0028",
+    "comment": "PTO durability test extended by one week due to a facility conflict.",
+    "timestamp": "2025-07-26",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0188",
+    "projectCode": "PJ01011",
+    "gateCode": "VV",
+    "deliverableAssignmentId": "PDA-0843",
+    "userId": "USR-0172",
+    "comment": "Please update the CAD revision — BOM still references the old rev.",
+    "timestamp": "2025-08-15",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0189",
+    "projectCode": "PJ01011",
+    "gateCode": "PC",
+    "deliverableAssignmentId": "PDA-0854",
+    "userId": "USR-0213",
+    "comment": "Warranty data from the previous platform reviewed for lessons learned.",
+    "timestamp": "2025-08-29",
+    "mentions": [
+      "USR-0238",
+      "USR-0147"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0190",
+    "projectCode": "PJ01011",
+    "gateCode": "PC",
+    "deliverableAssignmentId": "PDA-0862",
+    "userId": "USR-0147",
+    "comment": "Dealer feedback from the pilot batch has been logged for review.",
+    "timestamp": "2025-09-09",
+    "mentions": [],
+    "attachments": [
+      "PC-11_Signoff.xlsx"
+    ]
+  },
+  {
+    "commentId": "PCM-0191",
+    "projectCode": "PJ01011",
+    "gateCode": "PC",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0175",
+    "comment": "Test rig availability confirmed for the durability validation.",
+    "timestamp": "2025-10-22",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0192",
+    "projectCode": "PJ01011",
+    "gateCode": "PC",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0009",
+    "comment": "Prototype build is on track; sub-assembly fit checks complete.",
+    "timestamp": "2025-10-11",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0193",
+    "projectCode": "PJ01011",
+    "gateCode": "PR",
+    "deliverableAssignmentId": "PDA-0871",
+    "userId": "USR-0109",
+    "comment": "Need updated DFMEA before we can close this action.",
+    "timestamp": "2026-07-05",
+    "mentions": [
+      "USR-0023"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0194",
+    "projectCode": "PJ01011",
+    "gateCode": "PR",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0103",
+    "comment": "Supplier audit completed with two minor NCs, CAPA in progress.",
+    "timestamp": "2026-01-28",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0195",
+    "projectCode": "PJ01011",
+    "gateCode": "PR",
+    "deliverableAssignmentId": "PDA-0874",
+    "userId": "USR-0130",
+    "comment": "Three-point linkage load test results are within the target spec.",
+    "timestamp": "2026-01-08",
+    "mentions": [],
+    "attachments": [
+      "PR-09_Report.pdf"
+    ]
+  },
+  {
+    "commentId": "PCM-0196",
+    "projectCode": "PJ01011",
+    "gateCode": "PR",
+    "deliverableAssignmentId": "PDA-0866",
+    "userId": "USR-0109",
+    "comment": "Test rig availability confirmed for the durability validation.",
+    "timestamp": "2026-06-30",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0197",
+    "projectCode": "PJ01012",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0005",
+    "comment": "Warranty data from the previous platform reviewed for lessons learned.",
+    "timestamp": "2025-12-22",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0198",
+    "projectCode": "PJ01012",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0009",
+    "comment": "Requesting an extension on this deliverable — dependency on the CAE report.",
+    "timestamp": "2025-12-09",
+    "mentions": [
+      "USR-0155"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0199",
+    "projectCode": "PJ01012",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0896",
+    "userId": "USR-0210",
+    "comment": "PTO durability test extended by one week due to a facility conflict.",
+    "timestamp": "2025-12-31",
+    "mentions": [
+      "USR-0005"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0200",
+    "projectCode": "PJ01012",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0914",
+    "userId": "USR-0003",
+    "comment": "BIS certification documentation submitted for review.",
+    "timestamp": "2026-04-10",
+    "mentions": [],
+    "attachments": [
+      "CV-09_Signoff.xlsx"
+    ]
+  },
+  {
+    "commentId": "PCM-0201",
+    "projectCode": "PJ01012",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0910",
+    "userId": "USR-0003",
+    "comment": "Updated GD&T applied per the review — please re-check the drawing.",
+    "timestamp": "2026-05-13",
+    "mentions": [],
+    "attachments": [
+      "CV-05_Signoff.xlsx"
+    ]
+  },
+  {
+    "commentId": "PCM-0202",
+    "projectCode": "PJ01012",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0100",
+    "comment": "Design review comments have been closed out in the latest CAD package.",
+    "timestamp": "2026-05-05",
+    "mentions": [
+      "USR-0024"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0203",
+    "projectCode": "PJ01012",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0912",
+    "userId": "USR-0175",
+    "comment": "Warranty data from the previous platform reviewed for lessons learned.",
+    "timestamp": "2026-05-08",
+    "mentions": [
+      "USR-0009"
+    ],
+    "attachments": [
+      "CV-07_Review-MoM.docx"
+    ]
+  },
+  {
+    "commentId": "PCM-0204",
+    "projectCode": "PJ01012",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0003",
+    "comment": "Emission certification test slot confirmed for next month.",
+    "timestamp": "2026-05-19",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0205",
+    "projectCode": "PJ01013",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0973",
+    "userId": "USR-0012",
+    "comment": "Test rig availability confirmed for the durability validation.",
+    "timestamp": "2026-05-21",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0206",
+    "projectCode": "PJ01013",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0976",
+    "userId": "USR-0239",
+    "comment": "Please update the CAD revision — BOM still references the old rev.",
+    "timestamp": "2026-05-19",
+    "mentions": [
+      "USR-0184"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0207",
+    "projectCode": "PJ01013",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0239",
+    "comment": "Supplier audit completed with two minor NCs, CAPA in progress.",
+    "timestamp": "2026-05-16",
+    "mentions": [
+      "USR-0184",
+      "USR-0037"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0208",
+    "projectCode": "PJ01013",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0975",
+    "userId": "USR-0106",
+    "comment": "Requesting an extension on this deliverable — dependency on the CAE report.",
+    "timestamp": "2026-05-07",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0209",
+    "projectCode": "PJ01013",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0977",
+    "userId": "USR-0012",
+    "comment": "Test rig availability confirmed for the durability validation.",
+    "timestamp": "2026-05-10",
+    "mentions": [
+      "USR-0151",
+      "USR-0121"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0210",
+    "projectCode": "PJ01013",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0976",
+    "userId": "USR-0215",
+    "comment": "Need updated DFMEA before we can close this action.",
+    "timestamp": "2026-05-14",
+    "mentions": [
+      "USR-0012"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0211",
+    "projectCode": "PJ01013",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0012",
+    "comment": "Quality has signed off on the incoming inspection plan.",
+    "timestamp": "2026-05-14",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0212",
+    "projectCode": "PJ01013",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0978",
+    "userId": "USR-0106",
+    "comment": "DVP&R plan looks good, one clarification on the durability cycle count.",
+    "timestamp": "2026-05-14",
+    "mentions": [],
+    "attachments": [
+      "CV-04_Analysis.pptx"
+    ]
+  },
+  {
+    "commentId": "PCM-0213",
+    "projectCode": "PJ01013",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0979",
+    "userId": "USR-0151",
+    "comment": "Quality has signed off on the incoming inspection plan.",
+    "timestamp": "2026-07-04",
+    "mentions": [],
+    "attachments": [
+      "CV-05_Analysis.pptx"
+    ]
+  },
+  {
+    "commentId": "PCM-0214",
+    "projectCode": "PJ01013",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0180",
+    "comment": "PFMEA review identified two additional failure modes to mitigate.",
+    "timestamp": "2026-06-26",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0215",
+    "projectCode": "PJ01014",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0981",
+    "userId": "USR-0002",
+    "comment": "Updated GD&T applied per the review — please re-check the drawing.",
+    "timestamp": "2026-06-27",
+    "mentions": [
+      "USR-0157"
+    ],
+    "attachments": [
+      "PK-03_Review-MoM.docx"
+    ]
+  },
+  {
+    "commentId": "PCM-0216",
+    "projectCode": "PJ01014",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0017",
+    "comment": "Quality has signed off on the incoming inspection plan.",
+    "timestamp": "2026-07-09",
+    "mentions": [
+      "USR-0174"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0217",
+    "projectCode": "PJ01014",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0981",
+    "userId": "USR-0132",
+    "comment": "Concept sketch finalized after the styling review.",
+    "timestamp": "2026-07-07",
+    "mentions": [],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0218",
+    "projectCode": "PJ01015",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-1002",
+    "userId": "USR-0174",
+    "comment": "Three-point linkage load test results are within the target spec.",
+    "timestamp": "2026-04-10",
+    "mentions": [
+      "USR-0009"
+    ],
+    "attachments": [
+      "PK-14_Checklist.pdf"
+    ]
+  },
+  {
+    "commentId": "PCM-0219",
+    "projectCode": "PJ01015",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": "PDA-0993",
+    "userId": "USR-0010",
+    "comment": "Transmission NVH levels within target after the latest tuning.",
+    "timestamp": "2026-05-14",
+    "mentions": [
+      "USR-0032",
+      "USR-0192"
+    ],
+    "attachments": []
+  },
+  {
+    "commentId": "PCM-0220",
+    "projectCode": "PJ01015",
+    "gateCode": "Pre-KO",
+    "deliverableAssignmentId": null,
+    "userId": "USR-0009",
+    "comment": "Cost estimate revised after the latest supplier quote.",
+    "timestamp": "2026-03-14",
+    "mentions": [],
+    "attachments": []
+  }
+]
