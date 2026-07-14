@@ -43,22 +43,32 @@ const complianceStatusData = computeComplianceStatusData();
 // ── Compliance Rate data (Chart 4) — FY27 (the current-year actual line) is computed with
 //    Compliance % = (Actual ÷ Planned) × 100, grouping projectPortfolioData by its reporting
 //    month; this is the same formula and the same source data as the "month" drill-down table,
-//    so the chart and its drill-down can never disagree. Months with no reporting project (Feb,
-//    in this dataset) are left as a gap in the line (spanGaps handles the visual join) rather
-//    than a fabricated 0%. There's no independent prior-year dataset in this app, so FY26
+//    so the chart and its drill-down can never disagree. An INTERIOR month with no reporting
+//    project is left as a real gap (spanGaps handles the visual join) rather than a fabricated
+//    0%; a LEADING month (before the portfolio's first real data point) is backfilled with the
+//    portfolio average instead, since spanGaps can't bridge a gap with nothing before it — see
+//    firstKnown below. There's no independent prior-year dataset in this app, so FY26
 //    (comparison) is derived deterministically from the real FY27 series (a fixed offset, not a
 //    random/static array) — clearly distinct, reproducible, and never independent of the real
 //    numbers. Figma's design shows exactly two lines (FY26, FY27) — no AI-predicted 3rd line. ──
 function computeComplianceRateData() {
-  const FY27 = monthOrder.map(mon => {
+  const FY27raw = monthOrder.map(mon => {
     const ps = projectPortfolioData.filter(p => p.month === mon);
     if (!ps.length) return null;
     const planned = ps.reduce((s,p) => s + p.planned, 0);
     const actual  = ps.reduce((s,p) => s + p.actual, 0);
     return planned ? Math.round(actual / planned * 100) : null;
   });
-  const known   = FY27.filter(v => v != null);
+  const known   = FY27raw.filter(v => v != null);
   const fallback = known.length ? Math.round(known.reduce((a,b) => a + b, 0) / known.length) : 60;
+  // Leading FY months with no reporting project yet (before the portfolio's first real data
+  // point) would otherwise start the line with a blank gap — spanGaps only bridges a gap
+  // BETWEEN two known points, not one with nothing before it. Backfill those leading months
+  // with the portfolio's own average rate so the line always starts at the first FY month;
+  // interior gaps (a month with no reporting project between two real ones) are untouched and
+  // still bridged visually by spanGaps.
+  const firstKnown = FY27raw.findIndex(v => v != null);
+  const FY27 = FY27raw.map((v, i) => (v == null && firstKnown > i) ? fallback : v);
   const clamp   = v => Math.max(0, Math.min(100, v));
   const FY26    = FY27.map(v => clamp((v ?? fallback) - 4));
   return { FY27, FY26 };
@@ -69,8 +79,12 @@ const complianceRateData = computeComplianceRateData();
 //  STATE
 // ==========================================================
 let fsWidgetId = null; // ID of the currently fullscreened widget
-let openPanel = null;  // tracks currently open panel as "panelId|type|value"
-let currentFilter = { 1: null, 2: null }; // per-row active filter state
+// Drill-down panels are now persistent + unlimited-per-row (only the ✕ closes one) so two can
+// sit side-by-side for comparison — each row's zone can hold any number of independent panel
+// instances, tracked here by a generated id rather than a single fixed panelId per row.
+let panelInstances = { 1: [], 2: [] }; // { id, type, value }[]
+let panelSeq = 0;
+function anyPanelOpen() { return panelInstances[1].length > 0 || panelInstances[2].length > 0; }
 
 // Chart instance registry — update data arrays above; no design changes needed
 const charts = {};
@@ -97,7 +111,7 @@ function fitViewport() {
   // We do NOT temporarily remove the transform here — that causes a reflow flash.
   // The initial baseline (672) matches the CSS exactly; subsequent measurements
   // happen naturally when layout is stable.
-  if (!openPanel && !fsWidgetId && root.scrollHeight > 0) {
+  if (!anyPanelOpen() && !fsWidgetId && root.scrollHeight > 0) {
     baselineContentHeight = root.scrollHeight;
   }
 
@@ -247,35 +261,135 @@ function renderHealthTable(thId, tbId, value, projects) {
   const tbodyEl = typeof tbId === "string" ? document.getElementById(tbId) : tbId;
   const isDelayView = value === "On Track" || value === "Delayed" || value === "At Risk";
 
+  // Status cell: colored chip + (only when there's something to explain) a small arrow that
+  // expands an inline row below with a real, derived explanation — see buildDelayStory().
+  const statusCell = p => {
+    const chip = mkBadge(p.status, statusBadgeClass(p.status));
+    if (p.status === "On Track") return chip;
+    return chip + " <button type='button' class='dd-story-toggle' data-code='" + esc(p.projectCode) + "' title='Why is this delayed?'>▾</button>";
+  };
+  const clsChip = p => p.classification === "N-BB" ? "<span class='dd-chip-nbb'>N-BB</span>" : "<span class='dd-chip-bb'>BB</span>";
+
+  // Deliverable (Actual/Planned) — real completed-count / total-count for the whole project, and
+  // Delay Count — how many of those deliverables are actually delayed (>15 days, the same
+  // on-time/delayed threshold the RAG bands elsewhere in this app already use), not just any
+  // non-zero delayDays. Shared by both table variants below.
+  function delivStatsCells(p) {
+    const deliv = _deliverables.filter(d => d.projectCode === p.projectCode);
+    const actual = deliv.filter(d => d.status === "Completed").length;
+    const planned = deliv.length;
+    const delayedCount = deliv.filter(d => (d.delayDays || 0) > 15).length;
+    return "<td class='dd-deliv-ap'>" + actual + "<span class='dd-slash'>/</span>" + planned + "</td>" +
+           "<td class='" + (delayedCount > 0 ? "dd-delay-med" : "") + "'>" + delayedCount + "</td>";
+  }
+
   if (isDelayView) {
-    // PROJECT NAME | PROCESS COMPLIANCE SCORE | 0-15 / 15-60 / >60 day delay bands — counted in
-    // real deliverables (not projects), from each deliverable's own real delayDays.
-    theadEl.innerHTML = "<tr><th>PROJECT NAME</th><th>PROCESS COMPLIANCE SCORE</th><th>0-15 (No. of Deliverables)</th><th>15-60 (No. of Deliverables)</th><th>&gt;60 (No. of Deliverables)</th></tr>";
-    if (!projects.length) { tbodyEl.innerHTML = "<tr><td colspan='5' class='dd-empty'>No records match this filter.</td></tr>"; return; }
+    // PROJECT NAME | DELIVERABLE (A/P) | DELAY COUNT | PROCESS COMPLIANCE SCORE | 0-15 / 15-60 /
+    // >60 day delay bands — counted in real deliverables (not projects), from each deliverable's
+    // own real delayDays — plus TYPE / CLASSIFICATION / STATUS so a row can be identified and (if
+    // delayed) explained in place.
+    theadEl.innerHTML = "<tr><th>PROJECT NAME</th><th>DELIVERABLE</th><th>DELAY(DAYS)</th><th>PROCESS COMPLIANCE SCORE</th><th>0-15 (No. of Del)</th><th>15-60 (No. of Del)</th><th>&gt;60 (No. of Del)</th><th>TYPE</th><th>CLASSIFICATION</th><th>STATUS</th></tr>";
+    if (!projects.length) { tbodyEl.innerHTML = "<tr><td colspan='10' class='dd-empty'>No records match this filter.</td></tr>"; return; }
     tbodyEl.innerHTML = projects.map(p => {
       const deliv = _deliverables.filter(d => d.projectCode === p.projectCode);
       const band = (lo, hi) => deliv.filter(d => { const days = d.delayDays || 0; return days > lo && days <= hi; }).length;
       const scoreCls = p.riskScore >= 70 ? "dd-risk-high" : p.riskScore >= 40 ? "dd-risk-med" : "dd-risk-ok";
       return "<tr>" +
         "<td class='col-project'><a class='dd-project-link' href='pages/project-detail/index.html?id=" + encodeURIComponent(p.projectCode) + "'>" + esc(p.projectName) + "</a></td>" +
+        delivStatsCells(p) +
         "<td><span class='dd-risk-pill " + scoreCls + "'>" + p.riskScore + "</span></td>" +
         "<td>" + band(-Infinity, 15) + "</td><td>" + band(15, 60) + "</td><td>" + band(60, Infinity) + "</td>" +
+        "<td><span class='dd-chip'>" + esc(p.type) + "</span></td>" +
+        "<td>" + clsChip(p) + "</td>" +
+        "<td>" + statusCell(p) + "</td>" +
       "</tr>";
     }).join("");
   } else {
-    // PROJECT NAME | Platform | Current GATE | Current DELIVERABLES (nearest to today's date)
-    theadEl.innerHTML = "<tr><th>PROJECT NAME</th><th>PLATFORM</th><th>CURRENT GATE</th><th>CURRENT DELIVERABLES</th></tr>";
-    if (!projects.length) { tbodyEl.innerHTML = "<tr><td colspan='4' class='dd-empty'>No records match this filter.</td></tr>"; return; }
+    // PROJECT NAME | Platform | Current GATE | Current DELIVERABLES (nearest to today's date) |
+    // DELIVERABLE (A/P) | DELAY COUNT | CLASSIFICATION | DELAY | STATUS
+    theadEl.innerHTML = "<tr><th>PROJECT NAME</th><th>PLATFORM</th><th>CURRENT GATE</th><th>CURRENT DELIVERABLES</th><th>DELIVERABLE</th><th>DELAY(DAYS)</th><th>CLASSIFICATION</th><th>DELAY</th><th>STATUS</th></tr>";
+    if (!projects.length) { tbodyEl.innerHTML = "<tr><td colspan='9' class='dd-empty'>No records match this filter.</td></tr>"; return; }
     tbodyEl.innerHTML = projects.map(p => {
       const nearest = nearestDeliverableFor(p.projectCode, p.gate);
+      const delayCls = p.delayDays > 60 ? "dd-delay-high" : p.delayDays > 15 ? "dd-delay-med" : "dd-delay-low";
       return "<tr>" +
         "<td class='col-project'><a class='dd-project-link' href='pages/project-detail/index.html?id=" + encodeURIComponent(p.projectCode) + "'>" + esc(p.projectName) + "</a></td>" +
         "<td>" + esc(p.platform || "-") + "</td>" +
         "<td><span class='dd-chip'>" + esc(p.gate) + "</span></td>" +
         "<td>" + esc(nearest) + "</td>" +
+        delivStatsCells(p) +
+        "<td>" + clsChip(p) + "</td>" +
+        "<td class='" + delayCls + "'>" + p.delayDays + "d</td>" +
+        "<td>" + statusCell(p) + "</td>" +
       "</tr>";
     }).join("");
   }
+}
+
+// Real, ~50-60 word narrative: which gate actually carries the delay and what effect that has
+// on the project's journey — derived from the same gate-instance / risk records the rest of the
+// dashboard already reconciles against, never canned/random text.
+function buildDelayStory(projectCode) {
+  const proj = (typeof _projects !== "undefined" ? _projects : []).find(pr => pr.code === projectCode);
+  const row  = projectPortfolioData.find(p => p.projectCode === projectCode);
+  if (!proj || !row) return "No additional detail available for this project.";
+
+  const GATE_NAMES = { "Pre-KO":"Pre-Kickoff", "CVPA":"Concept & Vehicle Program Approval", "VV":"Virtual Validation", "PC":"Prototype Certification", "PR":"Production Readiness", "PPO":"Post Production Optimization" };
+  const fmtDate = iso => iso ? new Date(iso).toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric" }) : "-";
+
+  // The completed gate that actually carries the largest real slip (actual vs planned finish) —
+  // found generically from the real records, not hardcoded per project.
+  const gates = (typeof _gateInstances !== "undefined" ? _gateInstances : []).filter(g => g.projectCode === projectCode);
+  let worstGate = null, worstDelay = 0;
+  gates.forEach(g => {
+    if (g.currentStatus !== "Completed" || !g.actualFinish || !g.plannedFinish) return;
+    const delay = Math.round((new Date(g.actualFinish) - new Date(g.plannedFinish)) / 86400000);
+    if (delay > worstDelay) { worstDelay = delay; worstGate = g; }
+  });
+
+  const totalVar = Math.max(0, proj.sopVarianceDays || 0);
+  let cause;
+  if (worstGate && worstDelay > 0) {
+    // Reuse the real cause clause already written into that gate's own remark, e.g. "...—
+    // Critical casting supplier missed PPAP submission at Pre-KO, delaying downstream approval."
+    const remark = worstGate.gateRemarks || "";
+    const dashIdx = remark.indexOf("—");
+    const causeClause = dashIdx >= 0 ? remark.slice(dashIdx + 1).trim() : remark;
+    cause = (GATE_NAMES[worstGate.gateCode] || worstGate.gateCode) + " gate closed " + worstDelay + " days behind plan — " + causeClause;
+  } else {
+    // No completed gate carries a delay yet (still trending behind within the current active
+    // gate) — fall back to the project's own real risk/issue reason.
+    cause = (GATE_NAMES[row.gate] || row.gate) + " gate is currently trending " + totalVar + " days behind plan" +
+      (row.reason && row.reason !== "None" ? " due to " + row.reason : "") + ".";
+  }
+  const effect = "This has pushed the forecast SOP to " + fmtDate(proj.forecastSOP) + " against the original " + fmtDate(proj.targetSOP) +
+    " target (" + totalVar + " days behind), keeping the project in the " + row.status + " band.";
+
+  let story = cause + " " + effect;
+  const words = story.split(/\s+/);
+  if (words.length > 62) story = words.slice(0, 60).join(" ") + "…";
+  return story;
+}
+
+// Toggle a row's inline delay-story sub-row open/closed — shared by the arrow button and the
+// sub-row's own ✕ (see the delegated click handler in wireDrillDownPanelEvents).
+function toggleStoryRow(btn) {
+  const tr = btn.closest("tr");
+  if (!tr) return;
+  const next = tr.nextElementSibling;
+  if (next && next.classList.contains("dd-story-row")) { next.remove(); btn.textContent = "▾"; btn.classList.remove("open"); return; }
+  const storyTr = document.createElement("tr");
+  storyTr.className = "dd-story-row";
+  storyTr.innerHTML = "<td colspan='" + tr.children.length + "'><div class='dd-story-box'><span>" + esc(buildDelayStory(btn.dataset.code)) + "</span><button type='button' class='dd-story-close' aria-label='Close'>✕</button></div></td>";
+  tr.after(storyTr);
+  btn.textContent = "▴"; btn.classList.add("open");
+}
+function closeStoryRow(closeBtn) {
+  const storyTr = closeBtn.closest(".dd-story-row");
+  const prevTr  = storyTr && storyTr.previousElementSibling;
+  const toggleBtn = prevTr && prevTr.querySelector(".dd-story-toggle");
+  if (toggleBtn) { toggleBtn.textContent = "▾"; toggleBtn.classList.remove("open"); }
+  storyTr?.remove();
 }
 
 // Same gate-started + real-calendar-quarter logic as computeGateStatusByQuarter (Chart 2's
@@ -302,6 +416,45 @@ function computePerProjectQuarterBreakdown() {
     row.total = { planned: totalPlanned, actual: totalActual };
     return row;
   });
+}
+
+// One specific quarter's progress per project — a single-row header (unlike renderQuarterTable's
+// Q1-Q4/TOTAL grid) so position:sticky just works, and each row shows real per-quarter progress %
+// plus the project's overall compliance score / status for context.
+function renderQuarterSingleTable(thId, tbId, quarterKey, rows) {
+  const theadEl = typeof thId === "string" ? document.getElementById(thId) : thId;
+  const tbodyEl = typeof tbId === "string" ? document.getElementById(tbId) : tbId;
+  const byCode = Object.fromEntries(projectPortfolioData.map(p => [p.projectCode, p]));
+
+  theadEl.innerHTML = "<tr><th>SR. NO</th><th>PROJECT NAME</th><th>PLANNED</th><th>ACTUAL</th><th>PROGRESS</th><th>COMPLIANCE SCORE</th><th>STATUS</th></tr>";
+  if (!rows.length) { tbodyEl.innerHTML = "<tr><td colspan='7' class='dd-empty'>No records match this filter.</td></tr>"; return; }
+
+  tbodyEl.innerHTML = rows.map((r, i) => {
+    const q = r[quarterKey] || { planned: 0, actual: 0 };
+    const p = byCode[r.projectCode];
+    const progressPct = q.planned ? Math.round(q.actual / q.planned * 100) : null;
+    const progressCell = progressPct === null ? "<span class='dd-delay-low'>—</span>" : "<span class='" + (progressPct >= 85 ? "dd-delay-low" : progressPct >= 50 ? "dd-delay-med" : "dd-delay-high") + "' style='font-weight:700'>" + progressPct + "%</span>";
+    const scoreCls = !p ? "dd-risk-ok" : p.riskScore >= 70 ? "dd-risk-high" : p.riskScore >= 40 ? "dd-risk-med" : "dd-risk-ok";
+    const scoreCell = p ? "<span class='dd-risk-pill " + scoreCls + "'>" + p.riskScore + "</span>" : "-";
+    const statusCell = p ? mkBadge(p.status, statusBadgeClass(p.status)) : "-";
+    return "<tr>" +
+      "<td>" + (i + 1) + "</td>" +
+      "<td class='col-project'><a class='dd-project-link' href='pages/project-detail/index.html?id=" + encodeURIComponent(r.projectCode) + "'>" + esc(r.projectName) + "</a></td>" +
+      "<td>" + q.planned + "</td><td>" + q.actual + "</td>" +
+      "<td>" + progressCell + "</td>" +
+      "<td>" + scoreCell + "</td>" +
+      "<td>" + statusCell + "</td>" +
+    "</tr>";
+  }).join("") + (function () {
+    const totalP = rows.reduce((s, r) => s + (r[quarterKey]?.planned || 0), 0);
+    const totalA = rows.reduce((s, r) => s + (r[quarterKey]?.actual || 0), 0);
+    const totalPct = totalP ? Math.round(totalA / totalP * 100) : 0;
+    return "<tr style='background:#f1f5f9;font-weight:700;border-top:2px solid #e2e8f0'>" +
+      "<td></td><td style='padding-left:12px;color:#1e3a5f'>TOTAL (" + rows.length + " projects)</td>" +
+      "<td style='font-weight:800'>" + totalP + "</td><td style='font-weight:800'>" + totalA + "</td>" +
+      "<td style='font-weight:800'>" + (totalP ? totalPct + "%" : "—") + "</td><td></td><td></td>" +
+    "</tr>";
+  })();
 }
 
 function renderQuarterTable(thId, tbId, rows) {
@@ -338,6 +491,8 @@ function renderQuarterTable(thId, tbId, rows) {
 }
 
 function renderComplianceTable(thId, tbId, type, value) {
+  const theadEl = typeof thId === "string" ? document.getElementById(thId) : thId;
+  const tbodyEl = typeof tbId === "string" ? document.getElementById(tbId) : tbId;
   // typeFilter = "M2"|"M4"|"M6"|"Total", col = "Planned"|"Actual"|"Percentage"|""
   const typeFilter = value.split("-")[0];
   const colHighlight = value.split("-")[1] || null;
@@ -349,7 +504,7 @@ function renderComplianceTable(thId, tbId, type, value) {
 
   // Header — highlight the clicked column
   const hl = col => colHighlight === col ? "style='background:#eff6ff;font-weight:800'" : "";
-  document.getElementById(thId).innerHTML =
+  theadEl.innerHTML =
     "<tr>" +
     "<th>PROJECT NAME</th>" +
     "<th>TYPE</th>" +
@@ -362,17 +517,18 @@ function renderComplianceTable(thId, tbId, type, value) {
     "</tr>";
 
   if (!projects.length) {
-    document.getElementById(tbId).innerHTML = "<tr><td colspan='8' class='dd-empty'>No records match this filter.</td></tr>";
+    tbodyEl.innerHTML = "<tr><td colspan='8' class='dd-empty'>No records match this filter.</td></tr>";
     return;
   }
 
   // Project rows — each project shows its own planned/actual so the sum always matches the chart
-  document.getElementById(tbId).innerHTML = projects.map((p, i) => {
+  tbodyEl.innerHTML = projects.map((p, i) => {
     const pct      = p.planned ? Math.round(p.actual / p.planned * 100) : 0;
     const variance = p.actual - p.planned;
     const pColor   = pct >= 85 ? "#15803d" : pct >= 70 ? "#d97706" : "#dc2626";
-    const pBg      = pct >= 85 ? "#f0fdf4" : pct >= 70 ? "#fffbeb" : "#ffebee";
-    const lbl      = pct >= 85 ? "On Track" : pct >= 70 ? "Watch" : "At Risk";
+    // STATUS reuses the same portfolio-wide derived risk (p.status = delayBandFor(p.delayDays))
+    // as every other widget, rather than this table's own compliance-% ratio — so the count of
+    // "At Risk" projects always reconciles across the whole dashboard, not just within this table.
     const clsBadge = p.classification === "N-BB" ? mkBadge("N-BB","badge-nbb") : mkBadge("BB","badge-bb");
     const bg       = i % 2 === 1 ? "#f8f9fb" : "#fff";
     return "<tr style='background:" + bg + "'>" +
@@ -383,7 +539,7 @@ function renderComplianceTable(thId, tbId, type, value) {
       "<td style='font-weight:600" + (colHighlight === "Actual"     ? ";background:#eff6ff;color:#1d4ed8" : "") + "'>" + p.actual + "</td>" +
       "<td style='font-weight:700;color:" + pColor + (colHighlight === "Percentage" ? ";background:#fffbeb" : "") + "'>" + pct + "%</td>" +
       "<td style='color:" + (variance < 0 ? "#dc2626" : "#15803d") + ";font-weight:600'>" + (variance > 0 ? "+" : "") + variance + "</td>" +
-      "<td><span style='display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:" + pBg + ";color:" + pColor + "'>" + lbl + "</span></td>" +
+      "<td>" + mkBadge(p.status, statusBadgeClass(p.status)) + "</td>" +
     "</tr>";
   }).join("") +
   // Summary totals row
@@ -405,12 +561,14 @@ function renderComplianceTable(thId, tbId, type, value) {
 }
 
 function renderMonthTable(thId, tbId, projects) {
-  document.getElementById(thId).innerHTML = "<tr><th>PROJECT NAME</th><th>GATE</th><th>TYPE</th><th>CLASSIFICATION</th><th>MONTH</th><th>PLANNED</th><th>ACTUAL</th><th>COMPLIANCE %</th><th>STATUS</th></tr>";
+  const theadEl = typeof thId === "string" ? document.getElementById(thId) : thId;
+  const tbodyEl = typeof tbId === "string" ? document.getElementById(tbId) : tbId;
+  theadEl.innerHTML = "<tr><th>PROJECT NAME</th><th>GATE</th><th>TYPE</th><th>CLASSIFICATION</th><th>MONTH</th><th>PLANNED</th><th>ACTUAL</th><th>COMPLIANCE %</th><th>STATUS</th></tr>";
   if (!projects.length) {
-    document.getElementById(tbId).innerHTML = "<tr><td colspan='9' class='dd-empty'>No records for this period.</td></tr>";
+    tbodyEl.innerHTML = "<tr><td colspan='9' class='dd-empty'>No records for this period.</td></tr>";
     return;
   }
-  document.getElementById(tbId).innerHTML = projects.map((p, i) => {
+  tbodyEl.innerHTML = projects.map((p, i) => {
     const compPct  = p.planned ? Math.round(p.actual / p.planned * 100) : 0;
     const pColor   = compPct >= 85 ? "#15803d" : compPct >= 70 ? "#d97706" : "#dc2626";
     const clsBadge = p.classification === "N-BB" ? mkBadge("N-BB","badge-nbb") : mkBadge("BB","badge-bb");
@@ -441,10 +599,12 @@ const titleMap = {
   typeGate:      v => "Classification " + v.replace("|"," / ") + " Projects",
   compliance:    v => "Process Compliance Status \u2014 " + (v.split("-")[0] === "Total" ? "All Projects" : v.split("-")[0] + " Projects"),
   month:         v => "Compliance Rate \u2014 " + v.replace("-"," "),
-  quarter:       v => "Gate Status \u2014 " + quarterLabel(v),
+  // "all" = the "Gate Status: 2026-2027" label itself was clicked (every quarter, side by side);
+  // a real Q1-Q4 key = one specific ring was clicked (that quarter only).
+  quarter:       v => v === "all" ? "Gate Status \u2014 All Quarters (" + new Date().getFullYear() + ")" : "Gate Status \u2014 " + quarterLabel(v),
 };
 const filterLabelMap = {
-  quarter: v => quarterLabel(v),
+  quarter: v => v === "all" ? "All Quarters" : quarterLabel(v),
 };
 const aiMap = {
   health:        (v,ps) => "\uD83E\uDD16 AI: " + ps.filter(p=>p.status==="At Risk").length + " at risk in \"" + v + "\" \u2014 avg risk " + avg(ps,"riskScore") + ". Compliance = (Actual \u00F7 Planned) \u00D7 100.",
@@ -463,6 +623,12 @@ const aiMap = {
   // gate-started counts) rather than re-deriving from the old per-project p.planned/p.actual \u2014
   // so the AI note can never disagree with the numbers inside the ring that was clicked.
   quarter:       (v) => {
+    if (v === "all") {
+      const totalP = gateStatusData.reduce((s, q) => s + q.planned, 0);
+      const totalA = gateStatusData.reduce((s, q) => s + q.actual, 0);
+      const pct = totalP ? Math.round(totalA / totalP * 100) : 0;
+      return "\uD83E\uDD16 AI: " + totalA + "\u00F7" + totalP + " deliverables complete across all quarters (" + pct + "%).";
+    }
     const row = gateStatusData.find(q => q.key === v);
     if (!row) return "\uD83E\uDD16 AI insights";
     return "\uD83E\uDD16 AI: " + row.actual + "\u00F7" + row.planned + " deliverables complete in " + quarterLabel(v) + " (" + row.pct + "%).";
@@ -471,7 +637,36 @@ const aiMap = {
 
 // Populates a panel's content for a given type/value \u2014 shared by showDrillDown (first open)
 // and refreshDrillDown (re-render the currently-open filter) so they can never drift apart.
-function renderDrillDownContent(row, type, value) {
+// Markup for one independent panel instance — appended into a row's zone, never overwritten by
+// another panel opening (that's the whole point: unlimited, persistent, side-by-side-able).
+function buildPanelHTML(instId) {
+  return "<div class='dd-panel' data-inst='" + instId + "' draggable='true'>" +
+    "<div class='dd-header'>" +
+      "<button type='button' class='dd-drag-handle' aria-label='Drag to reorder' title='Drag to place beside another panel'>" +
+        "<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='9' cy='5' r='1'/><circle cx='15' cy='5' r='1'/><circle cx='9' cy='12' r='1'/><circle cx='15' cy='12' r='1'/><circle cx='9' cy='19' r='1'/><circle cx='15' cy='19' r='1'/></svg>" +
+      "</button>" +
+      "<div class='dd-title-block'><span class='dd-filter-label'></span><h3></h3><p></p></div>" +
+      "<div class='dd-header-right'>" +
+        "<button class='dd-icon-btn dd-expand-toggle' type='button' title='Expand'>⤤</button>" +
+        "<button class='dd-close-btn' type='button' aria-label='Close'>✕</button>" +
+      "</div>" +
+    "</div>" +
+    "<div class='dd-table-wrap'><table class='dd-table'><thead></thead><tbody></tbody></table></div>" +
+    "<div class='dd-footer'>" +
+      "<div class='dd-ai-note'></div>" +
+      "<div class='dd-footer-btns'>" +
+        "<button type='button' class='dd-footer-btn dd-btn-export'>↗ Export CSV</button>" +
+        "<button type='button' class='dd-footer-btn dd-btn-refresh'>⟳ Refresh</button>" +
+      "</div>" +
+    "</div>" +
+  "</div>";
+}
+
+// Populates one panel instance's content for a given type/value — shared by showDrillDown
+// (first open) and refreshDrillDownInstance (re-render in place) so they can never drift apart.
+function renderDrillDownContent(row, instId, type, value) {
+  const panelEl = document.querySelector(".dd-panel[data-inst='" + instId + "']");
+  if (!panelEl) return;
   const projects  = filterProjects(type, value);
   const makeTitle = titleMap[type] || (v => v);
   const asOf = typeof todayISTLabel === "function" ? todayISTLabel() : "";
@@ -479,49 +674,71 @@ function renderDrillDownContent(row, type, value) {
     ? (() => {
         const tf = value.split("-")[0];
         const cnt = tf === "Total" ? projectPortfolioData.length : projectPortfolioData.filter(p => p.type === tf).length;
-        return cnt + " project(s) \u2014 Planned vs Actual \u2014 As on " + asOf;
+        return cnt + " project(s) — Planned vs Actual — As on " + asOf;
       })()
     : type === "quarter"
-    ? projectPortfolioData.length + " project(s) \u2014 Gate deliverables by quarter \u2014 As on " + asOf
-    : projects.length + " project(s) matched \u2014 As on " + asOf;
+    ? (value === "all"
+        ? projectPortfolioData.length + " project(s) — Gate deliverables, every quarter — As on " + asOf
+        : projectPortfolioData.length + " project(s) — Gate deliverables in " + quarterLabel(value) + " — As on " + asOf)
+    : projects.length + " project(s) matched — As on " + asOf;
 
+  panelEl.querySelector(".dd-filter-label").textContent = "▶ " + (filterLabelMap[type] ? filterLabelMap[type](value) : value.replace("|"," / "));
+  panelEl.querySelector(".dd-title-block h3").textContent = makeTitle(value);
+  panelEl.querySelector(".dd-title-block p").textContent  = subtitle;
+  const theadEl = panelEl.querySelector("thead");
+  const tbodyEl = panelEl.querySelector("tbody");
   if (row === 1) {
-    document.getElementById("ddFilterLabel1").textContent = "\u25B6 " + (filterLabelMap[type] ? filterLabelMap[type](value) : value.replace("|"," / "));
-    document.getElementById("ddTitle1").textContent    = makeTitle(value);
-    document.getElementById("ddSubTitle1").textContent = subtitle;
-    if (type === "quarter") renderQuarterTable("ddTH1","ddTB1", computePerProjectQuarterBreakdown());
-    else if (type === "health") renderHealthTable("ddTH1","ddTB1", value, projects);
-    else renderProjectTable("ddTH1","ddTB1", projects);
-    document.getElementById("ddAI1").textContent = (aiMap[type] || (() => "\uD83E\uDD16 AI insights"))(value, projects);
+    if (type === "quarter") {
+      // A specific ring (Q1-Q4) shows just that quarter's progress; the "Gate Status" label
+      // itself (value "all") shows every quarter side by side — see renderQuarterSingleTable /
+      // renderQuarterTable respectively.
+      if (value === "all") renderQuarterTable(theadEl, tbodyEl, computePerProjectQuarterBreakdown());
+      else renderQuarterSingleTable(theadEl, tbodyEl, value, computePerProjectQuarterBreakdown());
+    }
+    else if (type === "health") renderHealthTable(theadEl, tbodyEl, value, projects);
+    else renderProjectTable(theadEl, tbodyEl, projects);
   } else {
-    document.getElementById("ddFilterLabel2").textContent = "\u25B6 " + (filterLabelMap[type] ? filterLabelMap[type](value) : value.replace("|"," / ").replace("-"," "));
-    document.getElementById("ddTitle2").textContent    = makeTitle(value);
-    document.getElementById("ddSubTitle2").textContent = subtitle;
-    if (type === "compliance") renderComplianceTable("ddTH2","ddTB2", type, value);
-    else renderMonthTable("ddTH2","ddTB2", projects);
-    document.getElementById("ddAI2").textContent = (aiMap[type] || (() => "\uD83E\uDD16 AI insights"))(value, projects);
+    if (type === "compliance") renderComplianceTable(theadEl, tbodyEl, type, value);
+    else renderMonthTable(theadEl, tbodyEl, projects);
   }
-  updateChartSelection(row, type);
-  currentFilter[row] = { type, value };
+  panelEl.querySelector(".dd-ai-note").textContent = (aiMap[type] || (() => "🤖 AI insights"))(value, projects);
+
+  const inst = panelInstances[row].find(p => p.id === instId);
+  if (inst) { inst.type = type; inst.value = value; }
+  updateChartSelection();
+}
+
+// Opens a NEW panel instance for (type,value) — or, if that exact filter is already open in
+// this row, just scrolls to the existing one instead of duplicating it. Never closes any other
+// panel: the only way a panel closes is its own ✕ (or Escape, via closeAllDrillDowns).
+// A lone panel fills the whole row by default; width only shrinks to share the row (via the
+// .drill-down-zone[data-count] CSS rules) once there's actually another panel open next to it
+// to compare against — so "full row" vs "side-by-side" is driven purely by how many panels are
+// really in that zone, never a fixed panel width.
+function syncZoneWidths(row) {
+  const zone = document.getElementById(row === 1 ? "drillDownRow1" : "drillDownRow2");
+  if (zone) zone.dataset.count = String(panelInstances[row].length);
 }
 
 function showDrillDown(row, type, value) {
-  const panelId = row === 1 ? "drillDownRow1" : "drillDownRow2";
-  const panel   = document.getElementById(panelId);
-  const isSame  = openPanel === panelId + "|" + type + "|" + value;
+  const zone = document.getElementById(row === 1 ? "drillDownRow1" : "drillDownRow2");
+  const existing = panelInstances[row].find(p => p.type === type && p.value === value);
+  if (existing) {
+    document.querySelector(".dd-panel[data-inst='" + existing.id + "']")?.scrollIntoView({ behavior:"smooth", block:"nearest", inline:"center" });
+    return;
+  }
 
-  if (isSame) { closeDrillDown(row); return; }
+  const instId = "ddp" + (++panelSeq);
+  const wrap = document.createElement("div");
+  wrap.innerHTML = buildPanelHTML(instId);
+  const panelEl = wrap.firstElementChild;
+  zone.appendChild(panelEl);
+  panelInstances[row].push({ id: instId, type, value });
+  syncZoneWidths(row);
 
-  ["drillDownRow1","drillDownRow2"].forEach(id => {
-    if (id !== panelId) document.getElementById(id).classList.remove("open");
-  });
-
-  renderDrillDownContent(row, type, value);
-
-  panel.classList.add("open");
-  openPanel = panelId + "|" + type + "|" + value;
+  renderDrillDownContent(row, instId, type, value);
   updateScrollLock();
-  setTimeout(() => panel.scrollIntoView({ behavior:"smooth", block:"nearest" }), 80);
+  setTimeout(() => panelEl.scrollIntoView({ behavior:"smooth", block:"nearest" }), 80);
 }
 
 // Closing a row-2 (bottom-of-page) drill-down shrinks .viewport-fit's content back down and
@@ -529,45 +746,46 @@ function showDrillDown(row, type, value) {
 // element's scrollTop isn't reset by that alone, so it kept whatever offset the user had
 // scrolled to while the panel was open. With overflow now hidden at a non-zero scrollTop, the
 // content renders from that stale offset instead of the top, reading as "the page jumped and
-// half the content is missing". Reset scroll position back to the top on every close.
-function closeDrillDown(row) {
-  const panelId = row === 1 ? "drillDownRow1" : "drillDownRow2";
-  document.getElementById(panelId).classList.remove("open", "dd-expanded");
-  currentFilter[row] = null;
-  openPanel = null;
+// half the content is missing". Reset scroll position back to the top once nothing is open.
+function closeDrillDownInstance(row, instId) {
+  document.querySelector(".dd-panel[data-inst='" + instId + "']")?.remove();
+  panelInstances[row] = panelInstances[row].filter(p => p.id !== instId);
+  syncZoneWidths(row);
+  updateChartSelection();
   updateScrollLock();
-  document.querySelector(".viewport-fit").scrollTop = 0;
-  document.querySelectorAll(".widget").forEach(w => w.classList.remove("widget-active"));
+  if (!anyPanelOpen()) document.querySelector(".viewport-fit").scrollTop = 0;
 }
 
 function closeAllDrillDowns() {
-  ["drillDownRow1","drillDownRow2"].forEach(id => document.getElementById(id).classList.remove("open", "dd-expanded"));
-  currentFilter = { 1: null, 2: null };
-  openPanel = null;
+  [1, 2].forEach(row => {
+    document.getElementById(row === 1 ? "drillDownRow1" : "drillDownRow2").innerHTML = "";
+    panelInstances[row] = [];
+    syncZoneWidths(row);
+  });
+  updateChartSelection();
   updateScrollLock();
   document.querySelector(".viewport-fit").scrollTop = 0;
-  document.querySelectorAll(".widget").forEach(w => w.classList.remove("widget-active"));
 }
 
-// \u2500\u2500 Toolbar: Refresh / Expand-Restore / Export \u2500\u2500
-function refreshDrillDown(row) {
-  const cur = currentFilter[row];
-  if (!cur) return;
-  renderDrillDownContent(row, cur.type, cur.value);
+// ── Toolbar: Refresh / Expand-Restore / Export (per panel instance) ──
+function refreshDrillDownInstance(row, instId) {
+  const inst = panelInstances[row].find(p => p.id === instId);
+  if (!inst) return;
+  renderDrillDownContent(row, instId, inst.type, inst.value);
 }
 
-function toggleDrillDownExpand(row) {
-  const panelId = row === 1 ? "drillDownRow1" : "drillDownRow2";
-  const panel   = document.getElementById(panelId);
-  const btn     = panel.querySelector(".dd-expand-toggle");
-  const expanded = panel.classList.toggle("dd-expanded");
+function toggleDrillDownExpandInstance(instId) {
+  const panelEl = document.querySelector(".dd-panel[data-inst='" + instId + "']");
+  if (!panelEl) return;
+  const btn = panelEl.querySelector(".dd-expand-toggle");
+  const expanded = panelEl.classList.toggle("dd-expanded");
   if (btn) btn.setAttribute("title", expanded ? "Restore" : "Expand");
 }
 
-function exportDrillDownCsv(row) {
-  const cur = currentFilter[row];
-  if (!cur) return;
-  const { type, value } = cur;
+function exportDrillDownCsvInstance(row, instId) {
+  const inst = panelInstances[row].find(p => p.id === instId);
+  if (!inst) return;
+  const { type, value } = inst;
   let rows, keys, filenamePart;
 
   if (type === "compliance") {
@@ -600,17 +818,21 @@ function exportDrillDownCsv(row) {
 // Scrolling is only useful (and only enabled) while a drill-down panel is open and taller
 // than the fitted viewport; see the .viewport-fit comment in styles.css for why.
 function updateScrollLock() {
-  document.querySelector(".viewport-fit")?.classList.toggle("scroll-enabled", !!openPanel);
+  document.querySelector(".viewport-fit")?.classList.toggle("scroll-enabled", anyPanelOpen());
 }
 
-function updateChartSelection(row, type) {
+// Recomputed from scratch across every currently-open panel instance (there can be several now,
+// see panelInstances) — a widget stays highlighted as long as ANY open panel is showing its data.
+function updateChartSelection() {
   document.querySelectorAll(".widget").forEach(w => w.classList.remove("widget-active"));
   // Gate Status rings (row 1) use their own "quarter" type now, distinct from the Compliance
   // Rate line's per-point "month" type (row 2) — each maps to exactly one widget, no collision.
   const map = { health:"healthWidget", classification:"classificationWidget",
     typeGate:"classificationWidget", compliance:"complianceStatusWidget",
     quarter:"classificationWidget", month:"complianceRateWidget" };
-  document.getElementById(map[type])?.classList.add("widget-active");
+  [1, 2].forEach(row => panelInstances[row].forEach(inst => {
+    document.getElementById(map[inst.type])?.classList.add("widget-active");
+  }));
 }
 
 // ==========================================================
@@ -1020,18 +1242,36 @@ function wireEvents() {
   document.querySelectorAll(".gate-status-legend .legend-key").forEach(el =>
     el.addEventListener("click", () => showDrillDown(1,"quarter", lastGateQuarter))
   );
+  // "Gate Status: 2026-2027" itself — opens every quarter side by side (value "all"), as opposed
+  // to an individual ring's single-quarter view.
+  const gateStatusAllLabel = document.getElementById("gateStatusAllLabel");
+  gateStatusAllLabel?.addEventListener("click", () => showDrillDown(1,"quarter","all"));
+  gateStatusAllLabel?.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showDrillDown(1,"quarter","all"); }
+  });
 
   // ── Matrix cells ──
   document.querySelectorAll(".matrix-btn").forEach(el =>
     el.addEventListener("click", () => showDrillDown(1,"typeGate", el.dataset.type + "|" + el.dataset.stage))
   );
 
-  // ── Drill-down toolbars (close / expand-restore / refresh / export), both rows ──
+  // ── Drill-down panel toolbars + per-row delay-story toggle, both zones — delegated (panels are
+  // created/destroyed dynamically now, so there's no fixed id to bind to at load time). ──
   [1, 2].forEach(row => {
-    document.getElementById("ddClose" + row).addEventListener("click", () => closeDrillDown(row));
-    document.getElementById("ddExpand" + row)?.addEventListener("click", () => toggleDrillDownExpand(row));
-    document.getElementById("ddRefresh" + row)?.addEventListener("click", () => refreshDrillDown(row));
-    document.getElementById("ddExportCsv" + row)?.addEventListener("click", () => exportDrillDownCsv(row));
+    const zone = document.getElementById(row === 1 ? "drillDownRow1" : "drillDownRow2");
+    zone.addEventListener("click", e => {
+      const storyToggle = e.target.closest(".dd-story-toggle");
+      if (storyToggle) { toggleStoryRow(storyToggle); return; }
+      const storyClose = e.target.closest(".dd-story-close");
+      if (storyClose) { closeStoryRow(storyClose); return; }
+      const panelEl = e.target.closest(".dd-panel");
+      if (!panelEl) return;
+      const instId = panelEl.dataset.inst;
+      if (e.target.closest(".dd-close-btn")) closeDrillDownInstance(row, instId);
+      else if (e.target.closest(".dd-expand-toggle")) toggleDrillDownExpandInstance(instId);
+      else if (e.target.closest(".dd-btn-refresh")) refreshDrillDownInstance(row, instId);
+      else if (e.target.closest(".dd-btn-export")) exportDrillDownCsvInstance(row, instId);
+    });
   });
 
   // ── Widget fullscreen buttons ──
@@ -1081,6 +1321,52 @@ function wireEvents() {
       e.preventDefault();
       const before = e.clientX < widget.getBoundingClientRect().left + widget.offsetWidth / 2;
       widget.parentElement.insertBefore(draggingEl, before ? widget : widget.nextSibling);
+    });
+  });
+
+  // ── Drag-to-reposition drill-down panels via their own handle (.dd-drag-handle, distinct from
+  // widgets' .drag-handle above) — same restricted-to-same-zone rule as widgets, and for the
+  // same reason: it's what lets two panels end up side-by-side for comparison. Delegated on the
+  // zone (not queried once at load) since panels are created/destroyed dynamically. ──
+  let dragArmedPanelHandle = null;
+  document.addEventListener("mousedown", e => {
+    const handle = e.target.closest(".dd-drag-handle");
+    if (handle) dragArmedPanelHandle = handle;
+  });
+  document.addEventListener("mouseup", () => { dragArmedPanelHandle = null; });
+
+  [1, 2].forEach(row => {
+    const zone = document.getElementById(row === 1 ? "drillDownRow1" : "drillDownRow2");
+    zone.addEventListener("dragstart", e => {
+      const panelEl = e.target.closest(".dd-panel");
+      if (!panelEl || !dragArmedPanelHandle || !panelEl.contains(dragArmedPanelHandle)) { e.preventDefault(); return; }
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", panelEl.dataset.inst);
+      panelEl.classList.add("dragging");
+    });
+    zone.addEventListener("dragend", e => {
+      e.target.closest(".dd-panel")?.classList.remove("dragging");
+      zone.querySelectorAll(".drag-over-before,.drag-over-after")
+        .forEach(p => p.classList.remove("drag-over-before","drag-over-after"));
+    });
+    zone.addEventListener("dragover", e => {
+      const panelEl = e.target.closest(".dd-panel");
+      const draggingEl = zone.querySelector(".dd-panel.dragging");
+      if (!panelEl || !draggingEl || draggingEl === panelEl) return;
+      e.preventDefault();
+      const before = e.clientX < panelEl.getBoundingClientRect().left + panelEl.offsetWidth / 2;
+      panelEl.classList.toggle("drag-over-before", before);
+      panelEl.classList.toggle("drag-over-after", !before);
+    });
+    zone.addEventListener("dragleave", e => e.target.closest(".dd-panel")?.classList.remove("drag-over-before", "drag-over-after"));
+    zone.addEventListener("drop", e => {
+      const panelEl = e.target.closest(".dd-panel");
+      const draggingEl = zone.querySelector(".dd-panel.dragging");
+      panelEl?.classList.remove("drag-over-before", "drag-over-after");
+      if (!panelEl || !draggingEl || draggingEl === panelEl) return;
+      e.preventDefault();
+      const before = e.clientX < panelEl.getBoundingClientRect().left + panelEl.offsetWidth / 2;
+      zone.insertBefore(draggingEl, before ? panelEl : panelEl.nextSibling);
     });
   });
 

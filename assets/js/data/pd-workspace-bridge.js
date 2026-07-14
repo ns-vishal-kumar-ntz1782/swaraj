@@ -11,7 +11,8 @@
 // ==========================================================
 import {
   ensureSeeded, listAssignments, getAssignment, updateAssignmentStatus, updateAssignmentFields,
-  assignResponsibleMembers, uploadDocument,
+  assignResponsibleMembers, uploadDocument, listAddableDeliverables, addDeliverableToGate,
+  topLevelAssignmentOptionsFor, setAssignmentParent,
 } from "../../../pages/admin/js/store/projectExecution.js";
 import { getProjectTeam, displayFor } from "../../../pages/admin/js/store/orgDirectory.js";
 import { notify } from "../../../pages/admin/js/store/notifications.js";
@@ -36,5 +37,6 @@ function assignmentHistory(assignmentId, projectCode) {
 window.PDWorkspace = {
   listAssignments, getAssignment, updateAssignmentStatus, updateAssignmentFields,
   assignResponsibleMembers, uploadDocument, getProjectTeam, displayFor, notify, addAuditEntry,
-  assignmentHistory,
+  assignmentHistory, listAddableDeliverables, addDeliverableToGate,
+  topLevelAssignmentOptionsFor, setAssignmentParent,
 };

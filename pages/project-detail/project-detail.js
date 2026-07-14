@@ -33,6 +33,44 @@
   // Header is rendered by shared.js's renderTopNav("dashboard") — see the init call below —
   // so there's no page-local topnav wiring here anymore.
 
+  // ── Shared floating popover — one at a time, closed on outside click / Escape. Used by the
+  // Deliverables tab's Responsible "+ Assign"/Documents/Actions-history controls AND the
+  // Timeline tab's "Skip this gate" confirm (moved to top level, out of renderDeliverables'
+  // own closure, so both tabs' render functions can share the same instance). ──
+  let openPopoverEl = null;
+  function closePopover() {
+    if (openPopoverEl) { openPopoverEl.remove(); openPopoverEl = null; }
+    document.removeEventListener("mousedown", onPopoverOutsideClick, true);
+    document.removeEventListener("keydown", onPopoverEscape, true);
+  }
+  function onPopoverOutsideClick(e) { if (openPopoverEl && !openPopoverEl.contains(e.target)) closePopover(); }
+  function onPopoverEscape(e) { if (e.key === "Escape") closePopover(); }
+  function openPopover(anchorEl, innerHtml, extraClass) {
+    closePopover();
+    const pop = document.createElement("div");
+    pop.className = "dlv-popover" + (extraClass ? " " + extraClass : "");
+    pop.innerHTML = innerHtml;
+    document.body.appendChild(pop);
+    const r = anchorEl.getBoundingClientRect();
+    pop.style.top = r.bottom + 6 + "px";
+    pop.style.left = r.left + "px";
+    openPopoverEl = pop;
+    requestAnimationFrame(() => {
+      const pr = pop.getBoundingClientRect();
+      if (pr.right > window.innerWidth - 8) pop.style.left = Math.max(8, window.innerWidth - pr.width - 8) + "px";
+      if (pr.bottom > window.innerHeight - 8) pop.style.top = Math.max(8, r.top - pr.height - 6) + "px";
+    });
+    setTimeout(() => {
+      document.addEventListener("mousedown", onPopoverOutsideClick, true);
+      document.addEventListener("keydown", onPopoverEscape, true);
+    }, 0);
+    return pop;
+  }
+  // Exposed so timeline.js (a separate classic-script closure, loaded before this file but only
+  // *calling* this at click-time, well after both files have finished loading) can reuse the
+  // same floating-popover implementation for the Timeline tab's "Skip this gate" confirm.
+  window.PDPopover = { open: openPopover, close: closePopover };
+
   // ── Overview ──
   function renderOverview(d) {
     $("ovTitle").textContent = d.projectName + " — Project Overview";
@@ -101,6 +139,7 @@
       const g = d.gates && d.gates[gi];
       if (!g) return gi < (d.gateReached || 0) ? "Completed" : "Future";
       const s = g.status;
+      if (s === "Skipped") return "Skipped";
       if (s === "In Progress") return "Active";
       if (s === "Completed" || s === "On Time" || s === "Delayed 15-60" || s === "Delayed >60") return "Completed";
       return "Future";
@@ -118,38 +157,6 @@
     }
     if (selectedGateIdx === -1) selectedGateIdx = 0;
 
-    // ── Shared floating popover — one at a time, closed on outside click / Escape. Used by the
-    // Responsible "+ Assign" control, the Documents cell, and the Actions "history" button. ──
-    let openPopoverEl = null;
-    function closePopover() {
-      if (openPopoverEl) { openPopoverEl.remove(); openPopoverEl = null; }
-      document.removeEventListener("mousedown", onPopoverOutsideClick, true);
-      document.removeEventListener("keydown", onPopoverEscape, true);
-    }
-    function onPopoverOutsideClick(e) { if (openPopoverEl && !openPopoverEl.contains(e.target)) closePopover(); }
-    function onPopoverEscape(e) { if (e.key === "Escape") closePopover(); }
-    function openPopover(anchorEl, innerHtml, extraClass) {
-      closePopover();
-      const pop = document.createElement("div");
-      pop.className = "dlv-popover" + (extraClass ? " " + extraClass : "");
-      pop.innerHTML = innerHtml;
-      document.body.appendChild(pop);
-      const r = anchorEl.getBoundingClientRect();
-      pop.style.top = r.bottom + 6 + "px";
-      pop.style.left = r.left + "px";
-      openPopoverEl = pop;
-      requestAnimationFrame(() => {
-        const pr = pop.getBoundingClientRect();
-        if (pr.right > window.innerWidth - 8) pop.style.left = Math.max(8, window.innerWidth - pr.width - 8) + "px";
-        if (pr.bottom > window.innerHeight - 8) pop.style.top = Math.max(8, r.top - pr.height - 6) + "px";
-      });
-      setTimeout(() => {
-        document.addEventListener("mousedown", onPopoverOutsideClick, true);
-        document.addEventListener("keydown", onPopoverEscape, true);
-      }, 0);
-      return pop;
-    }
-
     // ── Build gate progress bar ──
     function buildGateBar() {
       const steps = gateDetails.map((g, gi) => {
@@ -161,12 +168,15 @@
           st === "Completed" ? "dlv-gate-completed" : "",
           st === "Active"    ? "dlv-gate-active"    : "",
           st === "Future"    ? "dlv-gate-future"    : "",
+          st === "Skipped"   ? "dlv-gate-skipped"   : "",
           isSelected         ? "dlv-gate-selected"  : "",
         ].filter(Boolean).join(" ");
 
         let circleInner = String(gi + 1);
         if (st === "Completed") {
           circleInner = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+        } else if (st === "Skipped") {
+          circleInner = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="5.5" y1="18.5" x2="18.5" y2="5.5"/></svg>`;
         }
 
         const connector = gi < gateDetails.length - 1 ? `<div class="dlv-gate-connector"></div>` : "";
@@ -190,12 +200,14 @@
       });
     }
 
-    // ── RAG calculation ──
+    // ── RAG calculation — Red/Amber/Green driven purely by real actual-vs-planned delay days:
+    // green = delivered on or before its planned end date; amber = late by up to 15 days;
+    // red = late by more than 15 days. No usable date (not started, no delayDays yet) reads as
+    // grey/empty rather than a falsely-reassuring green. ──
     function calcRag(delayDays, isNotStarted) {
-      if (isNotStarted) return "grey";
-      if (delayDays === null || delayDays === undefined || delayDays < 0) return "green";
-      if (delayDays <= 15)  return "green";
-      if (delayDays <= 60)  return "amber";
+      if (isNotStarted || delayDays === null || delayDays === undefined) return "grey";
+      if (delayDays <= 0)  return "green";
+      if (delayDays <= 15) return "amber";
       return "red";
     }
 
@@ -203,19 +215,7 @@
     // Started/Assigned/In Progress/Ready for Review/Completed/Rejected/Rework/Blocked), since
     // x.status now round-trips straight to/from that record via the workspace bridge. "Not
     // Started" displays as "Pending" (the spec's vocabulary for the same state) without needing
-    // a second stored value. ──
-    function statusClass(s) {
-      const map = {
-        "Not Started":"dlv-s-pending", "Blocked":"dlv-s-pending",
-        "Assigned":"dlv-s-assigned",
-        "In Progress":"dlv-s-inprogress",
-        "Ready for Review":"dlv-s-review",
-        "Completed":"dlv-s-completed",
-        "Rejected":"dlv-s-rejected",
-        "Rework":"dlv-s-rework",
-      };
-      return map[s] || "dlv-s-pending";
-    }
+    // a second stored value. Color comes from RAG (see calcRag), not the workflow stage itself. ──
     function statusLabel(s) {
       if (s === "Not Started") return "Pending";
       return s || "Pending";
@@ -297,6 +297,42 @@
       return `<div class="dlv-pop-head">Audit History</div><div class="dlv-pop-hist-list">${rows || '<div class="dlv-pop-empty">No history recorded yet.</div>'}</div>`;
     }
 
+    // ── Add Deliverable — PMO/SA only (see dlvAddBtn wiring in buildTable below). Scoped to the
+    // gate's own master library entries so the data stays realistic and reconcilable, same as
+    // every other deliverable on this page — never a free-text/custom entry. ──
+    function buildAddDeliverablePopoverHtml(options) {
+      const rows = options.map(o => `
+        <div class="dlv-pop-row" data-deliverable-no="${esc(o.deliverableNo)}">
+          <span class="dlv-pop-row-name">${esc(o.deliverableName)}</span>
+          <span class="dlv-pop-row-sub">${esc(o.deliverableCode)}${o.department ? " · " + esc(o.department) : ""}</span>
+        </div>`).join("");
+      return `
+        <div class="dlv-pop-head">Add Deliverable</div>
+        <div class="dlv-pop-list">${rows || '<div class="dlv-pop-empty">Every library deliverable for this gate is already assigned.</div>'}</div>
+        <div class="dlv-pop-actions">
+          <button type="button" class="dlv-pop-btn dlv-pop-cancel">Cancel</button>
+        </div>`;
+    }
+    function openAddDeliverablePopover(anchorEl, gateCode, gd) {
+      if (!bridge) return;
+      const options = bridge.listAddableDeliverables(d.projectCode, gateCode);
+      const pop = openPopover(anchorEl, buildAddDeliverablePopoverHtml(options), "dlv-add-popover");
+      pop.querySelector(".dlv-pop-cancel").addEventListener("click", closePopover);
+      pop.querySelectorAll("[data-deliverable-no]").forEach(row => {
+        row.addEventListener("click", () => {
+          try {
+            const fresh = bridge.addDeliverableToGate(d.projectCode, gateCode, row.dataset.deliverableNo, actorName, actorRoleBiz);
+            closePopover();
+            showToast(`Added "${row.querySelector(".dlv-pop-row-name").textContent}".`, "success");
+            if (fresh && typeof window.mapAssignmentToDisplay === "function") {
+              gd.deliverables.push(window.mapAssignmentToDisplay(fresh));
+            }
+            buildTable();
+          } catch (e) { showToast("Could not add: " + e.message, "error"); }
+        });
+      });
+    }
+
     // ── Format ISO date to DD Mon YY for display ──
     const MON3 = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     function isoToDisplay(iso) {
@@ -320,17 +356,106 @@
       return `${yr}-${String(mo+1).padStart(2,"0")}-${day}`;
     }
 
+    // ── Parent/child hierarchy — one level only, mirrors the Deliverable Library catalog's own
+    // rule. Returns [{idx, x, label, depth}] in display order: every top-level item numbered
+    // 1, 2, 3… followed immediately by its own children as 1.1, 1.2…, so array position ("idx",
+    // used everywhere else in this function for data-idx wiring) stays untouched — only the
+    // RENDER order and the displayed label change. ──
+    function buildHierarchyOrder(list) {
+      const byId = new Map(list.map((x, i) => [x.assignmentId, i]));
+      const childrenOf = new Map(); // parentAssignmentId -> [originalIdx,...]
+      const topLevel = [];
+      list.forEach((x, i) => {
+        const pid = x.parentAssignmentId;
+        if (pid && byId.has(pid) && pid !== x.assignmentId) {
+          if (!childrenOf.has(pid)) childrenOf.set(pid, []);
+          childrenOf.get(pid).push(i);
+        } else {
+          topLevel.push(i);
+        }
+      });
+      const order = [];
+      topLevel.forEach((idx, ti) => {
+        const label = String(ti + 1);
+        order.push({ idx, x: list[idx], label, depth: 0 });
+        (childrenOf.get(list[idx].assignmentId) || []).forEach((cidx, ci) => {
+          order.push({ idx: cidx, x: list[cidx], label: `${label}.${ci + 1}`, depth: 1 });
+        });
+      });
+      return order;
+    }
+    function hasChildren(list, assignmentId) {
+      return list.some(x => x.parentAssignmentId === assignmentId);
+    }
+
+    // ── Set Parent — SA/PMO only (same tier as Add Deliverable, a structural change rather than
+    // a day-to-day status/date edit). Lists other TOP-LEVEL deliverables in this same gate. ──
+    function buildSetParentPopoverHtml(x, candidates) {
+      const rows = candidates.map(c => `
+        <div class="dlv-pop-row" data-assignment-id="${esc(c.assignmentId)}">
+          <span class="dlv-pop-row-name">${esc(c.name)}</span>
+        </div>`).join("");
+      return `
+        <div class="dlv-pop-head">Set Parent — ${esc(x.name)}</div>
+        <div class="dlv-pop-list">
+          <div class="dlv-pop-row" data-assignment-id="">
+            <span class="dlv-pop-row-name">— None (top-level) —</span>
+          </div>
+          ${rows || '<div class="dlv-pop-empty">No other top-level deliverables in this gate.</div>'}
+        </div>
+        <div class="dlv-pop-actions">
+          <button type="button" class="dlv-pop-btn dlv-pop-cancel">Cancel</button>
+        </div>`;
+    }
+    function openSetParentPopover(anchorEl, gd, x) {
+      if (!bridge) return;
+      const candidates = gd.deliverables.filter(c => c.assignmentId !== x.assignmentId && !c.parentAssignmentId);
+      const pop = openPopover(anchorEl, buildSetParentPopoverHtml(x, candidates), "dlv-add-popover");
+      pop.querySelector(".dlv-pop-cancel").addEventListener("click", closePopover);
+      pop.querySelectorAll("[data-assignment-id]").forEach(row => {
+        row.addEventListener("click", () => {
+          try {
+            const parentId = row.dataset.assignmentId || null;
+            const fresh = bridge.setAssignmentParent(x.assignmentId, parentId, actorName, actorRoleBiz);
+            closePopover();
+            showToast(parentId ? `Set as a child deliverable.` : `Cleared parent — now top-level.`, "success");
+            const idx = gd.deliverables.findIndex(d => d.assignmentId === x.assignmentId);
+            if (idx !== -1 && typeof window.mapAssignmentToDisplay === "function") {
+              gd.deliverables[idx] = window.mapAssignmentToDisplay(fresh);
+            }
+            buildTable();
+          } catch (e) { showToast("Could not set parent: " + e.message, "error"); }
+        });
+      });
+    }
+
     // ── Build table ──
     function buildTable() {
       const gd = gateDetails[selectedGateIdx];
       const st = gateStatus(selectedGateIdx);
       const isFuture    = st === "Future";
       const isCompleted = st === "Completed";
+      const isSkipped   = st === "Skipped";
 
-      if (banner) banner.hidden = !isFuture;
+      if (banner) {
+        banner.hidden = !isFuture && !isSkipped;
+        if (isSkipped) {
+          banner.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="7" y1="17" x2="17" y2="7"/></svg>This gate has been marked Skipped for this project — no deliverables or approval are required, and it's excluded from progress and compliance calculations.`;
+        } else if (isFuture) {
+          banner.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>This gate has not started yet. Deliverables will become available once the previous gate is completed and this gate becomes Active.`;
+        }
+      }
+
+      const addBtn = document.getElementById("dlvAddBtn");
+      if (addBtn) {
+        addBtn.hidden = !(isSuperAdmin || isPMO);
+        addBtn.disabled = isSkipped;
+        addBtn.title = isSkipped ? "This gate is Skipped — deliverables can't be added." : "";
+        addBtn.onclick = isSkipped || !gd ? null : () => openAddDeliverablePopover(addBtn, gd.stage, gd);
+      }
 
       if (!gd || !gd.deliverables || !gd.deliverables.length) {
-        tbody.innerHTML = `<tr class="dlv-empty-row"><td colspan="12">No deliverables defined for this gate.</td></tr>`;
+        tbody.innerHTML = `<tr class="dlv-empty-row"><td colspan="12">${isSkipped ? "This gate is Skipped — no deliverables required." : "No deliverables defined for this gate."}</td></tr>`;
         return;
       }
 
@@ -345,7 +470,8 @@
         buildTable();
       }
 
-      const rows = gd.deliverables.map((x, i) => {
+      const hierOrder = buildHierarchyOrder(gd.deliverables);
+      const rows = hierOrder.map(({ idx: i, x, label: seqLabel, depth }) => {
         // ── Planned Start/End — the seed now provides these as two distinct real fields
         // (x.plannedDate / x.plannedEndDate, from the assignment's own plannedStart/targetDate,
         // clamped to a 5–60 day gap) — no longer duplicated from a single value. ──
@@ -356,11 +482,15 @@
         const plannedStartDisplay = isoToDisplay(plannedStartISO) || "—";
         const plannedEndDisplay   = isoToDisplay(plannedEndISO)   || "—";
         const actualDisplay       = isoToDisplay(actualISO)       || "—";
+        const outlookISO          = isFuture ? "" : (x.outlookDate && x.outlookDate !== "-" ? displayToISO(x.outlookDate) || x.outlookDate : "");
+        const outlookDisplay      = isoToDisplay(outlookISO) || "—";
 
-        // RAG
+        // RAG drives the Status pill's color (see statusCell below) — grey/no-color when there's
+        // no real date basis to judge from, rather than a default that would falsely claim "on time".
         const delayDays = (!isFuture && x.delayDays !== undefined) ? x.delayDays : null;
         const rag = calcRag(delayDays, isFuture);
-        const ragHtml = `<span class="dlv-rag-dot dlv-rag-${rag}" title="${delayDays !== null ? delayDays + ' day' + (delayDays === 1 ? '' : 's') + ' delay' : ''}"></span>`;
+        const isDelayed = rag === "amber" || rag === "red";
+        const delayTitle = delayDays !== null ? `${delayDays} day${delayDays === 1 ? "" : "s"} delay` : "";
 
         // Status — real value (see statusClass/statusLabel above); Future-gate rows are always
         // "Not Started" ("Pending" once displayed) regardless of anything on the underlying record.
@@ -397,25 +527,31 @@
         }
 
         // ── Date / status / remarks cells ──
-        let startCell, endCell, actualCell, statusCell, remarksCell;
+        let startCell, endCell, actualCell, outlookCell, statusCell, remarksCell;
         if (perms.canEditDates) {
           startCell = `<input class="dlv-edit-date" type="date" data-field="plannedStart" value="${plannedStartISO}">`;
           endCell   = `<input class="dlv-edit-date" type="date" data-field="plannedEnd" value="${plannedEndISO}">`;
           actualCell= `<input class="dlv-edit-date" type="date" data-field="actualClosure" value="${actualISO}">`;
+          // Outlook — a revised "expected to finish by" date, not a status/RAG indicator. Blank
+          // until someone explicitly sets one; no auto-computed default.
+          outlookCell = `<input class="dlv-edit-date" type="date" data-field="outlook" value="${outlookISO}">`;
         } else {
           startCell  = `<span style="color:var(--color-slate-680);font-size:var(--fs-11)">${isFuture ? "" : plannedStartDisplay}</span>`;
           endCell    = `<span style="color:var(--color-slate-680);font-size:var(--fs-11)">${isFuture ? "" : plannedEndDisplay}</span>`;
           actualCell = `<span style="color:var(--color-slate-680);font-size:var(--fs-11)">${isFuture ? "" : actualDisplay}</span>`;
+          outlookCell= `<span style="color:var(--color-slate-680);font-size:var(--fs-11)">${isFuture || !outlookISO ? "" : outlookDisplay}</span>`;
         }
+        // Status color reads as RAG (red/amber/green) — the same signal the delay-days hover
+        // used to carry on the (now-removed) Outlook dot lives here now, as this pill's title.
         if (perms.canEditStatus) {
-          statusCell = `<select class="dlv-edit-select dlv-edit-status" data-field="status">
+          statusCell = `<select class="dlv-edit-select dlv-edit-status dlv-status-rag-${rag}" data-field="status" title="${esc(delayTitle)}">
             ${nextAllowedStatuses(rawStatus).map(s => `<option value="${s}"${rawStatus === s ? " selected" : ""}>${esc(statusLabel(s))}</option>`).join("")}
           </select>`;
         } else {
-          statusCell = `<span class="dlv-status ${statusClass(rawStatus)}">${esc(statusLabel(rawStatus))}</span>`;
+          statusCell = `<span class="dlv-status dlv-status-rag-${rag}" title="${esc(delayTitle)}">${esc(statusLabel(rawStatus))}</span>`;
         }
         if (perms.canEditRemarks) {
-          remarksCell = `<input class="dlv-edit-text" type="text" data-field="remarks" value="${esc(remarks)}" placeholder="Add remarks…">`;
+          remarksCell = `<input class="dlv-edit-text${isDelayed ? " dlv-edit-text-required" : ""}" type="text" data-field="remarks" value="${esc(remarks)}" placeholder="${isDelayed ? "Remarks required — explain the delay…" : "Add remarks…"}">`;
         } else {
           remarksCell = `<span style="font-size:var(--fs-11);color:var(--color-slate-780)">${esc(remarks) || "—"}</span>`;
         }
@@ -431,17 +567,35 @@
         </button>`;
 
         const rowEditable = perms.canEditStatus || perms.canEditDates || perms.canEditRemarks || perms.canAssign || perms.canUpload;
-        const rowClass = isCompleted ? "dlv-row-readonly" : (rowEditable ? "dlv-row-editable" : "");
+        const rowClass = [
+          isCompleted ? "dlv-row-readonly" : (rowEditable ? "dlv-row-editable" : ""),
+          depth > 0 ? "dlv-row-child" : "",
+        ].filter(Boolean).join(" ");
+
+        // ── Parent/child control — SA/PMO only, same tier as Add Deliverable. A row that already
+        // has children of its own can't also become a child (one level of nesting, mirrors the
+        // Deliverable Library catalog's own rule). ──
+        const canSetParent = (isSuperAdmin || isPMO) && !isFuture && !isSkipped;
+        const isParentRow = hasChildren(gd.deliverables, x.assignmentId);
+        let parentTag = "";
+        if (depth > 0) {
+          const parentX = gd.deliverables.find(d => d.assignmentId === x.parentAssignmentId);
+          parentTag = canSetParent
+            ? `<button type="button" class="dlv-parent-tag dlv-parent-tag-btn" data-set-parent-idx="${i}">↳ Child of ${esc(parentX ? parentX.name : "—")}</button>`
+            : `<span class="dlv-parent-tag">↳ Child of ${esc(parentX ? parentX.name : "—")}</span>`;
+        } else if (canSetParent && !isParentRow) {
+          parentTag = `<button type="button" class="dlv-parent-tag dlv-parent-tag-btn dlv-parent-tag-empty" data-set-parent-idx="${i}">+ Set parent</button>`;
+        }
 
         return `<tr class="${rowClass}" data-idx="${i}">
-          <td style="text-align:center;color:var(--color-slate-530)">${i + 1}</td>
+          <td style="text-align:center;color:var(--color-slate-530)">${esc(seqLabel)}</td>
           <td style="font-weight:var(--fw-600);color:var(--color-slate-780);font-size:var(--fs-10)">${code}</td>
-          <td><span class="dlv-name-link">${esc(x.name)}</span></td>
+          <td class="${depth > 0 ? "dlv-td-name-child" : ""}"><span class="dlv-name-link">${esc(x.name)}</span>${parentTag}</td>
           <td class="dlv-td-resp">${respCell}</td>
           <td class="dlv-td-date">${startCell}</td>
           <td class="dlv-td-date">${endCell}</td>
           <td class="dlv-td-date">${actualCell}</td>
-          <td style="text-align:center">${ragHtml}</td>
+          <td class="dlv-td-date">${outlookCell}</td>
           <td class="dlv-td-status">${statusCell}</td>
           <td class="dlv-td-remarks">${remarksCell}</td>
           <td style="text-align:center">${docCell}</td>
@@ -457,19 +611,48 @@
         const x = gd.deliverables[idx];
         const perms = rowPermissions(x, isFuture, isCompleted);
 
+        row.querySelector("[data-set-parent-idx]")?.addEventListener("click", (e) => {
+          openSetParentPopover(e.currentTarget, gd, x);
+        });
+
+        // A delayed item (amber/red RAG) can't be updated — status, dates, whatever — without
+        // remarks explaining the delay first; only editing remarks itself is exempt. Reverts the
+        // control back to its saved value rather than leaving a phantom unsaved change on screen.
+        function originalFieldValue(field) {
+          if (field === "status") return x.status || "Not Started";
+          if (field === "plannedStart")  return x.plannedDate    && x.plannedDate    !== "-" ? (displayToISO(x.plannedDate)    || "") : "";
+          if (field === "plannedEnd")    return x.plannedEndDate && x.plannedEndDate !== "-" ? (displayToISO(x.plannedEndDate) || "") : "";
+          if (field === "actualClosure") return x.actualDate     && x.actualDate     !== "-" ? (displayToISO(x.actualDate)     || "") : "";
+          if (field === "outlook")       return x.outlookDate    && x.outlookDate    !== "-" ? (displayToISO(x.outlookDate)    || "") : "";
+          return "";
+        }
+
         // Status / date / remarks edits — each persists through the bridge immediately on change.
         row.querySelectorAll("[data-field]").forEach(input => {
           input.addEventListener("change", () => {
             if (!bridge) { showToast("Cannot save — workspace not ready.", "error"); return; }
             const field = input.dataset.field;
             const val = input.value;
+
+            const rowRag = calcRag(x.delayDays !== undefined ? x.delayDays : null, isFuture);
+            if (field !== "remarks" && (rowRag === "amber" || rowRag === "red")) {
+              const remarksInput = row.querySelector('[data-field="remarks"]');
+              const remarksVal = (remarksInput ? remarksInput.value : (x.remarks && x.remarks !== "-" ? x.remarks : "")).trim();
+              if (!remarksVal) {
+                showToast("This item is delayed — add remarks explaining the delay before updating it.", "error");
+                input.value = originalFieldValue(field);
+                if (remarksInput) remarksInput.focus();
+                return;
+              }
+            }
+
             try {
               let fresh;
               if (field === "status") {
                 fresh = bridge.updateAssignmentStatus(x.assignmentId, val, actorName, actorRoleBiz);
                 showToast(`${x.name} status set to ${statusLabel(val)}.`, "success");
               } else {
-                const fieldMap = { plannedStart: "plannedStart", plannedEnd: "targetDate", actualClosure: "actualEnd", remarks: "remarks" };
+                const fieldMap = { plannedStart: "plannedStart", plannedEnd: "targetDate", actualClosure: "actualEnd", outlook: "outlookDate", remarks: "remarks" };
                 fresh = bridge.updateAssignmentFields(x.assignmentId, { [fieldMap[field]]: val || null }, actorName, actorRoleBiz);
               }
               refreshRow(idx, fresh);
@@ -574,7 +757,7 @@
 
     const gateChecklist = d.gateChecklist || [];
     if (!gateChecklist.length) {
-      tbody.innerHTML = '<tr class="dlv-empty-row"><td colspan="7">No checklist data available for this project.</td></tr>';
+      tbody.innerHTML = '<tr class="dlv-empty-row"><td colspan="6">No checklist data available for this project.</td></tr>';
       return;
     }
 
@@ -594,9 +777,11 @@
       const g = d.gates && d.gates[gi];
       let seedStatus;
       if (!g) seedStatus = gi < (d.gateReached || 0) ? "Completed" : "Future";
+      else if (g.status === "Skipped") seedStatus = "Skipped";
       else if (g.status === "In Progress") seedStatus = "Active";
       else if (["Completed","On Time","Delayed 15-60","Delayed >60"].includes(g.status)) seedStatus = "Completed";
       else seedStatus = "Future";
+      if (seedStatus === "Skipped") return "Skipped";
       if (seedStatus !== "Future") return seedStatus;
       // Seed data hasn't caught up yet, but if the immediately previous gate was just approved
       // THIS session, unlock this one so the user can move straight into it.
@@ -604,7 +789,7 @@
       if (prevStage && gateApproved[prevStage]) return "Active";
       return seedStatus;
     }
-    function editableGate(gi) { return canEdit && gateStatus(gi) !== "Future" && gateStatus(gi) !== "Completed"; }
+    function editableGate(gi) { return canEdit && gateStatus(gi) !== "Future" && gateStatus(gi) !== "Completed" && gateStatus(gi) !== "Skipped"; }
 
     for (let i = 0; i < gateChecklist.length; i++) {
       if (gateStatus(i) === "Active") { selectedGateIdx = i; break; }
@@ -625,10 +810,12 @@
           st === "Completed" ? "dlv-gate-completed" : "",
           st === "Active"    ? "dlv-gate-active"    : "",
           st === "Future"    ? "dlv-gate-future"    : "",
+          st === "Skipped"   ? "dlv-gate-skipped"   : "",
           isSelected         ? "dlv-gate-selected"  : "",
         ].filter(Boolean).join(" ");
         let circleInner = String(gi + 1);
         if (st === "Completed") circleInner = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+        else if (st === "Skipped") circleInner = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="5.5" y1="18.5" x2="18.5" y2="5.5"/></svg>`;
         const connector = gi < gateChecklist.length - 1 ? `<div class="dlv-gate-connector"></div>` : "";
         const stepClass = st === "Completed" ? "dlv-gate-step dlv-gate-step-done" : "dlv-gate-step";
         return `<div class="${stepClass}">
@@ -648,14 +835,6 @@
       });
     }
 
-    function calcRag(delayDays, isNotStarted) {
-      if (isNotStarted) return "grey";
-      if (delayDays === null || delayDays === undefined || delayDays < 0) return "green";
-      if (delayDays <= 15) return "green";
-      if (delayDays <= 60) return "amber";
-      return "red";
-    }
-
     const CHK_STATUS_OPTIONS = ["Not Started","In Progress","Completed","Rework"];
     function chkStatusClass(s) {
       return ({ "Not Started":"dlv-s-pending","In Progress":"dlv-s-inprogress","Completed":"dlv-s-completed","Rework":"dlv-s-rework" })[s] || "dlv-s-pending";
@@ -669,42 +848,35 @@
       if (isNaN(dd)) return "—";
       return String(dd.getDate()).padStart(2,"0") + " " + MON3[dd.getMonth()] + " " + String(dd.getFullYear()).slice(2);
     }
-    function displayToISO(display) {
-      if (!display || display === "—") return "";
-      if (/^\d{4}-/.test(display)) return display;
-      const parts = display.trim().split(" ");
-      if (parts.length < 3) return "";
-      const day = parts[0].padStart(2,"0");
-      const mo = MON3.indexOf(parts[1]);
-      if (mo < 0) return "";
-      const yr = parseInt(parts[2]) < 100 ? 2000 + parseInt(parts[2]) : parseInt(parts[2]);
-      return `${yr}-${String(mo+1).padStart(2,"0")}-${day}`;
-    }
 
     function buildTable() {
       const gc = gateChecklist[selectedGateIdx];
       const st = gateStatus(selectedGateIdx);
       const isFuture = st === "Future";
       const isCompleted = st === "Completed";
-      const editable = canEdit && !isFuture && !isCompleted;
+      const isSkipped = st === "Skipped";
+      const editable = canEdit && !isFuture && !isCompleted && !isSkipped;
 
-      if (banner) banner.hidden = !isFuture;
+      if (banner) {
+        banner.hidden = !isFuture && !isSkipped;
+        if (isSkipped) {
+          banner.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="7" y1="17" x2="17" y2="7"/></svg>This gate has been marked Skipped for this project — no checklist or approval is required.`;
+        } else if (isFuture) {
+          banner.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>This gate's checklist isn't open yet — it becomes available once the previous gate's approval is complete.`;
+        }
+      }
 
       if (!gc || !gc.items || !gc.items.length) {
-        tbody.innerHTML = `<tr class="dlv-empty-row"><td colspan="7">No checklist items configured for this gate yet — add them in Admin Console → Gate Checklist Templates.</td></tr>`;
+        tbody.innerHTML = `<tr class="dlv-empty-row"><td colspan="6">${isSkipped ? "This gate is Skipped — no checklist required." : "No checklist items configured for this gate yet — add them in Admin Console → Gate Checklist Templates."}</td></tr>`;
         if (approvalEl) approvalEl.innerHTML = "";
         return;
       }
 
       const rows = gc.items.map((x, i) => {
-        const delayDays = (!isFuture && x.delayDays !== undefined) ? x.delayDays : null;
-        const rag = calcRag(delayDays, isFuture);
-        const ragHtml = `<span class="dlv-rag-dot dlv-rag-${rag}" title="${delayDays !== null ? delayDays + ' day' + (delayDays === 1 ? '' : 's') + ' delay' : ''}"></span>`;
-
         const rawStatus = isFuture ? "Not Started" : (x.status || "Not Started");
         const remarks = isFuture ? "" : (x.remarks || "");
         const responsibleList = isFuture ? [] : (Array.isArray(x.responsible) ? x.responsible : []);
-        const hasDocs = !isFuture && x.evidence;
+        const hasDocs = !isFuture && !!x.evidence;
 
         let respCell, statusCell, remarksCell;
 
@@ -733,9 +905,24 @@
           remarksCell = `<span style="font-size:var(--fs-11);color:var(--color-slate-780)">${esc(remarks) || "—"}</span>`;
         }
 
-        const dlBtn = `<button class="dlv-dl-btn" title="${hasDocs ? "Download: " + esc(x.evidence) : "No documents"}" ${!hasDocs ? "disabled" : ""} type="button">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        </button>`;
+        // Document cell — a Completed item (or any item someone already uploaded evidence for)
+        // shows a clear "uploaded" badge with its filename, not just a bare enabled icon;
+        // an editable, not-yet-uploaded item gets an Upload button instead of a disabled one.
+        let docCell;
+        if (hasDocs) {
+          docCell = `<div class="gc-doc-uploaded" data-doc-idx="${i}" title="${esc(x.evidence)}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <span class="gc-doc-name">${esc(x.evidence)}</span>
+            ${editable ? `<button type="button" class="gc-doc-replace" data-upload-idx="${i}" title="Replace document">Replace</button>` : ""}
+          </div>`;
+        } else if (editable) {
+          docCell = `<button type="button" class="gc-upload-btn" data-upload-idx="${i}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload
+          </button>`;
+        } else {
+          docCell = `<span class="dlv-unassigned">No document</span>`;
+        }
 
         const rowClass = isCompleted ? "dlv-row-readonly" : (editable ? "dlv-row-editable" : "");
         const mandTag = x.mandatory ? `<span class="gc-mand-tag" title="Mandatory">*</span>` : "";
@@ -744,10 +931,9 @@
           <td style="text-align:center;color:var(--color-slate-530)">${i + 1}</td>
           <td><span class="dlv-name-link" title="${esc(x.description || "")}">${esc(x.title)}${mandTag}</span></td>
           <td class="dlv-td-resp">${respCell}</td>
-          <td style="text-align:center">${ragHtml}</td>
           <td class="dlv-td-status">${statusCell}</td>
           <td class="dlv-td-remarks">${remarksCell}</td>
-          <td style="text-align:center">${dlBtn}</td>
+          <td class="dlv-td-doc">${docCell}</td>
         </tr>`;
       }).join("");
 
@@ -765,27 +951,17 @@
                 x.status = val;
                 x.completion = val === "Completed" ? 100 : (val === "In Progress" ? Math.max(x.completion || 0, 10) : 0);
                 // No Actual Closure column/input anymore — closing an item via the Status
-                // dropdown stamps today's (app-fixed) date so delay/RAG still has a real
-                // actual-vs-planned-end comparison to work from.
+                // dropdown stamps today's (app-fixed) date so a real actual-vs-planned-end
+                // comparison exists even without a dedicated date field.
                 if (val === "Completed" && (!x.actualDate || x.actualDate === "-")) x.actualDate = isoToDisplay("2026-07-07");
                 if (val !== "Completed") x.actualDate = "-";
-
-                const ragDot = row.querySelector(".dlv-rag-dot");
-                if (ragDot) {
-                  const today = new Date(2026, 6, 7);
-                  const actualISO = displayToISO(x.actualDate);
-                  const actualDate = actualISO ? new Date(actualISO) : null;
-                  const targetISO  = displayToISO(x.plannedEndDate);
-                  const targetDate = targetISO ? new Date(targetISO) : null;
-                  let delay = 0;
-                  if (actualDate && targetDate) delay = Math.max(0, Math.round((actualDate - targetDate) / 86400000));
-                  else if (targetDate && targetDate < today) delay = Math.round((today - targetDate) / 86400000);
-                  x.delayDays = delay;
-                  ragDot.className = `dlv-rag-dot dlv-rag-${calcRag(delay, false)}`;
-                }
+                // A newly-Completed item reads as "document uploaded" the same way a pre-seeded
+                // Completed one already does, rather than needing a separate manual upload —
+                // matches project-detail-seed.js's own deterministic evidence-filename pattern.
+                if (val === "Completed" && !x.evidence) x.evidence = x.title.replace(/\s+/g, "_") + ".pdf";
               }
               if (field === "remarks") x.remarks = val;
-              renderApprovalSection(); // item completion may just have changed gate eligibility
+              buildTable(); // status/remarks may change the Document cell or gate eligibility below
             });
           });
 
@@ -804,6 +980,32 @@
               if (!addSelect.value) return;
               x.responsible = [...(x.responsible || []), addSelect.value];
               buildTable();
+            });
+          }
+
+          // Upload (no document yet) / Replace (already uploaded) — same small popover either
+          // way. Session-only, like the rest of this tab's edits (no bridge/persistence layer
+          // exists for checklist items), but it drives the exact same "uploaded" badge a
+          // pre-seeded Completed item already shows.
+          const uploadBtn = row.querySelector(".gc-upload-btn") || row.querySelector(".gc-doc-replace");
+          if (uploadBtn) {
+            uploadBtn.addEventListener("click", () => {
+              const idx = parseInt(row.dataset.idx, 10);
+              const x = gc.items[idx];
+              const pop = openPopover(uploadBtn, `
+                <div class="dlv-pop-head">${x.evidence ? "Replace" : "Upload"} Document — ${esc(x.title)}</div>
+                <div class="dlv-pop-upload">
+                  <input type="text" class="dlv-pop-filename" placeholder="File name (e.g. Evidence.pdf)">
+                  <button type="button" class="dlv-pop-btn dlv-pop-save dlv-pop-upload-btn">Upload</button>
+                </div>`, "dlv-docs-popover");
+              pop.querySelector(".dlv-pop-upload-btn").addEventListener("click", () => {
+                const fileName = (pop.querySelector(".dlv-pop-filename").value || "").trim();
+                if (!fileName) return;
+                x.evidence = fileName;
+                closePopover();
+                showToast(`Uploaded "${fileName}".`, "success");
+                buildTable();
+              });
             });
           }
         });
@@ -847,8 +1049,8 @@
       if (!gc) { approvalEl.innerHTML = ""; return; }
       const stageCode = gc.stage;
 
-      // Not-started (Future) gate — no approval section at all.
-      if (st === "Future") { approvalEl.innerHTML = ""; return; }
+      // Not-started (Future) or Skipped gate — no approval section at all.
+      if (st === "Future" || st === "Skipped") { approvalEl.innerHTML = ""; return; }
 
       const state = approvalState[stageCode] || (approvalState[stageCode] = { approvers: [], started: false });
 
@@ -887,7 +1089,7 @@
           return;
         }
         approvalEl.innerHTML = approvalCardShell(stageCode,
-          `<h4>Start Gate Approval — ${esc(stageCode)}</h4>`,
+          `<h4>Start Gate Sign - Off — ${esc(stageCode)}</h4>`,
           `<p class="gc-approval-hint">All checklist items are complete. Choose how many approvers are required for this gate to close.</p>
           <div class="gc-approval-setup">
             <label>Number of Approvers
@@ -1240,242 +1442,394 @@
     });
   }
 
-  // ── Gantt ──
+  // ── Gantt Chart — gate-grouped deliverables (same records the Deliverables tab edits) with a
+  // real date-scaled timeline. Figma node 532:1621. Left/right panes are both built from one
+  // shared row model (rows[]) so their heights can never drift out of pixel alignment. ──
   function renderGantt(d) {
-    // ── helpers ──
-    const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    const parseDate = s => {
-      const p = String(s||"").trim().split(" ");
+    const MON3 = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    function parseDisp(s) {
+      if (!s || s === "-" || s === "—") return null;
+      const p = String(s).trim().split(" ");
       if (p.length < 3) return null;
-      const mi = MON.indexOf(p[1]);
+      const mi = MON3.indexOf(p[1]);
       if (mi < 0) return null;
-      const yr = +p[2] < 100 ? 2000 + +p[2] : +p[2];
-      return new Date(yr, mi, +p[0]);
-    };
-    const fmtDate = d2 => {
-      if (!d2) return "-";
-      return String(d2.getDate()).padStart(2,"0") + " " + MON[d2.getMonth()] + " " + String(d2.getFullYear()).slice(2);
-    };
-    const addDays = (d2, n) => new Date(d2.getTime() + n*86400000);
-    const diffDays = (a, b) => Math.round((b - a) / 86400000);
+      let yr = parseInt(p[2], 10); if (yr < 100) yr += 2000;
+      return new Date(yr, mi, parseInt(p[0], 10));
+    }
+    const diffDaysG = (a, b) => Math.round((b - a) / 86400000);
+    const TODAY_G = new Date(2026, 6, 7); // fixed app "today" — matches every other tab
 
-    // ── build activity rows from mock data ──
-    const activities = (d.activities||[]).filter(a => a.planned && a.planned !== "-");
+    const gateDetails = d.gateDetails || [];
+    const gatesArr = d.gates || [];
+    const kpiStrip       = $("gcKpiStrip");
+    const leftScroll     = $("gcLeftScroll");
+    const rightScroll    = $("gcRightScroll");
+    const headInner      = $("gcRightHeadInner");
+    const gateRowEl      = $("gcGateRow");
+    const monthRowEl     = $("gcMonthRow2");
+    const weekRowEl      = $("gcWeekRow2");
+    const barsInnerEl    = $("gcBarsInner");
+    const catFilterEl    = $("gcCategoryFilter");
+    const statusFilterEl = $("gcStatusFilter");
+    const filterSummaryEl = $("gcFilterSummary");
+    if (!leftScroll || !rightScroll) return;
 
-    // Compute project span
-    const allDates = [];
-    activities.forEach(a => {
-      const s = parseDate(a.planned);
-      const e = parseDate(a.outlook !== "-" ? a.outlook : a.planned) || s;
-      if (s) allDates.push(s.getTime(), (e||s).getTime());
-    });
-    if (!allDates.length) {
-      document.getElementById("gcLeftRows").innerHTML = "<div style='padding:20px;color:#64748b'>No activities found.</div>";
+    if (!gateDetails.length) {
+      leftScroll.innerHTML = '<div style="padding:24px;color:var(--color-slate-600);font-style:italic">No deliverables found for this project.</div>';
+      if (kpiStrip) kpiStrip.innerHTML = "";
       return;
     }
-    const spanStart = new Date(Math.min(...allDates));
-    const spanEnd   = new Date(Math.max(...allDates));
 
-    // Snap to month start/end
-    const chartStart = new Date(spanStart.getFullYear(), spanStart.getMonth(), 1);
-    const chartEnd   = new Date(spanEnd.getFullYear(), spanEnd.getMonth()+1, 0);
-    const totalDays  = diffDays(chartStart, chartEnd) + 1;
+    function gateStatusOf(gi) {
+      const g = gatesArr[gi];
+      if (!g) return gi < (d.gateReached || 0) ? "Completed" : "Future";
+      const s = g.status;
+      if (s === "In Progress") return "Active";
+      if (s === "Completed" || s === "On Time" || s === "Delayed 15-60" || s === "Delayed >60") return "Completed";
+      return "Future";
+    }
+    // Same 0–15 green / 15–60 amber / >60 red formula used by the Deliverables tab and Gate
+    // Checklist tab's delay bands — one formula, reused everywhere a deliverable/gate is scored.
+    function ragOf(x, isFutureGate) {
+      if (isFutureGate) return "grey";
+      const dd = x.delayDays;
+      if (dd === null || dd === undefined || dd < 0) return "green";
+      if (dd <= 15) return "green";
+      if (dd <= 60) return "amber";
+      return "red";
+    }
 
-    // Week width: distribute weeks across chart
-    const WEEK_W = 44; // px per week
-    const totalWeeks = Math.ceil(totalDays / 7);
-    const chartW = totalWeeks * WEEK_W;
+    // Flat, unfiltered list of every deliverable across every gate — base for KPI totals,
+    // category options and global row numbering (numbering stays stable across filtering).
+    const allEntries = [];
+    gateDetails.forEach((gd, gi) => {
+      const isFutureGate = gateStatusOf(gi) === "Future";
+      (gd.deliverables || []).forEach(x => allEntries.push({ x, gi, isFutureGate, rag: ragOf(x, isFutureGate) }));
+    });
+    allEntries.forEach((e, i) => { e.no = i + 1; });
 
-    // Helper: days from chartStart → px
-    const daysPx = days => (days / totalDays) * chartW;
-    const datePx = d2 => daysPx(diffDays(chartStart, d2));
+    // State persists across re-renders of this tab (expand/collapse + filters survive a redraw).
+    if (!renderGantt._state) {
+      renderGantt._state = { gateExpanded: {}, category: "", status: "", scrolledOnce: false };
+    }
+    const state = renderGantt._state;
 
-    // ── RAG from status ──
-    const ragClass = s => {
-      if (s === "On Time" || s === "Completed") return "gc-rag-green";
-      if (s === "In Progress" || s === "Delayed 15-60") return "gc-rag-amber";
-      if (s === "Delayed >60") return "gc-rag-red";
-      return "gc-rag-grey";
-    };
+    // ── KPI values — always over the WHOLE project, independent of the active filter ──
+    const plannedStarts = allEntries.map(e => parseDisp(e.x.plannedDate)).filter(Boolean);
+    const plannedEnds   = allEntries.map(e => parseDisp(e.x.plannedEndDate)).filter(Boolean);
+    const gateStarts = gatesArr.map(g => parseDisp(g.plannedStart)).filter(Boolean);
+    const gateEnds   = gatesArr.map(g => parseDisp(g.target)).filter(Boolean);
+    const spanStarts = plannedStarts.concat(gateStarts);
+    const spanEnds   = plannedEnds.concat(gateEnds);
+    const overallMin = spanStarts.length ? new Date(Math.min.apply(null, spanStarts.map(t => t.getTime()))) : TODAY_G;
+    const overallMax = spanEnds.length ? new Date(Math.max.apply(null, spanEnds.map(t => t.getTime()))) : TODAY_G;
 
-    // ── Intelligence banner stats ──
-    const critPath = activities.filter(a => a.priority === "High").length;
+    const totalDeliverables = allEntries.length;
+    const plannedDurationDays = Math.max(0, diffDaysG(overallMin, overallMax));
+    const criticalEntries = allEntries.filter(e => e.rag === "red");
+    const criticalCount = criticalEntries.length;
+    const delayedEntries = allEntries.filter(e => !e.isFutureGate && (e.x.delayDays || 0) > 0);
+    const avgDelay = delayedEntries.length ? Math.round(delayedEntries.reduce((s, e) => s + e.x.delayDays, 0) / delayedEntries.length) : 0;
+    const completedCount = allEntries.filter(e => e.x.status === "Completed").length;
 
-    const bannerEl = document.getElementById("gcBannerStats");
-    if (bannerEl) {
-      const planDays = diffDays(chartStart, chartEnd);
+    if (kpiStrip) {
       const cards = [
-        { val: activities.length, lbl: "TOTAL DELIVERABLES (PROJ.)", color: "gc-stat-green" },
-        { val: planDays,           lbl: "PLANNING DURATION (DAYS)",   color: "gc-stat-blue"  },
-        { val: critPath,           lbl: "CRITICAL PATH TASKS (PROJ.)", color: "gc-stat-amber", id: "gcCritStatCard" },
+        { val: totalDeliverables, lbl: "Total Deliverables" },
+        { val: plannedDurationDays + " days", lbl: "Planned Duration" },
+        { val: criticalCount, lbl: "Critical", id: "gcKpiCritical", cls: "gc2-kpi-red gc2-kpi-clickable" },
+        { val: avgDelay + "d", lbl: "Avg. Delay", cls: "gc2-kpi-amber" },
+        { val: completedCount, lbl: "Completed", cls: "gc2-kpi-teal" },
       ];
-      bannerEl.innerHTML = cards.map(c =>
-        `<div class="gc-stat${c.id ? " gc-stat-clickable" : ""}" ${c.id ? `id="${c.id}"` : ""}>
-           <div class="gc-stat-val ${c.color}">${c.val}</div>
-           <div class="gc-stat-lbl">${c.lbl}</div>
+      kpiStrip.innerHTML = cards.map(c =>
+        `<div class="gc2-kpi-card ${c.cls || ""}" ${c.id ? `id="${c.id}"` : ""}>
+           <div class="gc2-kpi-val">${c.val}</div>
+           <div class="gc2-kpi-lbl">${esc(c.lbl)}</div>
          </div>`
       ).join("");
     }
 
-    // ── Left rows ──
-    const leftRowsEl = document.getElementById("gcLeftRows");
-    if (leftRowsEl) {
-      leftRowsEl.innerHTML = activities.map((a, i) => {
-        const startD = parseDate(a.planned);
-        const endD   = parseDate(a.outlook !== "-" ? a.outlook : a.planned) || startD;
-        const days   = startD && endD ? diffDays(startD, endD) : "-";
-        return `<div class="gc-left-row">
-          <div class="gc-cell gc-cell-sno">${i+1}</div>
-          <div class="gc-cell gc-cell-deliv" title="${esc(a.activity)}">${esc(a.activity)}</div>
-          <div class="gc-cell gc-cell-id">${esc(a.gate||"-")}</div>
-          <div class="gc-cell gc-cell-resp" title="${esc(a.department)}">${esc((a.department||"").split(" ")[0])}</div>
-          <div class="gc-cell gc-cell-start">${fmtDate(startD)}</div>
-          <div class="gc-cell gc-cell-end">${fmtDate(endD)}</div>
-          <div class="gc-cell gc-cell-days">${days}</div>
-          <div class="gc-cell gc-cell-rag"><span class="gc-rag-dot ${ragClass(a.status)}"></span></div>
+    // Category filter options — real department values present on this project's deliverables.
+    if (catFilterEl && !catFilterEl.dataset.built) {
+      const cats = [...new Set(allEntries.map(e => e.x.department).filter(Boolean))].sort();
+      catFilterEl.innerHTML = '<option value="">Category: All</option>' + cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
+      catFilterEl.dataset.built = "1";
+    }
+
+    function passesFilter(e) {
+      if (state.category && e.x.department !== state.category) return false;
+      if (state.status && e.rag !== state.status) return false;
+      return true;
+    }
+
+    // ── Row model — one flat, ordered list driving BOTH panes ──
+    const GATE_H = 34, DELIV_H = 52, MS_H = 30;
+    const rows = [];
+    gateDetails.forEach((gd, gi) => {
+      const status = gateStatusOf(gi);
+      const gateEntries = allEntries.filter(e => e.gi === gi);
+      const visibleEntries = gateEntries.filter(passesFilter);
+      rows.push({ kind: "gate", gi, gd, status, height: GATE_H });
+      if (state.gateExpanded[gi] !== false) {
+        visibleEntries.forEach(e => rows.push({ kind: "deliv", gi, e, height: DELIV_H }));
+        const total = gateEntries.length;
+        const done = gateEntries.filter(e => e.x.status === "Completed").length;
+        const pct = total ? Math.round(done / total * 100) : 0;
+        rows.push({ kind: "ms", gi, status, pct, height: MS_H });
+      }
+    });
+    let yCursor = 0;
+    rows.forEach(r => { r.top = yCursor; yCursor += r.height; });
+    const totalHeight = Math.max(yCursor, 1);
+
+    // ── Left pane ──
+    function chevronSvg(open) {
+      return `<svg class="gc2-gate-chevron${open ? " gc2-open" : ""}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
+    }
+    const USER_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>';
+    function respText(x) {
+      const list = x.responsible || [];
+      if (!list.length) return "Unassigned";
+      if (list.length === 1) return list[0];
+      return list[0] + " +" + (list.length - 1);
+    }
+
+    const leftHtml = rows.map(r => {
+      if (r.kind === "gate") {
+        const open = state.gateExpanded[r.gi] !== false;
+        return `<div class="gc2-gate-header-row gc2-gate-${r.status.toLowerCase()}" data-gate-idx="${r.gi}" style="height:${r.height}px">
+          ${chevronSvg(open)}
+          <span>Gate ${r.gi + 1} — ${esc(r.gd.stage)}</span>
+          ${r.status === "Active" ? '<span class="gc2-gate-current-tag">(CURRENT)</span>' : ""}
+        </div>`;
+      }
+      if (r.kind === "ms") {
+        const bucket = r.pct >= 100 ? "gc2-ms-done" : r.pct > 0 ? "gc2-ms-partial" : "gc2-ms-pending";
+        return `<div class="gc2-milestone-row ${bucket}" style="height:${r.height}px">
+          <span class="gc2-ms-diamond"></span>
+          <span class="gc2-ms-label">Milestone: Gate ${r.gi + 1} Complete — ${r.pct}%</span>
+          ${r.pct < 100 ? `<div class="gc2-ms-bar"><div style="width:${r.pct}%"></div></div>` : ""}
+        </div>`;
+      }
+      const x = r.e.x;
+      const sD = parseDisp(x.plannedDate), eD = parseDisp(x.plannedEndDate);
+      const days = (sD && eD) ? diffDaysG(sD, eD) : "-";
+      const varVal = r.e.isFutureGate ? 0 : (x.delayDays || 0);
+      return `<div class="gc2-deliv-row" style="height:${r.height}px">
+        <div class="gc2-dc gc2-dc-no">${r.e.no}</div>
+        <div class="gc2-dc gc2-dc-deliv">
+          <div class="gc2-dc-name" title="${esc(x.name)}">${esc(x.name)}</div>
+          <div class="gc2-dc-resp">${USER_ICON}<span>${esc(respText(x))}</span></div>
+        </div>
+        <div class="gc2-dc gc2-dc-date"><span class="p">P: ${esc(x.plannedDate)}</span><span class="a">A: —</span></div>
+        <div class="gc2-dc gc2-dc-date"><span class="p">P: ${esc(x.plannedEndDate)}</span><span class="a">A: ${esc(x.actualDate)}</span></div>
+        <div class="gc2-dc gc2-dc-days">${days}</div>
+        <div class="gc2-dc gc2-dc-var gc2-var-${r.e.rag}">${varVal > 0 ? "+" + varVal : "0"}</div>
+        <div class="gc2-dc gc2-dc-status"><span class="gc2-rag-dot gc2-rag-${r.e.rag}" title="${x.delayDays || 0} day(s) delay"></span></div>
+      </div>`;
+    }).join("");
+    leftScroll.innerHTML = leftHtml;
+
+    // ── Right pane — date-scaled timeline ──
+    const chartStart = new Date(overallMin.getFullYear(), overallMin.getMonth(), 1);
+    const chartEnd   = new Date(overallMax.getFullYear(), overallMax.getMonth() + 1, 0);
+    const totalDays  = Math.max(1, diffDaysG(chartStart, chartEnd) + 1);
+    const WEEK_W = 26;
+    const totalWeeks = Math.ceil(totalDays / 7);
+    const chartW = totalWeeks * WEEK_W;
+    const daysPx = days => (days / totalDays) * chartW;
+    const datePx = dt => daysPx(diffDaysG(chartStart, dt));
+
+    // Per-gate span (for the gate-band header + milestone diamond x-position)
+    const gateSpans = gateDetails.map((gd, gi) => {
+      const ents = allEntries.filter(e => e.gi === gi);
+      const starts = ents.map(e => parseDisp(e.x.plannedDate)).filter(Boolean);
+      const ends   = ents.map(e => parseDisp(e.x.plannedEndDate)).filter(Boolean);
+      const gStart = parseDisp(gatesArr[gi] && gatesArr[gi].plannedStart);
+      const gEnd   = parseDisp(gatesArr[gi] && gatesArr[gi].target);
+      const allS = gStart ? starts.concat([gStart]) : starts;
+      const allE = gEnd ? ends.concat([gEnd]) : ends;
+      const s = allS.length ? new Date(Math.min.apply(null, allS.map(t => t.getTime()))) : chartStart;
+      const e2 = allE.length ? new Date(Math.max.apply(null, allE.map(t => t.getTime()))) : s;
+      return { start: s, end: e2 < s ? s : e2 };
+    });
+
+    if (gateRowEl) {
+      gateRowEl.innerHTML = gateSpans.map((sp, gi) => {
+        const status = gateStatusOf(gi);
+        const left = Math.max(0, datePx(sp.start));
+        const width = Math.max(34, datePx(sp.end) - left);
+        const open = state.gateExpanded[gi] !== false;
+        return `<div class="gc2-gate-band gc2-gate-${status.toLowerCase()}" data-gate-idx="${gi}" style="position:absolute;left:${left}px;width:${width}px;height:100%;top:0">
+          <span>Gate ${gi + 1}${status === "Active" ? " (CURRENT)" : ""}</span><span style="font-weight:400">${open ? "−" : "+"}</span>
         </div>`;
       }).join("");
     }
 
-    // ── Month / week headers ──
-    const monthRowEl = document.getElementById("gcMonthRow");
-    const weekRowEl  = document.getElementById("gcWeekRow");
-
     if (monthRowEl) {
-      const months = [];
-      let cur = new Date(chartStart);
+      let html = "", cur = new Date(chartStart);
       while (cur <= chartEnd) {
         const mStart = new Date(cur.getFullYear(), cur.getMonth(), 1);
-        const mEnd   = new Date(cur.getFullYear(), cur.getMonth()+1, 0);
-        const clamp  = t => Math.max(chartStart.getTime(), Math.min(chartEnd.getTime(), t));
-        const mW     = daysPx(diffDays(new Date(clamp(mStart.getTime())), new Date(clamp(mEnd.getTime()))) + 1);
-        months.push(`<div class="gc-month-cell" style="width:${mW}px">${MON[cur.getMonth()]} ${cur.getFullYear()}</div>`);
-        cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
+        const mEnd   = new Date(cur.getFullYear(), cur.getMonth() + 1, 0);
+        const clampT = t => Math.max(chartStart.getTime(), Math.min(chartEnd.getTime(), t));
+        const w = daysPx(diffDaysG(new Date(clampT(mStart.getTime())), new Date(clampT(mEnd.getTime()))) + 1);
+        html += `<div class="gc2-month-cell" style="width:${w}px">${MON3[cur.getMonth()]} ${cur.getFullYear()}</div>`;
+        cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
       }
-      monthRowEl.style.width = chartW + "px";
-      monthRowEl.innerHTML = months.join("");
+      monthRowEl.innerHTML = html;
     }
-
     if (weekRowEl) {
-      let html = "", cur = new Date(chartStart);
-      let weekNum = 1, lastMonth = cur.getMonth();
+      let html = "", cur = new Date(chartStart), weekNum = 1, lastMonth = cur.getMonth();
       while (cur <= chartEnd) {
         if (cur.getMonth() !== lastMonth) { weekNum = 1; lastMonth = cur.getMonth(); }
-        const isMonthStart = cur.getDate() <= 7 && weekNum === 1;
-        html += `<div class="gc-week-cell${isMonthStart?" month-start":""}" style="width:${WEEK_W}px">W${weekNum}</div>`;
-        cur = addDays(cur, 7);
+        html += `<div class="gc2-week-cell${weekNum === 1 ? " gc2-month-start" : ""}" style="width:${WEEK_W}px">W${weekNum}</div>`;
+        cur = new Date(cur.getTime() + 7 * 86400000);
         weekNum++;
       }
-      weekRowEl.style.width = chartW + "px";
       weekRowEl.innerHTML = html;
     }
+    if (headInner) headInner.style.width = chartW + "px";
 
-    // ── Bars ──
-    const barsEl = document.getElementById("gcBarsArea");
-    if (barsEl) {
-      // vertical grid every 4 weeks (month)
-      let vgrid = "", gc = new Date(chartStart);
-      while (gc <= chartEnd) {
-        gc = new Date(gc.getFullYear(), gc.getMonth()+1, 1);
-        const x = datePx(gc);
-        if (x > 0 && x < chartW) vgrid += `<div class="gc-vgrid" style="left:${x}px"></div>`;
-      }
-
-      const rows = activities.map(a => {
-        const startD = parseDate(a.planned);
-        const endD   = parseDate(a.outlook !== "-" ? a.outlook : a.planned) || startD;
-        const actStartD = parseDate(a.approved !== "-" ? a.approved : a.planned) || startD;
-        const actEndD   = endD;
-
-        let bars = "";
-        if (startD && endD) {
-          const pl = datePx(startD);
-          const pw = Math.max(WEEK_W * 0.5, datePx(endD) - datePx(startD));
-          bars += `<div class="gc-bar gc-bar-planned" style="left:${pl}px;width:${pw}px" title="Planned: ${fmtDate(startD)} – ${fmtDate(endD)}"></div>`;
-        }
-        if (actStartD && actEndD) {
-          const al = datePx(actStartD);
-          const aw = Math.max(WEEK_W * 0.4, datePx(actEndD) - datePx(actStartD));
-          bars += `<div class="gc-bar gc-bar-actual" style="left:${al}px;width:${aw}px" title="Actual: ${fmtDate(actStartD)} – ${fmtDate(actEndD)}"></div>`;
-        }
-        return `<div class="gc-bar-row" style="width:${chartW}px">${vgrid}${bars}</div>`;
-      }).join("");
-      barsEl.innerHTML = rows;
-    }
-
-    // Set chart inner width
-    const chartInner = document.getElementById("gcChartInner");
-    if (chartInner) chartInner.style.minWidth = chartW + "px";
-
-    // ── Critical Path filter toggle ──
-    let criticalPathActive = false;
-
-    function applyFilter() {
-      const leftRows  = document.querySelectorAll("#gcLeftRows .gc-left-row");
-      const barRows   = document.querySelectorAll("#gcBarsArea .gc-bar-row");
-      leftRows.forEach((row, i) => {
-        const act = activities[i];
-        const hide = criticalPathActive && act.priority !== "High";
-        row.style.display = hide ? "none" : "";
-        if (barRows[i]) barRows[i].style.display = hide ? "none" : "";
-      });
-
-      const critBtn = document.getElementById("gcCritPathBtn");
-      const allBtn = document.getElementById("gcAllBtn");
-      if (critBtn) {
-        critBtn.classList.toggle("gc-hl-crit-active", criticalPathActive);
-        critBtn.innerHTML = criticalPathActive
-          ? "✕ Clear Filter"
-          : '<i class="gc-dot gc-dot-amber"></i> Critical Path';
-      }
-      if (allBtn) {
-        allBtn.classList.toggle("gc-hl-active", !criticalPathActive);
+    // Vertical month grid lines
+    let vgridHtml = "";
+    { let cur = new Date(chartStart);
+      while (cur <= chartEnd) {
+        cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+        const x = datePx(cur);
+        if (x > 0 && x < chartW) vgridHtml += `<div class="gc2-vgrid-line" style="left:${x}px"></div>`;
       }
     }
 
-    // Wire the buttons (after DOM is painted)
-    requestAnimationFrame(() => {
-      const critBtn = document.getElementById("gcCritPathBtn");
-      const allBtn = document.getElementById("gcAllBtn");
-      const critCard = document.getElementById("gcCritStatCard");
-      
-      if (critBtn) {
-        critBtn.addEventListener("click", () => {
-          criticalPathActive = !criticalPathActive;
-          applyFilter();
-        });
+    // Bar rows — same order/heights as the left pane
+    const rowByName = {};
+    rows.forEach(r => { if (r.kind === "deliv") rowByName[r.e.x.name] = r; });
+    let depSvg = "";
+    const barRowsHtml = rows.map(r => {
+      if (r.kind === "gate") {
+        return `<div class="gc2-bar-row gc2-bar-row-gate" style="top:${r.top}px;height:${r.height}px;width:${chartW}px"></div>`;
       }
-      
-      if (allBtn) {
-        allBtn.addEventListener("click", () => {
-          criticalPathActive = false;
-          applyFilter();
-        });
+      if (r.kind === "ms") {
+        const sp = gateSpans[r.gi];
+        const cx = datePx(sp.end);
+        const cls = r.pct > 0 ? "done" : "pending";
+        return `<div class="gc2-bar-row gc2-bar-row-ms" style="top:${r.top}px;height:${r.height}px;width:${chartW}px">
+          <div class="gc2-ms-diamond-track ${cls}" style="left:${cx}px"></div>
+        </div>`;
       }
-      
-      if (critCard) {
-        critCard.addEventListener("click", () => {
-          criticalPathActive = true;
-          applyFilter();
-        });
-        critCard.style.cursor = "pointer";
+      const x = r.e.x;
+      const sD = parseDisp(x.plannedDate), eD = parseDisp(x.plannedEndDate);
+      let bars = "";
+      if (sD && eD) {
+        const left = datePx(sD), width = Math.max(10, datePx(eD) - left);
+        bars += `<div class="gc2-bar gc2-bar-planned" style="left:${left}px;width:${width}px" title="Planned: ${esc(x.plannedDate)} – ${esc(x.plannedEndDate)}">${width > 70 ? `<span class="gc2-bar-label">${esc(x.plannedDate)} – ${esc(x.plannedEndDate)}</span>` : ""}</div>`;
       }
+      if (x.status === "Completed" && x.actualDate && x.actualDate !== "-" && sD) {
+        const actualEndD = parseDisp(x.actualDate);
+        if (actualEndD) {
+          const left = datePx(sD), width = Math.max(8, datePx(actualEndD) - left);
+          bars += `<div class="gc2-bar gc2-bar-actual" style="left:${left}px;width:${width}px" title="Actual: ${esc(x.plannedDate)} – ${esc(x.actualDate)}"></div>`;
+        }
+      }
+      if (r.e.rag === "red") {
+        const alertLeft = (eD ? datePx(eD) : (sD ? datePx(sD) : 0)) + 4;
+        bars += `<div class="gc2-bar-alert" title="${x.delayDays} day(s) delay" style="left:${alertLeft}px">!</div>`;
+      }
+      // Dependency connector — only real dependencies (x.dependency names another real deliverable)
+      if (x.dependency && x.dependency !== "-") {
+        const depRow = rowByName[x.dependency];
+        if (depRow) {
+          const depX = parseDisp(depRow.e.x.plannedEndDate) || parseDisp(depRow.e.x.plannedDate);
+          if (depX && sD) {
+            const x1 = datePx(depX), y1 = depRow.top + depRow.height / 2;
+            const x2 = datePx(sD), y2 = r.top + r.height / 2;
+            const midX = x1 + Math.max(14, (x2 - x1) / 2);
+            depSvg += `<path d="M${x1},${y1} L${midX},${y1} L${midX},${y2} L${Math.max(x1, x2 - 5)},${y2}" fill="none" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="4,3" marker-end="url(#gc2ArrowHead)"/>`;
+          }
+        }
+      }
+      return `<div class="gc2-bar-row" style="top:${r.top}px;height:${r.height}px;width:${chartW}px">${bars}</div>`;
+    }).join("");
+
+    if (barsInnerEl) {
+      barsInnerEl.style.width = chartW + "px";
+      barsInnerEl.style.height = totalHeight + "px";
+      const todayX = datePx(TODAY_G);
+      barsInnerEl.innerHTML = `
+        <div class="gc2-vgrid-overlay">${vgridHtml}</div>
+        <svg class="gc2-dep-svg" width="${chartW}" height="${totalHeight}">
+          <defs><marker id="gc2ArrowHead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+          ${depSvg}
+        </svg>
+        ${barRowsHtml}
+        ${todayX >= 0 && todayX <= chartW ? `<div class="gc2-today-line" style="left:${todayX}px;height:${totalHeight}px"></div><div class="gc2-today-flag" style="left:${todayX}px">Today</div>` : ""}
+      `;
+    }
+
+    // ── Scroll sync: vertical (left ↔ right), horizontal (right bars → sticky head via transform) ──
+    let syncingV = false;
+    leftScroll.onscroll = () => {
+      if (syncingV) return; syncingV = true;
+      rightScroll.scrollTop = leftScroll.scrollTop;
+      syncingV = false;
+    };
+    rightScroll.onscroll = () => {
+      if (!syncingV) { syncingV = true; leftScroll.scrollTop = rightScroll.scrollTop; syncingV = false; }
+      if (headInner) headInner.style.transform = `translateX(-${rightScroll.scrollLeft}px)`;
+    };
+
+    // ── Gate accordion toggle — both left header and right band open/close the same gate ──
+    function toggleGate(gi) {
+      state.gateExpanded[gi] = state.gateExpanded[gi] === false ? true : false;
+      renderGantt(d);
+    }
+    leftScroll.querySelectorAll(".gc2-gate-header-row").forEach(el => {
+      el.addEventListener("click", () => toggleGate(parseInt(el.dataset.gateIdx, 10)));
     });
-    const leftRows = document.getElementById("gcLeftRows");
-    const barsArea = document.getElementById("gcBarsArea");
-    if (leftRows && barsArea) {
-      let syncing = false;
-      leftRows.addEventListener("scroll", () => {
-        if (syncing) return; syncing = true;
-        barsArea.scrollTop = leftRows.scrollTop;
-        syncing = false;
-      }, {passive:true});
-      barsArea.addEventListener("scroll", () => {
-        if (syncing) return; syncing = true;
-        leftRows.scrollTop = barsArea.scrollTop;
-        syncing = false;
-      }, {passive:true});
+    if (gateRowEl) gateRowEl.querySelectorAll(".gc2-gate-band").forEach(el => {
+      el.addEventListener("click", () => toggleGate(parseInt(el.dataset.gateIdx, 10)));
+    });
+
+    // ── Filters ──
+    if (catFilterEl) {
+      catFilterEl.value = state.category;
+      catFilterEl.classList.toggle("gc2-filter-active", !!state.category);
+      catFilterEl.onchange = () => { state.category = catFilterEl.value; renderGantt(d); };
     }
+    if (statusFilterEl) {
+      statusFilterEl.value = state.status;
+      statusFilterEl.classList.toggle("gc2-filter-active", !!state.status);
+      statusFilterEl.onchange = () => { state.status = statusFilterEl.value; renderGantt(d); };
+    }
+    const critCard = $("gcKpiCritical");
+    if (critCard) {
+      critCard.classList.toggle("gc2-kpi-active", state.status === "red");
+      critCard.title = "Click to filter the table to Critical (>60 day delay) deliverables";
+      critCard.addEventListener("click", () => {
+        state.status = state.status === "red" ? "" : "red";
+        renderGantt(d);
+      });
+    }
+
+    if (filterSummaryEl) {
+      const visibleCount = allEntries.filter(passesFilter).length;
+      filterSummaryEl.textContent = (state.category || state.status)
+        ? `Showing ${visibleCount} of ${totalDeliverables} deliverables`
+        : `${totalDeliverables} deliverables · Scroll ↓ rows · Scroll → timeline`;
+    }
+
+    // Bring "today" into view the first time this tab's panel is actually visible — while the
+    // panel is [hidden] (every tab renders once up-front in init(), not lazily on click) it has
+    // no layout box, so a scrollLeft write here would silently no-op. initTabs() calls this again
+    // once the Gantt panel's `hidden` attribute is removed, when clientWidth is real.
+    renderGantt._scrollToToday = function () {
+      if (state.scrolledOnce) return;
+      const viewportW = rightScroll.clientWidth;
+      if (!viewportW) return; // still hidden — initTabs() will retry on tab click
+      state.scrolledOnce = true;
+      const target = Math.max(0, datePx(TODAY_G) - viewportW * 0.3);
+      rightScroll.scrollLeft = target;
+      if (headInner) headInner.style.transform = `translateX(-${target}px)`;
+    };
+    requestAnimationFrame(renderGantt._scrollToToday);
   }
 
   // ── Gate Checklist init ──
@@ -1492,6 +1846,9 @@
         const tab = btn.dataset.tab;
         document.querySelectorAll(".pd-tabpanel").forEach(p => { p.hidden = p.id !== "tab-" + tab; });
         if (tab === "snapshot") Object.values(_charts).forEach(c => c && c.resize && c.resize());
+        // The Gantt tab's initial "scroll to today" runs once when its panel first becomes
+        // visible — while [hidden], the pane has no layout box so scrollLeft writes are no-ops.
+        if (tab === "gantt" && typeof renderGantt._scrollToToday === "function") renderGantt._scrollToToday();
       });
     });
   }

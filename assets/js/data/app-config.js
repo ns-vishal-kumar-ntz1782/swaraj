@@ -110,6 +110,29 @@ const { projects: _projects, deliverableAssignments: _deliverables, gateInstance
   loadJsonSync("projects.json"), loadJsonSync("projectDeliverableAssignments.json"), loadJsonSync("projectGateInstances.json")
 );
 
+// ── Gate Skip Registry resolution — a Skipped gate needs no approval/deliverables and must be
+// excluded from every progress/compliance number the Dashboard computes. Resolved once here
+// (in-memory only — the underlying JSON/localStorage records are never mutated) rather than at
+// every downstream calculation site, per assets/js/data/gate-skip.js's design: stamp matching
+// gate instances "Skipped", then drop their deliverables entirely so every ratio calculation
+// downstream (_buildPortfolioRow, dashboard.js's quarter/compliance aggregations, etc.) sees a
+// clean 0-deliverable gate rather than a misleading 0/0 that would need special-casing everywhere. ──
+(function applyGateSkips() {
+  if (typeof isGateSkipped !== "function") return; // gate-skip.js not loaded on this page — no-op
+  const skippedInstanceIds = new Set();
+  _gateInstances.forEach(g => {
+    if (isGateSkipped(g.projectCode, g.gateCode)) {
+      g.currentStatus = "Skipped";
+      skippedInstanceIds.add(g.id);
+    }
+  });
+  if (skippedInstanceIds.size) {
+    for (let i = _deliverables.length - 1; i >= 0; i--) {
+      if (skippedInstanceIds.has(_deliverables[i].gateInstanceId)) _deliverables.splice(i, 1);
+    }
+  }
+})();
+
 const _MON3 = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 function _parseISO(s) { if (!s) return null; const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); }
 function _monthLabelOf(iso) { const d = _parseISO(iso); return d ? _MON3[d.getMonth()] : null; }

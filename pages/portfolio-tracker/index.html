@@ -7,8 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../../assets/css/styles.css" />
+  <link rel="stylesheet" href="../../assets/css/styles.css?v=2" />
   <link rel="stylesheet" href="portfolio.css" />
+  <script src="../../assets/js/data/gate-skip.js"></script>
   <script src="../../assets/js/data/app-config.js"></script>
   <script src="../../assets/js/data/project-detail-seed.js"></script>
   <script src="../../assets/js/auth.js"></script>
@@ -41,27 +42,16 @@
                 <option value="N-BB">Non-BlockBuster</option>
               </select>
             </div>
-            <button class="pt-btn pt-btn-outline pt-btn-active" id="btnToday">Today</button>
-            <button class="pt-btn pt-btn-outline" id="btnFilters">Filters</button>
-            <button class="pt-btn pt-btn-outline" id="btnCriticalPath">Critical Path</button>
-            <button class="pt-btn pt-btn-outline" id="btnDependencies">Dependencies</button>
-            <button class="pt-btn pt-btn-dark" id="btnAI">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-              AI Insights
-            </button>
-            <button class="pt-btn pt-btn-navy" id="btnExport">Export</button>
+            
           </div>
         </div>
 
-        <!-- KPI Row -->
-        <div class="pt-kpi-row" id="kpiRow"></div>
-
-        <!-- Matrix -->
-        <div class="pt-matrix-wrap">
-          <div class="pt-matrix" id="matrixTable"></div>
+        <!-- Board: GATES column + category swimlanes -->
+        <div class="pt-board-wrap">
+          <div class="pt-board" id="boardTable"></div>
         </div>
 
-        <!-- Legend Panel -->
+        <!-- Legend Panel (collapsible, default open) -->
         <div class="pt-legend" id="legendPanel"></div>
 
       </div>
@@ -69,6 +59,7 @@
   </div>
 
   <script src="../../assets/js/shared.js"></script>
+  <script src="../../assets/js/chatbot.js?v=2"></script>
   <script src="portfolio.js"></script>
   <script>
     renderTopNav("portfolio-tracker");

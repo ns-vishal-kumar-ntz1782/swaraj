@@ -161,28 +161,28 @@
     "severity": "Minor",
     "source": "Gate Review",
     "status": "Closed",
-    "createdDate": "2025-02-25",
-    "assignedDate": "2025-02-26",
-    "targetDate": "2025-03-06",
-    "actualCompletionDate": "2025-03-07",
-    "reminderDate": "2025-03-04",
+    "createdDate": "2026-04-14",
+    "assignedDate": "2026-04-15",
+    "targetDate": "2026-04-23",
+    "actualCompletionDate": "2026-04-24",
+    "reminderDate": "2026-04-21",
     "escalationDate": null,
     "comments": [
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
-        "timestamp": "2025-02-27",
+        "timestamp": "2026-04-16",
         "commentId": "ACT-0003-CMT-01",
         "userId": "USR-0001"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
-        "timestamp": "2025-03-01",
+        "timestamp": "2026-04-18",
         "commentId": "ACT-0003-CMT-02",
         "userId": "USR-0001"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
-        "timestamp": "2025-03-03",
+        "timestamp": "2026-04-20",
         "commentId": "ACT-0003-CMT-03",
         "userId": "USR-0001"
       }
@@ -192,13 +192,13 @@
         "fileName": "PJ01002_Pre-KO_PDF_1.pdf",
         "type": "PDF",
         "uploadedBy": "Shalini Malhotra",
-        "uploadedAt": "2025-02-26"
+        "uploadedAt": "2026-04-15"
       },
       {
         "fileName": "PJ01002_Pre-KO_Image_2.png",
         "type": "Image",
         "uploadedBy": "Shalini Malhotra",
-        "uploadedAt": "2025-02-27"
+        "uploadedAt": "2026-04-16"
       }
     ],
     "reminderEnabled": true,
@@ -218,50 +218,50 @@
     "id": "ACT-0004",
     "actionNumber": "AR-0004",
     "projectCode": "PJ01002",
-    "gateCode": "PPO",
-    "deliverableAssignmentId": "PDA-0152",
-    "checklistItemId": "CHK-026",
-    "relatedRisk": "Risk: Production Readiness Review blocked — upstream input required",
-    "relatedIssue": "Issue: Planning concern at PPO",
-    "title": "Production Readiness Review blocked — upstream input required",
-    "description": "Production Readiness Review (DEL-PPO-003) is blocked pending upstream input and cannot progress until resolved.",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0101",
+    "checklistItemId": "CHK-005",
+    "relatedRisk": "Risk: Concept Sketch Package blocked — upstream input required",
+    "relatedIssue": "Issue: Planning concern at CVPA",
+    "title": "Concept Sketch Package blocked — upstream input required",
+    "description": "Concept Sketch Package (DEL-CVP-006) is blocked pending upstream input and cannot progress until resolved.",
     "category": "Planning",
     "priority": "High",
     "severity": "Major",
     "source": "Gate Review",
     "status": "Open",
-    "createdDate": "2026-06-09",
-    "assignedDate": "2026-06-10",
-    "targetDate": "2026-06-17",
+    "createdDate": "2026-06-12",
+    "assignedDate": "2026-06-13",
+    "targetDate": "2026-06-20",
     "actualCompletionDate": null,
-    "reminderDate": "2026-06-15",
+    "reminderDate": "2026-06-18",
     "escalationDate": null,
     "comments": [
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
-        "timestamp": "2026-06-11",
+        "timestamp": "2026-06-14",
         "commentId": "ACT-0004-CMT-01",
-        "userId": "USR-0110"
+        "userId": "USR-0032"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
-        "timestamp": "2026-06-13",
+        "timestamp": "2026-06-16",
         "commentId": "ACT-0004-CMT-02",
-        "userId": "USR-0110"
+        "userId": "USR-0032"
       }
     ],
     "attachments": [
       {
-        "fileName": "PJ01002_PPO_PDF_1.pdf",
+        "fileName": "PJ01002_CVPA_PDF_1.pdf",
         "type": "PDF",
         "uploadedBy": "Shalini Malhotra",
-        "uploadedAt": "2026-06-10"
+        "uploadedAt": "2026-06-13"
       },
       {
-        "fileName": "PJ01002_PPO_Image_2.png",
+        "fileName": "PJ01002_CVPA_Image_2.png",
         "type": "Image",
-        "uploadedBy": "Ajay Dhillon",
-        "uploadedAt": "2026-06-11"
+        "uploadedBy": "Sandeep Banerjee",
+        "uploadedAt": "2026-06-14"
       }
     ],
     "reminderEnabled": true,
@@ -271,10 +271,10 @@
     "escalationReason": null,
     "dependsOnActionIds": [],
     "assignedByUserId": "USR-0009",
-    "assignedToUserId": "USR-0110",
+    "assignedToUserId": "USR-0032",
     "watcherUserIds": [
       "USR-0009",
-      "USR-0110"
+      "USR-0032"
     ],
     "escalationOwnerUserId": null
   },
@@ -282,50 +282,120 @@
     "id": "ACT-0005",
     "actionNumber": "AR-0005",
     "projectCode": "PJ01002",
-    "gateCode": "VV",
-    "deliverableAssignmentId": "PDA-0115",
-    "checklistItemId": "CHK-011",
-    "relatedRisk": "Risk: Minor observation closed out on Durability Simulation Report",
-    "relatedIssue": "Issue: Quality concern at VV",
-    "title": "Minor observation closed out on Durability Simulation Report",
-    "description": "Routine review comment on Durability Simulation Report (DEL-VV-006) addressed and closed prior to gate approval.",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0108",
+    "checklistItemId": "CHK-007",
+    "relatedRisk": "Risk: Ownership Cost Model blocked — upstream input required",
+    "relatedIssue": "Issue: Planning concern at CVPA",
+    "title": "Ownership Cost Model blocked — upstream input required",
+    "description": "Ownership Cost Model (DEL-CVP-013) is blocked pending upstream input and cannot progress until resolved.",
+    "category": "Planning",
+    "priority": "High",
+    "severity": "Major",
+    "source": "Gate Review",
+    "status": "In Progress",
+    "createdDate": "2026-06-02",
+    "assignedDate": "2026-06-03",
+    "targetDate": "2026-06-07",
+    "actualCompletionDate": null,
+    "reminderDate": "2026-06-05",
+    "escalationDate": "2026-06-09",
+    "comments": [
+      {
+        "comment": "Interim containment in place while the permanent fix is developed.",
+        "timestamp": "2026-06-04",
+        "commentId": "ACT-0005-CMT-01",
+        "userId": "USR-0214"
+      },
+      {
+        "comment": "Root cause identified; corrective action is being drafted.",
+        "timestamp": "2026-06-06",
+        "commentId": "ACT-0005-CMT-02",
+        "userId": "USR-0214"
+      },
+      {
+        "comment": "Awaiting updated data before re-assessment.",
+        "timestamp": "2026-06-08",
+        "commentId": "ACT-0005-CMT-03",
+        "userId": "USR-0214"
+      }
+    ],
+    "attachments": [
+      {
+        "fileName": "PJ01002_CVPA_PDF_1.pdf",
+        "type": "PDF",
+        "uploadedBy": "Shalini Malhotra",
+        "uploadedAt": "2026-06-03"
+      },
+      {
+        "fileName": "PJ01002_CVPA_Image_2.png",
+        "type": "Image",
+        "uploadedBy": "Dhruv Jain",
+        "uploadedAt": "2026-06-04"
+      }
+    ],
+    "reminderEnabled": true,
+    "reminderFrequency": "Daily",
+    "escalationLevel": "Level 1",
+    "escalatedTo": "USR-0001",
+    "escalationReason": "Planning risk not resolved by target date — customer SOP commitment at risk.",
+    "dependsOnActionIds": [],
+    "assignedByUserId": "USR-0009",
+    "assignedToUserId": "USR-0214",
+    "watcherUserIds": [
+      "USR-0009",
+      "USR-0214"
+    ],
+    "escalationOwnerUserId": "USR-0001"
+  },
+  {
+    "id": "ACT-0006",
+    "actionNumber": "AR-0006",
+    "projectCode": "PJ01002",
+    "gateCode": "CVPA",
+    "deliverableAssignmentId": "PDA-0107",
+    "checklistItemId": "CHK-007",
+    "relatedRisk": "Risk: Minor observation closed out on Ergonomics Study Report",
+    "relatedIssue": "Issue: Quality concern at CVPA",
+    "title": "Minor observation closed out on Ergonomics Study Report",
+    "description": "Routine review comment on Ergonomics Study Report (DEL-CVP-012) addressed and closed prior to gate approval.",
     "category": "Quality",
     "priority": "Low",
     "severity": "Minor",
     "source": "Lessons from Previous Gates",
     "status": "Closed",
-    "createdDate": "2025-07-24",
-    "assignedDate": "2025-07-25",
-    "targetDate": "2025-07-30",
-    "actualCompletionDate": "2025-07-31",
-    "reminderDate": "2025-07-28",
+    "createdDate": "2026-06-24",
+    "assignedDate": "2026-06-25",
+    "targetDate": "2026-06-29",
+    "actualCompletionDate": "2026-06-28",
+    "reminderDate": "2026-06-27",
     "escalationDate": null,
     "comments": [
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
-        "timestamp": "2025-07-26",
-        "commentId": "ACT-0005-CMT-01",
+        "timestamp": "2026-06-26",
+        "commentId": "ACT-0006-CMT-01",
         "userId": "USR-0032"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
-        "timestamp": "2025-07-28",
-        "commentId": "ACT-0005-CMT-02",
+        "timestamp": "2026-06-28",
+        "commentId": "ACT-0006-CMT-02",
         "userId": "USR-0032"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
-        "timestamp": "2025-07-30",
-        "commentId": "ACT-0005-CMT-03",
+        "timestamp": "2026-06-30",
+        "commentId": "ACT-0006-CMT-03",
         "userId": "USR-0032"
       }
     ],
     "attachments": [
       {
-        "fileName": "PJ01002_VV_PDF_1.pdf",
+        "fileName": "PJ01002_CVPA_PDF_1.pdf",
         "type": "PDF",
         "uploadedBy": "Shalini Malhotra",
-        "uploadedAt": "2025-07-25"
+        "uploadedAt": "2026-06-25"
       }
     ],
     "reminderEnabled": true,
@@ -342,8 +412,8 @@
     "escalationOwnerUserId": null
   },
   {
-    "id": "ACT-0006",
-    "actionNumber": "AR-0006",
+    "id": "ACT-0007",
+    "actionNumber": "AR-0007",
     "projectCode": "PJ01003",
     "gateCode": "PC",
     "deliverableAssignmentId": "PDA-0211",
@@ -367,31 +437,31 @@
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
         "timestamp": "2025-11-03",
-        "commentId": "ACT-0006-CMT-01",
+        "commentId": "ACT-0007-CMT-01",
         "userId": "USR-0136"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
         "timestamp": "2025-11-05",
-        "commentId": "ACT-0006-CMT-02",
+        "commentId": "ACT-0007-CMT-02",
         "userId": "USR-0136"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
         "timestamp": "2025-11-07",
-        "commentId": "ACT-0006-CMT-03",
+        "commentId": "ACT-0007-CMT-03",
         "userId": "USR-0136"
       },
       {
         "comment": "Reviewed with the team — plan agreed, tracking to target date.",
         "timestamp": "2025-11-09",
-        "commentId": "ACT-0006-CMT-04",
+        "commentId": "ACT-0007-CMT-04",
         "userId": "USR-0136"
       },
       {
         "comment": "Blocked pending a decision from the design authority.",
         "timestamp": "2025-11-11",
-        "commentId": "ACT-0006-CMT-05",
+        "commentId": "ACT-0007-CMT-05",
         "userId": "USR-0136"
       }
     ],
@@ -418,8 +488,8 @@
     "escalationOwnerUserId": null
   },
   {
-    "id": "ACT-0007",
-    "actionNumber": "AR-0007",
+    "id": "ACT-0008",
+    "actionNumber": "AR-0008",
     "projectCode": "PJ01003",
     "gateCode": "PC",
     "deliverableAssignmentId": "PDA-0205",
@@ -443,25 +513,25 @@
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
         "timestamp": "2025-10-08",
-        "commentId": "ACT-0007-CMT-01",
+        "commentId": "ACT-0008-CMT-01",
         "userId": "USR-0136"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
         "timestamp": "2025-10-10",
-        "commentId": "ACT-0007-CMT-02",
+        "commentId": "ACT-0008-CMT-02",
         "userId": "USR-0136"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
         "timestamp": "2025-10-12",
-        "commentId": "ACT-0007-CMT-03",
+        "commentId": "ACT-0008-CMT-03",
         "userId": "USR-0136"
       },
       {
         "comment": "Reviewed with the team — plan agreed, tracking to target date.",
         "timestamp": "2025-10-14",
-        "commentId": "ACT-0007-CMT-04",
+        "commentId": "ACT-0008-CMT-04",
         "userId": "USR-0136"
       }
     ],
@@ -494,8 +564,8 @@
     "escalationOwnerUserId": "USR-0001"
   },
   {
-    "id": "ACT-0008",
-    "actionNumber": "AR-0008",
+    "id": "ACT-0009",
+    "actionNumber": "AR-0009",
     "projectCode": "PJ01003",
     "gateCode": "PPO",
     "deliverableAssignmentId": null,
@@ -519,25 +589,25 @@
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
         "timestamp": "2026-06-16",
-        "commentId": "ACT-0008-CMT-01",
+        "commentId": "ACT-0009-CMT-01",
         "userId": "USR-0008"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
         "timestamp": "2026-06-18",
-        "commentId": "ACT-0008-CMT-02",
+        "commentId": "ACT-0009-CMT-02",
         "userId": "USR-0008"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
         "timestamp": "2026-06-20",
-        "commentId": "ACT-0008-CMT-03",
+        "commentId": "ACT-0009-CMT-03",
         "userId": "USR-0008"
       },
       {
         "comment": "Reviewed with the team — plan agreed, tracking to target date.",
         "timestamp": "2026-06-22",
-        "commentId": "ACT-0008-CMT-04",
+        "commentId": "ACT-0009-CMT-04",
         "userId": "USR-0008"
       }
     ],
@@ -565,8 +635,8 @@
     "escalationOwnerUserId": "USR-0001"
   },
   {
-    "id": "ACT-0009",
-    "actionNumber": "AR-0009",
+    "id": "ACT-0010",
+    "actionNumber": "AR-0010",
     "projectCode": "PJ01004",
     "gateCode": "Pre-KO",
     "deliverableAssignmentId": "PDA-0248",
@@ -590,31 +660,31 @@
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
         "timestamp": "2025-01-31",
-        "commentId": "ACT-0009-CMT-01",
+        "commentId": "ACT-0010-CMT-01",
         "userId": "USR-0213"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
         "timestamp": "2025-02-02",
-        "commentId": "ACT-0009-CMT-02",
+        "commentId": "ACT-0010-CMT-02",
         "userId": "USR-0213"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
         "timestamp": "2025-02-04",
-        "commentId": "ACT-0009-CMT-03",
+        "commentId": "ACT-0010-CMT-03",
         "userId": "USR-0213"
       },
       {
         "comment": "Reviewed with the team — plan agreed, tracking to target date.",
         "timestamp": "2025-02-06",
-        "commentId": "ACT-0009-CMT-04",
+        "commentId": "ACT-0010-CMT-04",
         "userId": "USR-0213"
       },
       {
         "comment": "Blocked pending a decision from the design authority.",
         "timestamp": "2025-02-08",
-        "commentId": "ACT-0009-CMT-05",
+        "commentId": "ACT-0010-CMT-05",
         "userId": "USR-0213"
       }
     ],
@@ -640,8 +710,8 @@
     "escalationOwnerUserId": null
   },
   {
-    "id": "ACT-0010",
-    "actionNumber": "AR-0010",
+    "id": "ACT-0011",
+    "actionNumber": "AR-0011",
     "projectCode": "PJ01005",
     "gateCode": "Pre-KO",
     "deliverableAssignmentId": "PDA-0334",
@@ -665,25 +735,25 @@
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
         "timestamp": "2026-07-12",
-        "commentId": "ACT-0010-CMT-01",
+        "commentId": "ACT-0011-CMT-01",
         "userId": "USR-0140"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
         "timestamp": "2026-07-14",
-        "commentId": "ACT-0010-CMT-02",
+        "commentId": "ACT-0011-CMT-02",
         "userId": "USR-0140"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
         "timestamp": "2026-07-16",
-        "commentId": "ACT-0010-CMT-03",
+        "commentId": "ACT-0011-CMT-03",
         "userId": "USR-0140"
       },
       {
         "comment": "Reviewed with the team — plan agreed, tracking to target date.",
         "timestamp": "2026-07-18",
-        "commentId": "ACT-0010-CMT-04",
+        "commentId": "ACT-0011-CMT-04",
         "userId": "USR-0140"
       }
     ],
@@ -710,8 +780,8 @@
     "escalationOwnerUserId": "USR-0241"
   },
   {
-    "id": "ACT-0011",
-    "actionNumber": "AR-0011",
+    "id": "ACT-0012",
+    "actionNumber": "AR-0012",
     "projectCode": "PJ01007",
     "gateCode": "CVPA",
     "deliverableAssignmentId": "PDA-0503",
@@ -735,25 +805,25 @@
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
         "timestamp": "2026-07-12",
-        "commentId": "ACT-0011-CMT-01",
+        "commentId": "ACT-0012-CMT-01",
         "userId": "USR-0186"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
         "timestamp": "2026-07-14",
-        "commentId": "ACT-0011-CMT-02",
+        "commentId": "ACT-0012-CMT-02",
         "userId": "USR-0186"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
         "timestamp": "2026-07-16",
-        "commentId": "ACT-0011-CMT-03",
+        "commentId": "ACT-0012-CMT-03",
         "userId": "USR-0186"
       },
       {
         "comment": "Reviewed with the team — plan agreed, tracking to target date.",
         "timestamp": "2026-07-18",
-        "commentId": "ACT-0011-CMT-04",
+        "commentId": "ACT-0012-CMT-04",
         "userId": "USR-0186"
       }
     ],
@@ -786,8 +856,8 @@
     "escalationOwnerUserId": "USR-0241"
   },
   {
-    "id": "ACT-0012",
-    "actionNumber": "AR-0012",
+    "id": "ACT-0013",
+    "actionNumber": "AR-0013",
     "projectCode": "PJ01007",
     "gateCode": "CVPA",
     "deliverableAssignmentId": "PDA-0514",
@@ -811,25 +881,25 @@
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
         "timestamp": "2026-07-06",
-        "commentId": "ACT-0012-CMT-01",
+        "commentId": "ACT-0013-CMT-01",
         "userId": "USR-0186"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
         "timestamp": "2026-07-08",
-        "commentId": "ACT-0012-CMT-02",
+        "commentId": "ACT-0013-CMT-02",
         "userId": "USR-0186"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
         "timestamp": "2026-07-10",
-        "commentId": "ACT-0012-CMT-03",
+        "commentId": "ACT-0013-CMT-03",
         "userId": "USR-0186"
       },
       {
         "comment": "Reviewed with the team — plan agreed, tracking to target date.",
         "timestamp": "2026-07-12",
-        "commentId": "ACT-0012-CMT-04",
+        "commentId": "ACT-0013-CMT-04",
         "userId": "USR-0186"
       }
     ],
@@ -856,8 +926,8 @@
     "escalationOwnerUserId": null
   },
   {
-    "id": "ACT-0013",
-    "actionNumber": "AR-0013",
+    "id": "ACT-0014",
+    "actionNumber": "AR-0014",
     "projectCode": "PJ01007",
     "gateCode": "Pre-KO",
     "deliverableAssignmentId": "PDA-0496",
@@ -881,13 +951,13 @@
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
         "timestamp": "2026-05-09",
-        "commentId": "ACT-0013-CMT-01",
+        "commentId": "ACT-0014-CMT-01",
         "userId": "USR-0129"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
         "timestamp": "2026-05-11",
-        "commentId": "ACT-0013-CMT-02",
+        "commentId": "ACT-0014-CMT-02",
         "userId": "USR-0129"
       }
     ],
@@ -919,8 +989,8 @@
     "escalationOwnerUserId": null
   },
   {
-    "id": "ACT-0014",
-    "actionNumber": "AR-0014",
+    "id": "ACT-0015",
+    "actionNumber": "AR-0015",
     "projectCode": "PJ01008",
     "gateCode": "Pre-KO",
     "deliverableAssignmentId": "PDA-0581",
@@ -944,31 +1014,31 @@
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
         "timestamp": "2026-02-23",
-        "commentId": "ACT-0014-CMT-01",
+        "commentId": "ACT-0015-CMT-01",
         "userId": "USR-0017"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
         "timestamp": "2026-02-25",
-        "commentId": "ACT-0014-CMT-02",
+        "commentId": "ACT-0015-CMT-02",
         "userId": "USR-0017"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
         "timestamp": "2026-02-27",
-        "commentId": "ACT-0014-CMT-03",
+        "commentId": "ACT-0015-CMT-03",
         "userId": "USR-0017"
       },
       {
         "comment": "Reviewed with the team — plan agreed, tracking to target date.",
         "timestamp": "2026-03-01",
-        "commentId": "ACT-0014-CMT-04",
+        "commentId": "ACT-0015-CMT-04",
         "userId": "USR-0017"
       },
       {
         "comment": "Blocked pending a decision from the design authority.",
         "timestamp": "2026-03-03",
-        "commentId": "ACT-0014-CMT-05",
+        "commentId": "ACT-0015-CMT-05",
         "userId": "USR-0017"
       }
     ],
@@ -1001,8 +1071,8 @@
     "escalationOwnerUserId": null
   },
   {
-    "id": "ACT-0015",
-    "actionNumber": "AR-0015",
+    "id": "ACT-0016",
+    "actionNumber": "AR-0016",
     "projectCode": "PJ01008",
     "gateCode": "Pre-KO",
     "deliverableAssignmentId": "PDA-0580",
@@ -1026,19 +1096,19 @@
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
         "timestamp": "2026-02-12",
-        "commentId": "ACT-0015-CMT-01",
+        "commentId": "ACT-0016-CMT-01",
         "userId": "USR-0159"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
         "timestamp": "2026-02-14",
-        "commentId": "ACT-0015-CMT-02",
+        "commentId": "ACT-0016-CMT-02",
         "userId": "USR-0159"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
         "timestamp": "2026-02-16",
-        "commentId": "ACT-0015-CMT-03",
+        "commentId": "ACT-0016-CMT-03",
         "userId": "USR-0159"
       }
     ],
@@ -1065,8 +1135,8 @@
     "escalationOwnerUserId": null
   },
   {
-    "id": "ACT-0016",
-    "actionNumber": "AR-0016",
+    "id": "ACT-0017",
+    "actionNumber": "AR-0017",
     "projectCode": "PJ01008",
     "gateCode": "Pre-KO",
     "deliverableAssignmentId": "PDA-0577",
@@ -1090,19 +1160,19 @@
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
         "timestamp": "2026-02-19",
-        "commentId": "ACT-0016-CMT-01",
+        "commentId": "ACT-0017-CMT-01",
         "userId": "USR-0140"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
         "timestamp": "2026-02-21",
-        "commentId": "ACT-0016-CMT-02",
+        "commentId": "ACT-0017-CMT-02",
         "userId": "USR-0140"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
         "timestamp": "2026-02-23",
-        "commentId": "ACT-0016-CMT-03",
+        "commentId": "ACT-0017-CMT-03",
         "userId": "USR-0140"
       }
     ],
@@ -1135,8 +1205,8 @@
     "escalationOwnerUserId": null
   },
   {
-    "id": "ACT-0017",
-    "actionNumber": "AR-0017",
+    "id": "ACT-0018",
+    "actionNumber": "AR-0018",
     "projectCode": "PJ01008",
     "gateCode": "CVPA",
     "deliverableAssignmentId": null,
@@ -1160,19 +1230,19 @@
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
         "timestamp": "2027-07-10",
-        "commentId": "ACT-0017-CMT-01",
+        "commentId": "ACT-0018-CMT-01",
         "userId": "USR-0009"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
         "timestamp": "2027-07-12",
-        "commentId": "ACT-0017-CMT-02",
+        "commentId": "ACT-0018-CMT-02",
         "userId": "USR-0009"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
         "timestamp": "2027-07-14",
-        "commentId": "ACT-0017-CMT-03",
+        "commentId": "ACT-0018-CMT-03",
         "userId": "USR-0009"
       }
     ],
@@ -1206,8 +1276,8 @@
     "escalationOwnerUserId": "USR-0001"
   },
   {
-    "id": "ACT-0018",
-    "actionNumber": "AR-0018",
+    "id": "ACT-0019",
+    "actionNumber": "AR-0019",
     "projectCode": "PJ01008",
     "gateCode": "Pre-KO",
     "deliverableAssignmentId": "PDA-0573",
@@ -1231,25 +1301,25 @@
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
         "timestamp": "2026-02-12",
-        "commentId": "ACT-0018-CMT-01",
+        "commentId": "ACT-0019-CMT-01",
         "userId": "USR-0216"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
         "timestamp": "2026-02-14",
-        "commentId": "ACT-0018-CMT-02",
+        "commentId": "ACT-0019-CMT-02",
         "userId": "USR-0216"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
         "timestamp": "2026-02-16",
-        "commentId": "ACT-0018-CMT-03",
+        "commentId": "ACT-0019-CMT-03",
         "userId": "USR-0216"
       },
       {
         "comment": "Reviewed with the team — plan agreed, tracking to target date.",
         "timestamp": "2026-02-18",
-        "commentId": "ACT-0018-CMT-04",
+        "commentId": "ACT-0019-CMT-04",
         "userId": "USR-0216"
       }
     ],
@@ -1275,8 +1345,8 @@
     "escalationOwnerUserId": null
   },
   {
-    "id": "ACT-0019",
-    "actionNumber": "AR-0019",
+    "id": "ACT-0020",
+    "actionNumber": "AR-0020",
     "projectCode": "PJ01009",
     "gateCode": "CVPA",
     "deliverableAssignmentId": "PDA-0666",
@@ -1300,13 +1370,13 @@
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
         "timestamp": "2025-12-13",
-        "commentId": "ACT-0019-CMT-01",
+        "commentId": "ACT-0020-CMT-01",
         "userId": "USR-0030"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
         "timestamp": "2025-12-15",
-        "commentId": "ACT-0019-CMT-02",
+        "commentId": "ACT-0020-CMT-02",
         "userId": "USR-0030"
       }
     ],
@@ -1332,8 +1402,8 @@
     "escalationOwnerUserId": null
   },
   {
-    "id": "ACT-0020",
-    "actionNumber": "AR-0020",
+    "id": "ACT-0021",
+    "actionNumber": "AR-0021",
     "projectCode": "PJ01010",
     "gateCode": "PC",
     "deliverableAssignmentId": "PDA-0783",
@@ -1357,13 +1427,13 @@
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
         "timestamp": "2025-12-28",
-        "commentId": "ACT-0020-CMT-01",
+        "commentId": "ACT-0021-CMT-01",
         "userId": "USR-0184"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
         "timestamp": "2025-12-30",
-        "commentId": "ACT-0020-CMT-02",
+        "commentId": "ACT-0021-CMT-02",
         "userId": "USR-0184"
       }
     ],
@@ -1396,8 +1466,8 @@
     "escalationOwnerUserId": "USR-0241"
   },
   {
-    "id": "ACT-0021",
-    "actionNumber": "AR-0021",
+    "id": "ACT-0022",
+    "actionNumber": "AR-0022",
     "projectCode": "PJ01010",
     "gateCode": "PC",
     "deliverableAssignmentId": "PDA-0782",
@@ -1421,25 +1491,25 @@
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
         "timestamp": "2026-01-19",
-        "commentId": "ACT-0021-CMT-01",
+        "commentId": "ACT-0022-CMT-01",
         "userId": "USR-0184"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
         "timestamp": "2026-01-21",
-        "commentId": "ACT-0021-CMT-02",
+        "commentId": "ACT-0022-CMT-02",
         "userId": "USR-0184"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
         "timestamp": "2026-01-23",
-        "commentId": "ACT-0021-CMT-03",
+        "commentId": "ACT-0022-CMT-03",
         "userId": "USR-0184"
       },
       {
         "comment": "Reviewed with the team — plan agreed, tracking to target date.",
         "timestamp": "2026-01-25",
-        "commentId": "ACT-0021-CMT-04",
+        "commentId": "ACT-0022-CMT-04",
         "userId": "USR-0184"
       }
     ],
@@ -1472,8 +1542,8 @@
     "escalationOwnerUserId": "USR-0241"
   },
   {
-    "id": "ACT-0022",
-    "actionNumber": "AR-0022",
+    "id": "ACT-0023",
+    "actionNumber": "AR-0023",
     "projectCode": "PJ01010",
     "gateCode": "PC",
     "deliverableAssignmentId": "PDA-0780",
@@ -1497,13 +1567,13 @@
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
         "timestamp": "2025-12-27",
-        "commentId": "ACT-0022-CMT-01",
+        "commentId": "ACT-0023-CMT-01",
         "userId": "USR-0111"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
         "timestamp": "2025-12-29",
-        "commentId": "ACT-0022-CMT-02",
+        "commentId": "ACT-0023-CMT-02",
         "userId": "USR-0111"
       }
     ],
@@ -1530,8 +1600,8 @@
     "escalationOwnerUserId": "USR-0241"
   },
   {
-    "id": "ACT-0023",
-    "actionNumber": "AR-0023",
+    "id": "ACT-0024",
+    "actionNumber": "AR-0024",
     "projectCode": "PJ01010",
     "gateCode": "PR",
     "deliverableAssignmentId": null,
@@ -1555,13 +1625,13 @@
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
         "timestamp": "2026-09-08",
-        "commentId": "ACT-0023-CMT-01",
+        "commentId": "ACT-0024-CMT-01",
         "userId": "USR-0006"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
         "timestamp": "2026-09-10",
-        "commentId": "ACT-0023-CMT-02",
+        "commentId": "ACT-0024-CMT-02",
         "userId": "USR-0006"
       }
     ],
@@ -1595,8 +1665,8 @@
     "escalationOwnerUserId": null
   },
   {
-    "id": "ACT-0024",
-    "actionNumber": "AR-0024",
+    "id": "ACT-0025",
+    "actionNumber": "AR-0025",
     "projectCode": "PJ01011",
     "gateCode": "PR",
     "deliverableAssignmentId": "PDA-0875",
@@ -1620,31 +1690,31 @@
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
         "timestamp": "2026-06-14",
-        "commentId": "ACT-0024-CMT-01",
+        "commentId": "ACT-0025-CMT-01",
         "userId": "USR-0111"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
         "timestamp": "2026-06-16",
-        "commentId": "ACT-0024-CMT-02",
+        "commentId": "ACT-0025-CMT-02",
         "userId": "USR-0111"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
         "timestamp": "2026-06-18",
-        "commentId": "ACT-0024-CMT-03",
+        "commentId": "ACT-0025-CMT-03",
         "userId": "USR-0111"
       },
       {
         "comment": "Reviewed with the team — plan agreed, tracking to target date.",
         "timestamp": "2026-06-20",
-        "commentId": "ACT-0024-CMT-04",
+        "commentId": "ACT-0025-CMT-04",
         "userId": "USR-0111"
       },
       {
         "comment": "Blocked pending a decision from the design authority.",
         "timestamp": "2026-06-22",
-        "commentId": "ACT-0024-CMT-05",
+        "commentId": "ACT-0025-CMT-05",
         "userId": "USR-0111"
       }
     ],
@@ -1677,8 +1747,8 @@
     "escalationOwnerUserId": "USR-0001"
   },
   {
-    "id": "ACT-0025",
-    "actionNumber": "AR-0025",
+    "id": "ACT-0026",
+    "actionNumber": "AR-0026",
     "projectCode": "PJ01012",
     "gateCode": "Pre-KO",
     "deliverableAssignmentId": "PDA-0905",
@@ -1692,35 +1762,35 @@
     "severity": "Critical",
     "source": "Internal Audit",
     "status": "In Progress",
-    "createdDate": "2025-04-27",
-    "assignedDate": "2025-04-28",
-    "targetDate": "2025-05-03",
+    "createdDate": "2026-03-13",
+    "assignedDate": "2026-03-14",
+    "targetDate": "2026-03-19",
     "actualCompletionDate": null,
-    "reminderDate": "2025-05-01",
-    "escalationDate": "2025-05-05",
+    "reminderDate": "2026-03-17",
+    "escalationDate": "2026-03-21",
     "comments": [
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
-        "timestamp": "2025-04-29",
-        "commentId": "ACT-0025-CMT-01",
+        "timestamp": "2026-03-15",
+        "commentId": "ACT-0026-CMT-01",
         "userId": "USR-0016"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
-        "timestamp": "2025-05-01",
-        "commentId": "ACT-0025-CMT-02",
+        "timestamp": "2026-03-17",
+        "commentId": "ACT-0026-CMT-02",
         "userId": "USR-0016"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
-        "timestamp": "2025-05-03",
-        "commentId": "ACT-0025-CMT-03",
+        "timestamp": "2026-03-19",
+        "commentId": "ACT-0026-CMT-03",
         "userId": "USR-0016"
       },
       {
         "comment": "Reviewed with the team — plan agreed, tracking to target date.",
-        "timestamp": "2025-05-05",
-        "commentId": "ACT-0025-CMT-04",
+        "timestamp": "2026-03-21",
+        "commentId": "ACT-0026-CMT-04",
         "userId": "USR-0016"
       }
     ],
@@ -1729,7 +1799,7 @@
         "fileName": "PJ01012_Pre-KO_PDF_1.pdf",
         "type": "PDF",
         "uploadedBy": "Shalini Malhotra",
-        "uploadedAt": "2025-04-28"
+        "uploadedAt": "2026-03-14"
       }
     ],
     "reminderEnabled": true,
@@ -1747,8 +1817,8 @@
     "escalationOwnerUserId": "USR-0001"
   },
   {
-    "id": "ACT-0026",
-    "actionNumber": "AR-0026",
+    "id": "ACT-0027",
+    "actionNumber": "AR-0027",
     "projectCode": "PJ01012",
     "gateCode": "Pre-KO",
     "deliverableAssignmentId": "PDA-0904",
@@ -1762,41 +1832,41 @@
     "severity": "Critical",
     "source": "Internal Audit",
     "status": "Open",
-    "createdDate": "2025-04-16",
-    "assignedDate": "2025-04-17",
-    "targetDate": "2025-04-25",
+    "createdDate": "2026-03-02",
+    "assignedDate": "2026-03-03",
+    "targetDate": "2026-03-11",
     "actualCompletionDate": null,
-    "reminderDate": "2025-04-23",
+    "reminderDate": "2026-03-09",
     "escalationDate": null,
     "comments": [
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
-        "timestamp": "2025-04-18",
-        "commentId": "ACT-0026-CMT-01",
+        "timestamp": "2026-03-04",
+        "commentId": "ACT-0027-CMT-01",
         "userId": "USR-0155"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
-        "timestamp": "2025-04-20",
-        "commentId": "ACT-0026-CMT-02",
+        "timestamp": "2026-03-06",
+        "commentId": "ACT-0027-CMT-02",
         "userId": "USR-0155"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
-        "timestamp": "2025-04-22",
-        "commentId": "ACT-0026-CMT-03",
+        "timestamp": "2026-03-08",
+        "commentId": "ACT-0027-CMT-03",
         "userId": "USR-0155"
       },
       {
         "comment": "Reviewed with the team — plan agreed, tracking to target date.",
-        "timestamp": "2025-04-24",
-        "commentId": "ACT-0026-CMT-04",
+        "timestamp": "2026-03-10",
+        "commentId": "ACT-0027-CMT-04",
         "userId": "USR-0155"
       },
       {
         "comment": "Blocked pending a decision from the design authority.",
-        "timestamp": "2025-04-26",
-        "commentId": "ACT-0026-CMT-05",
+        "timestamp": "2026-03-12",
+        "commentId": "ACT-0027-CMT-05",
         "userId": "USR-0155"
       }
     ],
@@ -1805,7 +1875,7 @@
         "fileName": "PJ01012_Pre-KO_PDF_1.pdf",
         "type": "PDF",
         "uploadedBy": "Shalini Malhotra",
-        "uploadedAt": "2025-04-17"
+        "uploadedAt": "2026-03-03"
       }
     ],
     "reminderEnabled": true,
@@ -1823,8 +1893,8 @@
     "escalationOwnerUserId": null
   },
   {
-    "id": "ACT-0027",
-    "actionNumber": "AR-0027",
+    "id": "ACT-0028",
+    "actionNumber": "AR-0028",
     "projectCode": "PJ01012",
     "gateCode": "Pre-KO",
     "deliverableAssignmentId": "PDA-0903",
@@ -1838,41 +1908,41 @@
     "severity": "Critical",
     "source": "Internal Audit",
     "status": "In Progress",
-    "createdDate": "2025-04-24",
-    "assignedDate": "2025-04-25",
-    "targetDate": "2025-05-01",
+    "createdDate": "2026-03-10",
+    "assignedDate": "2026-03-11",
+    "targetDate": "2026-03-17",
     "actualCompletionDate": null,
-    "reminderDate": "2025-04-29",
-    "escalationDate": "2025-05-03",
+    "reminderDate": "2026-03-15",
+    "escalationDate": "2026-03-19",
     "comments": [
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
-        "timestamp": "2025-04-26",
-        "commentId": "ACT-0027-CMT-01",
+        "timestamp": "2026-03-12",
+        "commentId": "ACT-0028-CMT-01",
         "userId": "USR-0001"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
-        "timestamp": "2025-04-28",
-        "commentId": "ACT-0027-CMT-02",
+        "timestamp": "2026-03-14",
+        "commentId": "ACT-0028-CMT-02",
         "userId": "USR-0001"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
-        "timestamp": "2025-04-30",
-        "commentId": "ACT-0027-CMT-03",
+        "timestamp": "2026-03-16",
+        "commentId": "ACT-0028-CMT-03",
         "userId": "USR-0001"
       },
       {
         "comment": "Reviewed with the team — plan agreed, tracking to target date.",
-        "timestamp": "2025-05-02",
-        "commentId": "ACT-0027-CMT-04",
+        "timestamp": "2026-03-18",
+        "commentId": "ACT-0028-CMT-04",
         "userId": "USR-0001"
       },
       {
         "comment": "Blocked pending a decision from the design authority.",
-        "timestamp": "2025-05-04",
-        "commentId": "ACT-0027-CMT-05",
+        "timestamp": "2026-03-20",
+        "commentId": "ACT-0028-CMT-05",
         "userId": "USR-0001"
       }
     ],
@@ -1881,13 +1951,13 @@
         "fileName": "PJ01012_Pre-KO_PDF_1.pdf",
         "type": "PDF",
         "uploadedBy": "Shalini Malhotra",
-        "uploadedAt": "2025-04-25"
+        "uploadedAt": "2026-03-11"
       },
       {
         "fileName": "PJ01012_Pre-KO_Image_2.png",
         "type": "Image",
         "uploadedBy": "Vijay Grewal",
-        "uploadedAt": "2025-04-26"
+        "uploadedAt": "2026-03-12"
       }
     ],
     "reminderEnabled": true,
@@ -1905,59 +1975,59 @@
     "escalationOwnerUserId": "USR-0001"
   },
   {
-    "id": "ACT-0028",
-    "actionNumber": "AR-0028",
+    "id": "ACT-0029",
+    "actionNumber": "AR-0029",
     "projectCode": "PJ01012",
-    "gateCode": "PR",
+    "gateCode": "CVPA",
     "deliverableAssignmentId": null,
     "checklistItemId": null,
     "relatedRisk": "Risk: Forecast SOP slip of 71 days requires mitigation plan",
-    "relatedIssue": "Issue: Quality concern at PR",
+    "relatedIssue": "Issue: Quality concern at CVPA",
     "title": "Forecast SOP slip of 71 days requires mitigation plan",
-    "description": "Cumulative schedule impact from Quality Issue at Pre-KO has pushed forecast SOP to 2026-11-11 (target was 2026-09-01). Mitigation and recovery plan required.",
+    "description": "Cumulative schedule impact from Quality Issue at Pre-KO has pushed forecast SOP to 2027-09-27 (target was 2027-07-18). Mitigation and recovery plan required.",
     "category": "Quality",
     "priority": "Critical",
     "severity": "Critical",
     "source": "Internal Audit",
     "status": "In Progress",
-    "createdDate": "2026-09-11",
-    "assignedDate": "2026-09-12",
-    "targetDate": "2026-09-16",
+    "createdDate": "2027-07-28",
+    "assignedDate": "2027-07-29",
+    "targetDate": "2027-08-02",
     "actualCompletionDate": null,
-    "reminderDate": "2026-09-14",
-    "escalationDate": "2026-09-18",
+    "reminderDate": "2027-07-31",
+    "escalationDate": "2027-08-04",
     "comments": [
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
-        "timestamp": "2026-09-13",
-        "commentId": "ACT-0028-CMT-01",
+        "timestamp": "2027-07-30",
+        "commentId": "ACT-0029-CMT-01",
         "userId": "USR-0009"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
-        "timestamp": "2026-09-15",
-        "commentId": "ACT-0028-CMT-02",
+        "timestamp": "2027-08-01",
+        "commentId": "ACT-0029-CMT-02",
         "userId": "USR-0009"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
-        "timestamp": "2026-09-17",
-        "commentId": "ACT-0028-CMT-03",
+        "timestamp": "2027-08-03",
+        "commentId": "ACT-0029-CMT-03",
         "userId": "USR-0009"
       }
     ],
     "attachments": [
       {
-        "fileName": "PJ01012_PR_PDF_1.pdf",
+        "fileName": "PJ01012_CVPA_PDF_1.pdf",
         "type": "PDF",
         "uploadedBy": "Shalini Malhotra",
-        "uploadedAt": "2026-09-12"
+        "uploadedAt": "2027-07-29"
       },
       {
-        "fileName": "PJ01012_PR_Image_2.png",
+        "fileName": "PJ01012_CVPA_Image_2.png",
         "type": "Image",
         "uploadedBy": "Vijay Grewal",
-        "uploadedAt": "2026-09-13"
+        "uploadedAt": "2027-07-30"
       }
     ],
     "reminderEnabled": true,
@@ -1976,293 +2046,8 @@
     "escalationOwnerUserId": "USR-0001"
   },
   {
-    "id": "ACT-0029",
-    "actionNumber": "AR-0029",
-    "projectCode": "PJ01012",
-    "gateCode": "PR",
-    "deliverableAssignmentId": "PDA-0948",
-    "checklistItemId": "CHK-021",
-    "relatedRisk": "Risk: Homologation Builds Completion blocked — upstream input required",
-    "relatedIssue": "Issue: Planning concern at PR",
-    "title": "Homologation Builds Completion blocked — upstream input required",
-    "description": "Homologation Builds Completion (DEL-PR-002) is blocked pending upstream input and cannot progress until resolved.",
-    "category": "Planning",
-    "priority": "High",
-    "severity": "Major",
-    "source": "Gate Review",
-    "status": "In Progress",
-    "createdDate": "2026-05-04",
-    "assignedDate": "2026-05-05",
-    "targetDate": "2026-05-13",
-    "actualCompletionDate": null,
-    "reminderDate": "2026-05-11",
-    "escalationDate": "2026-05-15",
-    "comments": [
-      {
-        "comment": "Interim containment in place while the permanent fix is developed.",
-        "timestamp": "2026-05-06",
-        "commentId": "ACT-0029-CMT-01",
-        "userId": "USR-0183"
-      },
-      {
-        "comment": "Root cause identified; corrective action is being drafted.",
-        "timestamp": "2026-05-08",
-        "commentId": "ACT-0029-CMT-02",
-        "userId": "USR-0183"
-      }
-    ],
-    "attachments": [
-      {
-        "fileName": "PJ01012_PR_PDF_1.pdf",
-        "type": "PDF",
-        "uploadedBy": "Shalini Malhotra",
-        "uploadedAt": "2026-05-05"
-      },
-      {
-        "fileName": "PJ01012_PR_Image_2.png",
-        "type": "Image",
-        "uploadedBy": "Ananya Rao",
-        "uploadedAt": "2026-05-06"
-      }
-    ],
-    "reminderEnabled": true,
-    "reminderFrequency": "Daily",
-    "escalationLevel": "Level 1",
-    "escalatedTo": "USR-0001",
-    "escalationReason": "Planning risk not resolved by target date — customer SOP commitment at risk.",
-    "dependsOnActionIds": [],
-    "assignedByUserId": "USR-0009",
-    "assignedToUserId": "USR-0183",
-    "watcherUserIds": [
-      "USR-0009",
-      "USR-0183"
-    ],
-    "escalationOwnerUserId": "USR-0001"
-  },
-  {
     "id": "ACT-0030",
     "actionNumber": "AR-0030",
-    "projectCode": "PJ01012",
-    "gateCode": "PR",
-    "deliverableAssignmentId": "PDA-0950",
-    "checklistItemId": "CHK-022",
-    "relatedRisk": "Risk: Field Trial Report blocked — upstream input required",
-    "relatedIssue": "Issue: Planning concern at PR",
-    "title": "Field Trial Report blocked — upstream input required",
-    "description": "Field Trial Report (DEL-PR-004) is blocked pending upstream input and cannot progress until resolved.",
-    "category": "Planning",
-    "priority": "High",
-    "severity": "Major",
-    "source": "Gate Review",
-    "status": "Open",
-    "createdDate": "2026-06-05",
-    "assignedDate": "2026-06-06",
-    "targetDate": "2026-06-12",
-    "actualCompletionDate": null,
-    "reminderDate": "2026-06-10",
-    "escalationDate": null,
-    "comments": [
-      {
-        "comment": "Interim containment in place while the permanent fix is developed.",
-        "timestamp": "2026-06-07",
-        "commentId": "ACT-0030-CMT-01",
-        "userId": "USR-0183"
-      },
-      {
-        "comment": "Root cause identified; corrective action is being drafted.",
-        "timestamp": "2026-06-09",
-        "commentId": "ACT-0030-CMT-02",
-        "userId": "USR-0183"
-      },
-      {
-        "comment": "Awaiting updated data before re-assessment.",
-        "timestamp": "2026-06-11",
-        "commentId": "ACT-0030-CMT-03",
-        "userId": "USR-0183"
-      },
-      {
-        "comment": "Reviewed with the team — plan agreed, tracking to target date.",
-        "timestamp": "2026-06-13",
-        "commentId": "ACT-0030-CMT-04",
-        "userId": "USR-0183"
-      },
-      {
-        "comment": "Blocked pending a decision from the design authority.",
-        "timestamp": "2026-06-15",
-        "commentId": "ACT-0030-CMT-05",
-        "userId": "USR-0183"
-      }
-    ],
-    "attachments": [
-      {
-        "fileName": "PJ01012_PR_PDF_1.pdf",
-        "type": "PDF",
-        "uploadedBy": "Shalini Malhotra",
-        "uploadedAt": "2026-06-06"
-      },
-      {
-        "fileName": "PJ01012_PR_Image_2.png",
-        "type": "Image",
-        "uploadedBy": "Ananya Rao",
-        "uploadedAt": "2026-06-07"
-      }
-    ],
-    "reminderEnabled": true,
-    "reminderFrequency": "Daily",
-    "escalationLevel": null,
-    "escalatedTo": null,
-    "escalationReason": null,
-    "dependsOnActionIds": [],
-    "assignedByUserId": "USR-0009",
-    "assignedToUserId": "USR-0183",
-    "watcherUserIds": [
-      "USR-0009",
-      "USR-0183"
-    ],
-    "escalationOwnerUserId": null
-  },
-  {
-    "id": "ACT-0031",
-    "actionNumber": "AR-0031",
-    "projectCode": "PJ01012",
-    "gateCode": "PR",
-    "deliverableAssignmentId": "PDA-0951",
-    "checklistItemId": "CHK-024",
-    "relatedRisk": "Risk: Tool Release Certificate blocked — upstream input required",
-    "relatedIssue": "Issue: Planning concern at PR",
-    "title": "Tool Release Certificate blocked — upstream input required",
-    "description": "Tool Release Certificate (DEL-PR-005) is blocked pending upstream input and cannot progress until resolved.",
-    "category": "Planning",
-    "priority": "High",
-    "severity": "Major",
-    "source": "Gate Review",
-    "status": "In Progress",
-    "createdDate": "2026-04-26",
-    "assignedDate": "2026-04-27",
-    "targetDate": "2026-05-05",
-    "actualCompletionDate": null,
-    "reminderDate": "2026-05-03",
-    "escalationDate": "2026-05-07",
-    "comments": [
-      {
-        "comment": "Interim containment in place while the permanent fix is developed.",
-        "timestamp": "2026-04-28",
-        "commentId": "ACT-0031-CMT-01",
-        "userId": "USR-0103"
-      },
-      {
-        "comment": "Root cause identified; corrective action is being drafted.",
-        "timestamp": "2026-04-30",
-        "commentId": "ACT-0031-CMT-02",
-        "userId": "USR-0103"
-      }
-    ],
-    "attachments": [
-      {
-        "fileName": "PJ01012_PR_PDF_1.pdf",
-        "type": "PDF",
-        "uploadedBy": "Shalini Malhotra",
-        "uploadedAt": "2026-04-27"
-      },
-      {
-        "fileName": "PJ01012_PR_Image_2.png",
-        "type": "Image",
-        "uploadedBy": "Tarun Rathore",
-        "uploadedAt": "2026-04-28"
-      }
-    ],
-    "reminderEnabled": true,
-    "reminderFrequency": "Daily",
-    "escalationLevel": "Level 1",
-    "escalatedTo": "USR-0001",
-    "escalationReason": "Planning risk not resolved by target date — customer SOP commitment at risk.",
-    "dependsOnActionIds": [],
-    "assignedByUserId": "USR-0009",
-    "assignedToUserId": "USR-0103",
-    "watcherUserIds": [
-      "USR-0009",
-      "USR-0103"
-    ],
-    "escalationOwnerUserId": "USR-0001"
-  },
-  {
-    "id": "ACT-0032",
-    "actionNumber": "AR-0032",
-    "projectCode": "PJ01012",
-    "gateCode": "PR",
-    "deliverableAssignmentId": "PDA-0957",
-    "checklistItemId": "CHK-024",
-    "relatedRisk": "Risk: Minor observation closed out on Process Capability Study",
-    "relatedIssue": "Issue: Quality concern at PR",
-    "title": "Minor observation closed out on Process Capability Study",
-    "description": "Routine review comment on Process Capability Study (DEL-PR-011) addressed and closed prior to gate approval.",
-    "category": "Quality",
-    "priority": "Low",
-    "severity": "Minor",
-    "source": "Lessons from Previous Gates",
-    "status": "Closed",
-    "createdDate": "2026-05-09",
-    "assignedDate": "2026-05-10",
-    "targetDate": "2026-05-18",
-    "actualCompletionDate": "2026-05-17",
-    "reminderDate": "2026-05-16",
-    "escalationDate": null,
-    "comments": [
-      {
-        "comment": "Interim containment in place while the permanent fix is developed.",
-        "timestamp": "2026-05-11",
-        "commentId": "ACT-0032-CMT-01",
-        "userId": "USR-0155"
-      },
-      {
-        "comment": "Root cause identified; corrective action is being drafted.",
-        "timestamp": "2026-05-13",
-        "commentId": "ACT-0032-CMT-02",
-        "userId": "USR-0155"
-      },
-      {
-        "comment": "Awaiting updated data before re-assessment.",
-        "timestamp": "2026-05-15",
-        "commentId": "ACT-0032-CMT-03",
-        "userId": "USR-0155"
-      },
-      {
-        "comment": "Reviewed with the team — plan agreed, tracking to target date.",
-        "timestamp": "2026-05-17",
-        "commentId": "ACT-0032-CMT-04",
-        "userId": "USR-0155"
-      }
-    ],
-    "attachments": [
-      {
-        "fileName": "PJ01012_PR_PDF_1.pdf",
-        "type": "PDF",
-        "uploadedBy": "Shalini Malhotra",
-        "uploadedAt": "2026-05-10"
-      },
-      {
-        "fileName": "PJ01012_PR_Image_2.png",
-        "type": "Image",
-        "uploadedBy": "Shalini Malhotra",
-        "uploadedAt": "2026-05-11"
-      }
-    ],
-    "reminderEnabled": true,
-    "reminderFrequency": "On Due Date",
-    "escalationLevel": null,
-    "escalatedTo": null,
-    "escalationReason": null,
-    "dependsOnActionIds": [],
-    "assignedByUserId": "USR-0009",
-    "assignedToUserId": "USR-0155",
-    "watcherUserIds": [
-      "USR-0009"
-    ],
-    "escalationOwnerUserId": null
-  },
-  {
-    "id": "ACT-0033",
-    "actionNumber": "AR-0033",
     "projectCode": "PJ01013",
     "gateCode": "CVPA",
     "deliverableAssignmentId": "PDA-0987",
@@ -2286,31 +2071,31 @@
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
         "timestamp": "2026-07-09",
-        "commentId": "ACT-0033-CMT-01",
+        "commentId": "ACT-0030-CMT-01",
         "userId": "USR-0037"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
         "timestamp": "2026-07-11",
-        "commentId": "ACT-0033-CMT-02",
+        "commentId": "ACT-0030-CMT-02",
         "userId": "USR-0037"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
         "timestamp": "2026-07-13",
-        "commentId": "ACT-0033-CMT-03",
+        "commentId": "ACT-0030-CMT-03",
         "userId": "USR-0037"
       },
       {
         "comment": "Reviewed with the team — plan agreed, tracking to target date.",
         "timestamp": "2026-07-15",
-        "commentId": "ACT-0033-CMT-04",
+        "commentId": "ACT-0030-CMT-04",
         "userId": "USR-0037"
       },
       {
         "comment": "Blocked pending a decision from the design authority.",
         "timestamp": "2026-07-17",
-        "commentId": "ACT-0033-CMT-05",
+        "commentId": "ACT-0030-CMT-05",
         "userId": "USR-0037"
       }
     ],
@@ -2337,8 +2122,8 @@
     "escalationOwnerUserId": "USR-0241"
   },
   {
-    "id": "ACT-0034",
-    "actionNumber": "AR-0034",
+    "id": "ACT-0031",
+    "actionNumber": "AR-0031",
     "projectCode": "PJ01013",
     "gateCode": "Pre-KO",
     "deliverableAssignmentId": "PDA-0976",
@@ -2362,31 +2147,31 @@
       {
         "comment": "Interim containment in place while the permanent fix is developed.",
         "timestamp": "2026-05-28",
-        "commentId": "ACT-0034-CMT-01",
+        "commentId": "ACT-0031-CMT-01",
         "userId": "USR-0037"
       },
       {
         "comment": "Root cause identified; corrective action is being drafted.",
         "timestamp": "2026-05-30",
-        "commentId": "ACT-0034-CMT-02",
+        "commentId": "ACT-0031-CMT-02",
         "userId": "USR-0037"
       },
       {
         "comment": "Awaiting updated data before re-assessment.",
         "timestamp": "2026-06-01",
-        "commentId": "ACT-0034-CMT-03",
+        "commentId": "ACT-0031-CMT-03",
         "userId": "USR-0037"
       },
       {
         "comment": "Reviewed with the team — plan agreed, tracking to target date.",
         "timestamp": "2026-06-03",
-        "commentId": "ACT-0034-CMT-04",
+        "commentId": "ACT-0031-CMT-04",
         "userId": "USR-0037"
       },
       {
         "comment": "Blocked pending a decision from the design authority.",
         "timestamp": "2026-06-05",
-        "commentId": "ACT-0034-CMT-05",
+        "commentId": "ACT-0031-CMT-05",
         "userId": "USR-0037"
       }
     ],

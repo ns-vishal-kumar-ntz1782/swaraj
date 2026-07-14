@@ -11,7 +11,7 @@ import {
   listProjects, getProject, listGateInstances, listAssignments,
   checklistItemsForGate, computeChecklistStatus, canSubmitGate, submitGateForApproval,
   respondToGateApproval, closeGateInstance, updateAssignmentStatus,
-  uploadDocument, replaceDocument, removeDocument, gateInfo,
+  uploadDocument, replaceDocument, removeDocument, gateInfo, listSkippedGates,
   READ_ONLY_STATUSES, EDITABLE_STATUSES,
 } from "../store/projectExecution.js";
 import { getProjectTeam, displayFor } from "../store/orgDirectory.js";
@@ -38,6 +38,7 @@ function healthPillClass(h) {
   return h === "Green" ? "pill-green" : h === "Amber" ? "pill-amber" : "pill-red";
 }
 function bucketOf(status) {
+  if (status === "Skipped") return "readonly";
   if (READ_ONLY_STATUSES.includes(status)) return "readonly";
   if (EDITABLE_STATUSES.includes(status)) return "editable";
   if (status === "UnderReview") return "review";
@@ -152,6 +153,12 @@ export async function renderGateWorkspace(params) {
   }
 
   function renderGateBody(proj, gi, bucket) {
+    if (gi.currentStatus === "Skipped") {
+      const skip = listSkippedGates(proj.code).find((s) => s.gateCode === gi.gateCode);
+      return `<div class="gc-readonly-banner gc-skip-banner">Skipped — this gate requires no deliverables or approval and is excluded from progress and compliance calculations for this project.${
+        skip ? ` Skipped by ${escapeHtml(skip.skippedBy)} (${escapeHtml(skip.skippedByRole)}) on ${escapeHtml((skip.skippedAt || "").slice(0, 10))}${skip.reason ? ` — “${escapeHtml(skip.reason)}”` : ""}.` : ""
+      }</div>`;
+    }
     const assignments = listAssignments(proj.code, gi.gateCode);
     const checklist = checklistItemsForGate(gi.gateCode);
     const readOnly = bucket === "readonly";

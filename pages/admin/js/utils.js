@@ -422,6 +422,7 @@ export function statusPillClass(status) {
     Blocked: "pill-red", "Ready for Review": "pill-amber", Overdue: "pill-red",
     Submit: "pill-amber", ClarificationRequested: "pill-amber",
     Published: "pill-green", Archived: "pill-slate", Activated: "pill-blue", Inactive: "pill-slate",
+    Skipped: "pill-slate",
   };
   return map[status] || "pill-slate";
 }

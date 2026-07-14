@@ -254,6 +254,20 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
 }
 .sg-preview-gate-dates { font-size: var(--fs-11-5); color: var(--muted); font-weight: var(--fw-500); white-space: nowrap; }
 .sg-preview-gate-body { padding: var(--space-14); display: flex; flex-direction: column; gap: var(--space-12); }
+.sg-preview-gate-skipped { opacity: .7; }
+.sg-preview-gate-skipped .sg-preview-gate-head { border-bottom: 0; }
+
+/* ── "Configure Gates" wizard step — per-gate skip toggles ── */
+.sg-gate-toggle-list { display: flex; flex-direction: column; gap: var(--space-8); }
+.sg-gate-toggle-row {
+  display: flex; align-items: center; gap: var(--space-10); padding: var(--space-10) var(--space-14);
+  border: 1px solid var(--border); border-radius: var(--radius-9); cursor: pointer; background: var(--panel);
+}
+.sg-gate-toggle-row:hover { border-color: var(--brand-blue); }
+.sg-gate-toggle-row input[type="checkbox"] { width: 16px; height: 16px; flex-shrink: 0; cursor: pointer; }
+.sg-gate-toggle-name { font-size: var(--fs-12-5); color: var(--title); flex: 1; }
+.sg-gate-toggle-pill { margin-left: auto; }
+.sg-gate-toggle-skipped { background: var(--panel-alt); opacity: .8; }
 .sg-preview-row-label { display: block; font-size: var(--fs-11); font-weight: var(--fw-700); color: var(--muted); text-transform: uppercase; letter-spacing: .02em; margin-bottom: var(--space-6); }
 .sg-preview-chips { display: flex; flex-wrap: wrap; gap: var(--space-6); }
 .sg-preview-chips .chip { font-weight: var(--fw-500); background: var(--panel-alt); }
@@ -527,6 +541,9 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
 
 /* Read-only banner for a Completed/Closed/Approved gate expanded for viewing */
 .gc-readonly-banner { display:flex; align-items:center; gap: var(--space-8); background: var(--color-overlay-6); color: var(--color-green-730); border-radius: var(--radius-sm); padding: var(--space-8) var(--space-12); font-size: var(--fs-12-5); font-weight: var(--fw-600); margin-bottom: var(--space-12); }
+/* A gate the PMO marked Skipped — same layout as the read-only banner, slate instead of green
+   so it reads as "not applicable", not "successfully completed". */
+.gc-skip-banner { background: var(--panel-2, #f1f3f6); color: var(--muted); margin-bottom: 0; }
 
 /* Checklist item rows */
 .gc-checklist-row { display:flex; align-items:center; gap: var(--space-10); padding: var(--space-9) var(--space-12); border:1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: var(--space-6); background: var(--panel); }
@@ -562,6 +579,11 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
 
 /* ═══ ROW STATE ═══ */
 .sg-row-muted { opacity: .55; }
+
+/* ═══ DELIVERABLE LIBRARY — parent/child hierarchy (Seq./Parent columns, deliverables.js) ═══ */
+.sg-row-child { background: var(--color-blue-50); }
+.sg-hier-seq { font-variant-numeric: tabular-nums; color: var(--muted); font-weight: var(--fw-600); }
+.sg-hier-child-name { padding-left: var(--space-20) !important; }
 
 /* ═══ REORDER BUTTONS (Gate Master, Project Template gate sequence) ═══ */
 .sg-reorder-btns { display: flex; flex-direction: column; gap: var(--space-2); }

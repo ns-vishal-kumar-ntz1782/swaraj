@@ -7,8 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../../assets/css/styles.css" />
+  <link rel="stylesheet" href="../../assets/css/styles.css?v=2" />
   <link rel="stylesheet" href="project-detail.css" />
+  <script src="../../assets/js/data/gate-skip.js"></script>
   <script src="../../assets/js/data/app-config.js"></script>
   <script src="../../assets/js/auth.js"></script>
   <script>guardPage("dashboard");</script>
@@ -109,8 +110,10 @@
             </div>
             <p class="pd-asof" id="timelineAsOf">As on 07 Jul 2026</p>
           </div>
-          <div class="pd-stage-gate" id="stageGate"></div>
-          <div class="pd-tl-tablewrap"><div id="timelineTable"></div></div>
+          <div class="pd-tl-scrollsync">
+            <div class="pd-stage-gate" id="stageGate"></div>
+            <div class="pd-tl-tablewrap"><div id="timelineTable"></div></div>
+          </div>
           <div class="pd-tl-legend" id="timelineLegend"></div>
         </div>
 
@@ -147,9 +150,12 @@
 
       <!-- Legend row -->
       <div class="dlv-legend-row">
-        <span class="dlv-leg-item"><i class="dlv-leg-dot dlv-leg-green"></i>On Time (0–15 days)</span>
-        <span class="dlv-leg-item"><i class="dlv-leg-dot dlv-leg-amber"></i>Delay (16–60 days)</span>
-        <span class="dlv-leg-item"><i class="dlv-leg-dot dlv-leg-red"></i>Delayed (&gt;60 days)</span>
+        <div class="dlv-legend-items">
+          <span class="dlv-leg-item"><i class="dlv-leg-dot dlv-leg-green"></i>On Time</span>
+          <span class="dlv-leg-item"><i class="dlv-leg-dot dlv-leg-amber"></i>Delay (1–15 days)</span>
+          <span class="dlv-leg-item"><i class="dlv-leg-dot dlv-leg-red"></i>Delayed (&gt;15 days)</span>
+        </div>
+        <button class="dlv-add-btn" id="dlvAddBtn" type="button" hidden>+ Add Deliverable</button>
       </div>
 
       <!-- Future-gate info banner (hidden when gate is active/completed) -->
@@ -170,7 +176,7 @@
               <th style="width:140px">PLANNED START</th>
               <th style="width:140px">PLANNED END</th>
               <th style="width:120px">ACTUAL CLOSURE</th>
-              <th style="width:70px">OUTLOOK</th>
+              <th style="width:120px">OUTLOOK</th>
               <th style="width:130px">STATUS</th>
               <th style="width:170px">REMARKS</th>
               <th style="width:96px">DOCUMENTS</th>
@@ -191,13 +197,6 @@
       <!-- Gate Progress Bar -->
       <div class="dlv-gate-bar" id="gcGateBar"></div>
 
-      <!-- Legend row -->
-      <div class="dlv-legend-row">
-        <span class="dlv-leg-item"><i class="dlv-leg-dot dlv-leg-green"></i>On Time (0–15 days)</span>
-        <span class="dlv-leg-item"><i class="dlv-leg-dot dlv-leg-amber"></i>Delay (16–60 days)</span>
-        <span class="dlv-leg-item"><i class="dlv-leg-dot dlv-leg-red"></i>Delayed (&gt;60 days)</span>
-      </div>
-
       <!-- Future-gate info banner -->
       <div class="dlv-future-banner" id="gcFutureBanner" hidden>
         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -210,12 +209,11 @@
           <thead>
             <tr>
               <th style="width:42px">S.NO</th>
-              <th>CHECKLIST ITEM</th>
+              <th style="width:180px">CHECKLIST ITEM</th>
               <th style="width:160px">RESPONSIBLE</th>
-              <th style="width:70px">OUTLOOK</th>
               <th style="width:110px">STATUS</th>
               <th style="width:200px">REMARKS</th>
-              <th style="width:80px">DOWNLOAD</th>
+              <th style="width:150px">DOCUMENT</th>
             </tr>
           </thead>
           <tbody id="gcTableBody"></tbody>
@@ -271,52 +269,50 @@
       </div>
     </section>
 
-    <!-- GANTT CHART tab -->
+    <!-- GANTT CHART tab — Figma node 532:1621. Deliverables grouped by gate (same records the
+         Deliverables tab edits), gate accordion open by default, KPI strip + Category/Status
+         filters, timeline with planned/actual bars, milestone diamonds, dependency connectors. -->
     <section class="pd-tabpanel pd-tab-content-panel" id="tab-gantt" hidden>
-      <!-- Intelligence Banner — 3 stat cards -->
-      <div class="gc-banner" id="gcBanner">
-        <div class="gc-banner-stats" id="gcBannerStats"></div>
+      <div class="gc2-topbar">
+        <div class="gc2-kpi-strip" id="gcKpiStrip"></div>
+        
       </div>
 
-      <!-- Main Gantt body -->
-      <div class="gc-body">
+      <div class="gc2-legend">
+        <span class="gc2-leg-item"><i class="gc2-sw gc2-sw-planned"></i>Planned</span>
+        <span class="gc2-leg-item"><i class="gc2-sw gc2-sw-actual"></i>Actual</span>
+        <span class="gc2-leg-item"><i class="gc2-sw-diamond"></i>Milestone achieved</span>
+        <span class="gc2-leg-item gc2-leg-dep"><i class="gc2-dep-arrow"></i>Dependency</span>
+        <span class="gc2-legend-right" id="gcFilterSummary"></span>
+      </div>
+
+      <div class="gc2-body" id="gcBody">
         <!-- Left frozen pane -->
-        <div class="gc-left-pane">
-          <div class="gc-left-header">
-            <div class="gc-lh-col gc-lh-sno">S.NO</div>
-            <div class="gc-lh-col gc-lh-deliv">DELIVERABLES</div>
-            <div class="gc-lh-col gc-lh-id">ID</div>
-            <div class="gc-lh-col gc-lh-resp">RESPONSIBLE</div>
-            <div class="gc-lh-col gc-lh-start">START<br>DATE</div>
-            <div class="gc-lh-col gc-lh-end">END<br>DATE</div>
-            <div class="gc-lh-col gc-lh-days">DAYS</div>
-            <div class="gc-lh-col gc-lh-rag">RAG</div>
+        <div class="gc2-left">
+          <div class="gc2-left-head">
+            <div class="gc2-lh gc2-lh-no">#</div>
+            <div class="gc2-lh gc2-lh-deliv">Deliverables</div>
+            <div class="gc2-lh gc2-lh-date">Start</div>
+            <div class="gc2-lh gc2-lh-date">End</div>
+            <div class="gc2-lh gc2-lh-days">Days</div>
+            <div class="gc2-lh gc2-lh-var">Var.</div>
+            <div class="gc2-lh gc2-lh-status">Status</div>
           </div>
-          <div class="gc-left-rows" id="gcLeftRows"></div>
+          <div class="gc2-left-scroll" id="gcLeftScroll"></div>
         </div>
-        <!-- Right scrollable chart -->
-        <div class="gc-right-pane" id="gcRightPane">
-          <div class="gc-chart-scroll" id="gcChartScroll">
-            <div class="gc-chart-inner" id="gcChartInner">
-              <div class="gc-month-row" id="gcMonthRow"></div>
-              <div class="gc-week-row" id="gcWeekRow"></div>
-              <div class="gc-bars-area" id="gcBarsArea"></div>
+        <!-- Right scrollable timeline -->
+        <div class="gc2-right">
+          <div class="gc2-right-head-scroll" id="gcRightHeadScroll">
+            <div class="gc2-right-head-inner" id="gcRightHeadInner">
+              <div class="gc2-gate-row" id="gcGateRow"></div>
+              <div class="gc2-month-row" id="gcMonthRow2"></div>
+              <div class="gc2-week-row" id="gcWeekRow2"></div>
             </div>
           </div>
+          <div class="gc2-right-scroll" id="gcRightScroll">
+            <div class="gc2-bars-inner" id="gcBarsInner"></div>
+          </div>
         </div>
-      </div>
-      <!-- Legend -->
-      <div class="gc-legend">
-        <span class="gc-legend-item"><i class="gc-swatch gc-swatch-planned"></i>Planned</span>
-        <span class="gc-legend-item"><i class="gc-swatch gc-swatch-actual"></i>Actual</span>
-        <span class="gc-legend-sep">RAG</span>
-        <span class="gc-legend-item"><i class="gc-dot gc-dot-green"></i>On Track</span>
-        <span class="gc-legend-item"><i class="gc-dot gc-dot-amber"></i>At Risk</span>
-        <span class="gc-legend-item"><i class="gc-dot gc-dot-red"></i>Off Track</span>
-        <span class="gc-legend-sep">HIGHLIGHT:</span>
-        <button class="gc-hl-all gc-hl-active" id="gcAllBtn">All</button>
-        <button class="gc-hl-crit" id="gcCritPathBtn"><i class="gc-dot gc-dot-amber"></i> Critical Path</button>
-        <span class="gc-legend-right">Scroll ↓ rows · Scroll → timeline</span>
       </div>
     </section>
 
@@ -325,6 +321,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="../../assets/js/shared.js"></script>
+<script src="../../assets/js/chatbot.js?v=2"></script>
 <script src="../../assets/js/data/project-detail-seed.js"></script>
 <script src="../../assets/js/data/preko-seed.js"></script>
 <script src="charts.js"></script>

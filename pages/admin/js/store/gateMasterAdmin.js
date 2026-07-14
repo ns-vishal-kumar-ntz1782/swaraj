@@ -33,7 +33,7 @@ export function createGate(data, actor, actorRole) {
   const gate = {
     id, gateCode: data.gateCode.trim(), gateName: data.gateName.trim(),
     description: data.description || "", displayOrder: list.length + 1,
-    defaultDuration: data.defaultDuration || "4 weeks", color: data.color || "#64748b",
+    defaultDuration: data.defaultDuration || "4 weeks",
     active: data.active !== false,
   };
   list.push(gate);

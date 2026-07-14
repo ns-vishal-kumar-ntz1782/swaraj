@@ -122,3 +122,129 @@
   display: flex; justify-content: flex-end; gap: var(--space-8);
   padding: var(--space-14) var(--space-20); border-top: 1px solid var(--border);
 }
+
+/* ═══════════════════════════════════════════
+   AI CHAT WIDGET — sticky bottom-right icon + draggable panel, mounted by assets/js/chatbot.js
+   on every page. Same navy/teal/brand-blue language the header's own AI button uses.
+═══════════════════════════════════════════ */
+.aichat-dock {
+  position: fixed; right: var(--space-24); bottom: var(--space-24); z-index: 9400;
+  display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-12);
+}
+.aichat-dragging { cursor: grabbing; }
+.aichat-dragging .aichat-toggle,
+.aichat-dragging .aichat-head { cursor: grabbing; }
+
+.aichat-toggle {
+  order: 2;
+  width: 56px; height: 56px; border-radius: 50%; border: 0; cursor: grab;
+  background: linear-gradient(135deg, var(--navy), var(--brand-blue));
+  color: #fff; box-shadow: 0 10px 24px rgba(0,59,136,.35), 0 2px 6px rgba(0,0,0,.15);
+  display: grid; place-items: center; padding: 0;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.aichat-toggle:hover { transform: scale(1.06); box-shadow: 0 14px 30px rgba(0,59,136,.42), 0 2px 6px rgba(0,0,0,.18); }
+.aichat-toggle:active { cursor: grabbing; }
+.aichat-toggle-icon { width: 24px; height: 24px; display: block; }
+.aichat-toggle-icon svg { width: 100%; height: 100%; }
+.aichat-toggle-close { display: none; position: absolute; }
+.aichat-open .aichat-toggle-icon:not(.aichat-toggle-close) { display: none; }
+.aichat-open .aichat-toggle-close { display: block; position: static; }
+
+.aichat-panel {
+  order: 1;
+  width: 360px; max-width: calc(100vw - 32px); height: 480px; max-height: calc(100vh - 120px);
+  background: var(--panel); border-radius: var(--radius-16);
+  box-shadow: 0 20px 50px rgba(15,23,42,.22), 0 0 0 1px var(--border);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+/* An author stylesheet's `display` always beats the browser's default `[hidden] { display:none }`
+   UA rule, regardless of source order — so the unconditional `display:flex` above silently
+   cancelled out `.hidden = true`, leaving the panel visually shown at all times even though the
+   JS property correctly toggled. This selector's extra attribute bumps its specificity above the
+   bare class rule so [hidden] actually hides it again. */
+.aichat-panel[hidden] { display: none; }
+
+.aichat-head {
+  flex-shrink: 0; display: flex; align-items: center; gap: var(--space-8);
+  padding: var(--space-12) var(--space-14);
+  background: linear-gradient(135deg, var(--navy), var(--brand-blue)); color: #fff;
+  cursor: grab;
+}
+.aichat-head:active { cursor: grabbing; }
+.aichat-drag-handle { width: 16px; height: 16px; opacity: .7; flex-shrink: 0; }
+.aichat-drag-handle svg { width: 100%; height: 100%; }
+.aichat-head-title { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+.aichat-head-title strong { font-size: var(--fs-13); font-weight: var(--fw-700); }
+.aichat-head-title span { font-size: var(--fs-10); opacity: .8; }
+.aichat-head-close {
+  border: 0; background: rgba(255,255,255,.14); color: #fff; width: 24px; height: 24px;
+  border-radius: 50%; display: grid; place-items: center; cursor: pointer; flex-shrink: 0; padding: 0;
+}
+.aichat-head-close svg { width: 12px; height: 12px; }
+.aichat-head-close:hover { background: rgba(255,255,255,.26); }
+
+.aichat-messages {
+  flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-14);
+  display: flex; flex-direction: column; gap: var(--space-10); background: var(--panel-alt);
+}
+.aichat-messages::-webkit-scrollbar { width: 5px; }
+.aichat-messages::-webkit-scrollbar-thumb { background: var(--color-slate-380); border-radius: var(--radius-4); }
+
+.aichat-msg { display: flex; }
+.aichat-msg-bot  { justify-content: flex-start; }
+.aichat-msg-user { justify-content: flex-end; }
+.aichat-bubble {
+  max-width: 86%; font-size: var(--fs-12-5); line-height: 1.5; border-radius: var(--radius-12);
+  padding: var(--space-9) var(--space-12);
+}
+.aichat-msg-bot .aichat-bubble  { background: var(--panel); color: var(--title); box-shadow: 0 1px 2px rgba(0,0,0,.06); border-bottom-left-radius: var(--radius-3); }
+.aichat-msg-user .aichat-bubble { background: var(--brand-blue); color: #fff; border-bottom-right-radius: var(--radius-3); }
+
+.aichat-plist { list-style: none; margin: var(--space-8) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-6); }
+.aichat-plist li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-6); }
+.aichat-help { margin: var(--space-8) 0 0; padding-left: var(--space-16); display: flex; flex-direction: column; gap: var(--space-4); }
+.aichat-more { margin: var(--space-6) 0 0; color: var(--muted); font-size: var(--fs-11); }
+.aichat-meta { color: var(--muted); font-size: var(--fs-10-5); }
+.aichat-link { color: var(--brand-blue); font-weight: var(--fw-600); text-decoration: none; }
+.aichat-link:hover { text-decoration: underline; }
+.aichat-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.aichat-dot-green { background: var(--color-green-610); }
+.aichat-dot-amber { background: var(--color-amber-590); }
+.aichat-dot-red   { background: var(--color-red-450); }
+
+.aichat-typing .aichat-bubble { display: flex; gap: 4px; align-items: center; padding: var(--space-10) var(--space-14); }
+.aichat-typing .aichat-bubble span {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--color-slate-450);
+  animation: aichatBlink 1.1s infinite ease-in-out;
+}
+.aichat-typing .aichat-bubble span:nth-child(2) { animation-delay: .15s; }
+.aichat-typing .aichat-bubble span:nth-child(3) { animation-delay: .3s; }
+@keyframes aichatBlink { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-2px); } }
+
+.aichat-suggestions { flex-shrink: 0; display: flex; flex-wrap: wrap; gap: var(--space-6); padding: 0 var(--space-14) var(--space-10); background: var(--panel-alt); }
+.aichat-chip {
+  border: 1px solid var(--border); background: var(--panel); color: var(--brand-blue);
+  font-size: var(--fs-10-5); font-weight: var(--fw-600); padding: var(--space-4) var(--space-10);
+  border-radius: var(--radius-20); cursor: pointer; font-family: inherit; transition: var(--transition-8);
+}
+.aichat-chip:hover { background: var(--color-blue-50); }
+
+.aichat-inputrow { flex-shrink: 0; display: flex; gap: var(--space-8); padding: var(--space-10) var(--space-12); border-top: 1px solid var(--border); background: var(--panel); }
+.aichat-inputrow input {
+  flex: 1; min-width: 0; border: 1px solid var(--border); border-radius: var(--radius-20);
+  padding: var(--space-8) var(--space-14); font-size: var(--fs-12-5); font-family: inherit; color: var(--title);
+  background: var(--panel-alt);
+}
+.aichat-inputrow input:focus { outline: none; border-color: var(--brand-blue); background: var(--panel); }
+.aichat-send {
+  width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--brand-blue); color: #fff; display: grid; place-items: center; padding: 0;
+}
+.aichat-send svg { width: 15px; height: 15px; }
+.aichat-send:hover { background: var(--navy); }
+
+@media (max-width: 600px) {
+  .aichat-dock { right: var(--space-12); bottom: var(--space-12); }
+  .aichat-panel { width: calc(100vw - 24px); height: calc(100vh - 100px); }
+}

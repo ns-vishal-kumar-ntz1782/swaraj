@@ -12,7 +12,7 @@ import { nowIso, nextSequenceCode } from "../utils.js";
 import { getProjectTeam, isOnProjectTeam, displayFor } from "./orgDirectory.js";
 import { getTemplate as getProjectTemplate } from "./projectTemplateAdmin.js";
 import { getGate as getGateMasterRecord } from "./gateMasterAdmin.js";
-import { getDeliverable } from "./deliverables.js";
+import { getDeliverable, listDeliverables } from "./deliverables.js";
 import { getForm } from "./forms.js";
 
 const _projectTemplates = loadJsonSync("projectTemplates.json");
@@ -58,13 +58,20 @@ function templateFor(projectCode) {
 }
 
 // ---- gate instances ----
+// Both public read accessors resolve the skip registry (stamping currentStatus in the returned,
+// freshly-parsed copy only — never the internal allGateInstances() helper mutation functions
+// read-modify-persist through, which must stay unstamped or a later save() would permanently
+// bake "Skipped" into storage regardless of the registry).
 export function listGateInstances(projectCode) {
+  const skipped = new Set(listSkippedGates(projectCode).map((s) => s.gateCode));
   return load(ENTITY_KEYS.GATE_INSTANCES, [])
     .filter((g) => g.projectCode === projectCode)
+    .map((g) => (skipped.has(g.gateCode) ? { ...g, currentStatus: "Skipped" } : g))
     .sort((a, b) => a.sequence - b.sequence);
 }
 export function getGateInstance(projectCode, gateCode) {
-  return load(ENTITY_KEYS.GATE_INSTANCES, []).find((g) => g.projectCode === projectCode && g.gateCode === gateCode) || null;
+  const gi = load(ENTITY_KEYS.GATE_INSTANCES, []).find((g) => g.projectCode === projectCode && g.gateCode === gateCode) || null;
+  return gi && isGateSkipped(projectCode, gateCode) ? { ...gi, currentStatus: "Skipped" } : gi;
 }
 function allGateInstances() {
   return load(ENTITY_KEYS.GATE_INSTANCES, []);
@@ -73,12 +80,44 @@ function persistGateInstances(list) {
   save(ENTITY_KEYS.GATE_INSTANCES, list);
 }
 
+// ---- gate skip registry ----
+// A "skipped" gate is never a mutation of the gate-instance/deliverable-assignment records
+// themselves — it's one small registry entry, read identically here and by the outer app's
+// classic-script twin (assets/js/data/gate-skip.js, same localStorage key/shape via ENTITY_KEYS
+// "skipped_gates" / spd.skipped_gates.v1). See listGateInstances/listAssignments below, which
+// resolve this registry once per read rather than every render call downstream.
+export function listSkippedGates(projectCode) {
+  const all = load(ENTITY_KEYS.SKIPPED_GATES, []);
+  return projectCode ? all.filter((s) => s.projectCode === projectCode) : all;
+}
+export function isGateSkipped(projectCode, gateCode) {
+  return listSkippedGates(projectCode).some((s) => s.gateCode === gateCode);
+}
+export function skipGate(projectCode, gateCode, actor, actorRole, reason) {
+  const all = load(ENTITY_KEYS.SKIPPED_GATES, []);
+  if (all.some((s) => s.projectCode === projectCode && s.gateCode === gateCode)) return all; // already skipped
+  const entry = { projectCode, gateCode, skippedBy: actor, skippedByRole: actorRole, skippedAt: nowIso(), reason: reason || "" };
+  const next = [...all, entry];
+  save(ENTITY_KEYS.SKIPPED_GATES, next);
+  addAuditEntry({
+    actor, actorRole, action: "Skip", entityType: "ProjectGateInstance", entityId: `GI-${projectCode}-${gateCode}`,
+    projectCode, gateCode, summary: `Gate ${gateCode} (${projectCode}) marked Skipped by ${actor}${reason ? ": " + reason : ""}`,
+    before: null, after: entry,
+  });
+  return next;
+}
+
 // ---- deliverable assignments ----
+// A Skipped gate has no deliverables — listAssignments returns none for it (this is what makes
+// canSubmitGate/computeChecklistStatus/renderSummaryGrid all naturally read as "N/A" instead of
+// "0/0" for a skipped gate, with no changes needed in any of them).
 export function listAssignments(projectCode, gateCode) {
+  if (isGateSkipped(projectCode, gateCode)) return [];
   return load(ENTITY_KEYS.DELIVERABLE_ASSIGNMENTS, []).filter((a) => a.projectCode === projectCode && a.gateCode === gateCode);
 }
 export function getAssignment(assignmentId) {
-  return load(ENTITY_KEYS.DELIVERABLE_ASSIGNMENTS, []).find((a) => a.assignmentId === assignmentId) || null;
+  const a = load(ENTITY_KEYS.DELIVERABLE_ASSIGNMENTS, []).find((a) => a.assignmentId === assignmentId) || null;
+  return a && isGateSkipped(a.projectCode, a.gateCode) ? null : a;
 }
 function allAssignments() {
   return load(ENTITY_KEYS.DELIVERABLE_ASSIGNMENTS, []);
@@ -166,8 +205,14 @@ function activateNextGateInPlace(instances, projectCode, gateCode) {
   if (!template) return null;
   const seq = template.defaultGateSequence;
   const idx = seq.indexOf(gateCode);
-  if (idx === -1 || idx === seq.length - 1) return null;
-  const nextCode = seq[idx + 1];
+  if (idx === -1) return null;
+  // Step forward past any consecutively-Skipped gates to find the next real one to activate —
+  // a Skipped gate is never itself activated/approved, it's simply not part of the workflow.
+  const skipped = new Set(listSkippedGates(projectCode).map((s) => s.gateCode));
+  let nextPos = idx + 1;
+  while (nextPos < seq.length && skipped.has(seq[nextPos])) nextPos++;
+  if (nextPos >= seq.length) return null;
+  const nextCode = seq[nextPos];
   const nextIdx = instances.findIndex((g) => g.projectCode === projectCode && g.gateCode === nextCode);
   if (nextIdx === -1) return null;
   instances[nextIdx].currentStatus = "Active";
@@ -180,8 +225,12 @@ function updateProjectOnGateAdvance(projectCode, approvedGateCode, nextGateCode)
   if (idx === -1) return;
   const p = projects[idx];
   const template = templateByType[p.projectTypeCode];
-  const totalGates = template.defaultGateSequence.length;
-  const approvedIdx = template.defaultGateSequence.indexOf(approvedGateCode);
+  // Skipped gates never count toward "how many gates this project has" — a project with 1 of 6
+  // gates skipped reaches 100% after its 5th real approval, not its 6th.
+  const skipped = new Set(listSkippedGates(projectCode).map((s) => s.gateCode));
+  const realSeq = template.defaultGateSequence.filter((gc) => !skipped.has(gc));
+  const totalGates = realSeq.length;
+  const approvedIdx = realSeq.indexOf(approvedGateCode);
   if (nextGateCode) {
     p.currentGate = nextGateCode;
     p.currentPhase = gateInfoByCode[nextGateCode] ? gateInfoByCode[nextGateCode].gateName : p.currentPhase;
@@ -313,6 +362,38 @@ export function updateAssignmentFields(assignmentId, fields, actor, actorRole) {
   return a;
 }
 
+// ---- parent/child hierarchy — one level only, mirroring the same rule the Deliverable Library
+// catalog enforces (updateDeliverable in store/deliverables.js): a child can't itself have
+// children, and a parent must be a real assignment in the SAME project+gate. ----
+export function topLevelAssignmentOptionsFor(projectCode, gateCode, excludeAssignmentId) {
+  const inGate = listAssignments(projectCode, gateCode);
+  return inGate.filter((a) => a.assignmentId !== excludeAssignmentId && !a.parentAssignmentId);
+}
+
+export function setAssignmentParent(assignmentId, parentAssignmentId, actor, actorRole) {
+  const assignments = allAssignments();
+  const a = findAssignment(assignments, assignmentId);
+  if (parentAssignmentId) {
+    if (parentAssignmentId === assignmentId) throw new Error("A deliverable can't be its own parent.");
+    const parent = findAssignment(assignments, parentAssignmentId);
+    if (parent.projectCode !== a.projectCode || parent.gateCode !== a.gateCode) throw new Error("Parent must be in the same gate.");
+    if (parent.parentAssignmentId) throw new Error("The selected parent is itself a child — only one level of nesting is supported.");
+    if (assignments.some((x) => x.parentAssignmentId === assignmentId)) throw new Error("This deliverable already has children — it can't also become a child (only one level of nesting is supported).");
+  }
+  const before = { ...a };
+  a.parentAssignmentId = parentAssignmentId || null;
+  persistAssignments(assignments);
+  addAuditEntry({
+    actor, actorRole, action: "Update", entityType: "ProjectDeliverableAssignment", entityId: assignmentId,
+    projectCode: a.projectCode, gateCode: a.gateCode,
+    summary: parentAssignmentId
+      ? `${actor} set ${a.deliverableCode} (${a.deliverableName}) as a child of ${findAssignment(assignments, parentAssignmentId).deliverableCode}`
+      : `${actor} cleared the parent of ${a.deliverableCode} (${a.deliverableName})`,
+    before, after: a,
+  });
+  return a;
+}
+
 // userIds: full desired responsibleMemberUserIds list (project-team USR-XXXX ids). Notifies only
 // newly-added members (org-roster people, no console login — see the notify() comment further up
 // this file for why that notification has no bell-icon UI to land in today, but is still recorded).
@@ -336,6 +417,60 @@ export function assignResponsibleMembers(assignmentId, userIds, actor, actorRole
     entityType: "ProjectDeliverableAssignment", entityId: assignmentId,
   }));
   return a;
+}
+
+// ---- add a deliverable to a gate (PMO/Admin only — enforced by the calling UI's role check,
+// same as every other write in this file) ----
+// Scoped to the master library's real entries for that gate — never a free-text/custom
+// deliverable — so project data stays realistic and reconcilable with deliverableLibrary.json.
+export function listAddableDeliverables(projectCode, gateCode) {
+  const already = new Set(listAssignments(projectCode, gateCode).map((a) => a.deliverableNo));
+  return listDeliverables({ gateCode }).filter((d) => !already.has(d.deliverableNo));
+}
+
+export function addDeliverableToGate(projectCode, gateCode, deliverableNo, actor, actorRole) {
+  if (isGateSkipped(projectCode, gateCode)) throw new Error("This gate is skipped — no deliverables can be added.");
+  const gi = getGateInstance(projectCode, gateCode);
+  if (!gi) throw new Error("Gate instance not found.");
+  const d = getDeliverable(deliverableNo);
+  if (!d) throw new Error("Deliverable not found in the library.");
+  const assignments = allAssignments();
+  if (assignments.some((a) => a.projectCode === projectCode && a.gateCode === gateCode && a.deliverableNo === deliverableNo)) {
+    throw new Error("This deliverable is already assigned to this gate.");
+  }
+  const template = templateFor(projectCode);
+  const gc = template && template.gates.find((g) => g.gateCode === gateCode);
+  const existingIds = assignments.map((a) => a.assignmentId);
+  // If the library deliverable is itself a defined child (parentDeliverableCode) and its parent
+  // is already assigned to this same project+gate, inherit that relationship automatically — so
+  // an admin-defined hierarchy carries through to every project without the user having to
+  // re-link it by hand every time. If the parent hasn't been added to this gate yet, this one
+  // simply starts top-level and can be linked later via setAssignmentParent.
+  let parentAssignmentId = null;
+  if (d.parentDeliverableCode) {
+    const parentAssignment = assignments.find((a) => a.projectCode === projectCode && a.gateCode === gateCode && a.deliverableNo === d.parentDeliverableCode);
+    if (parentAssignment) parentAssignmentId = parentAssignment.assignmentId;
+  }
+  const assignment = {
+    assignmentId: nextSequenceCode(existingIds, "PDA-", 4),
+    projectCode, gateInstanceId: gi.id, gateCode, deliverableNo,
+    deliverableCode: d.deliverableCode, deliverableName: d.deliverableName, department: d.department,
+    mandatory: gc ? (gc.mandatoryDeliverables || []).includes(deliverableNo) : false,
+    linkedFormCode: d.linkedFormCode || null,
+    plannedStart: gi.plannedStart, actualStart: null, targetDate: gi.plannedFinish, completedDate: null, actualEnd: null,
+    status: "Not Started", progress: 0, dependencyAssignments: [],
+    requiredDocuments: [`${d.deliverableCode}_Report.pdf`], uploadedDocuments: [], documentStatus: "Pending",
+    remarks: "", approvalHistory: [], formStatus: d.linkedFormCode ? "Pending" : null,
+    completionPct: 0, delayDays: 0, riskFlag: "Low", healthScore: 100, responsibleMemberUserIds: [],
+    parentAssignmentId,
+  };
+  persistAssignments([...assignments, assignment]);
+  addAuditEntry({
+    actor, actorRole, action: "Add", entityType: "ProjectDeliverableAssignment", entityId: assignment.assignmentId,
+    projectCode, gateCode, summary: `${actor} added deliverable ${d.deliverableCode} (${d.deliverableName}) to ${gateCode} (${projectCode})`,
+    before: null, after: assignment,
+  });
+  return assignment;
 }
 
 // uploadedByUserId: the project-team member (data/projectMembers.json) credited with the

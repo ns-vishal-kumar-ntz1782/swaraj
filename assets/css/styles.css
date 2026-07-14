@@ -6,9 +6,9 @@
    unchanged and the computed cascade is identical to before — no selector or
    value was changed.
 ═══════════════════════════════════════════ */
-@import "../../styles/variables.css";
-@import "../../styles/theme.css";
-@import "../../styles/layout.css";
-@import "../../styles/components.css";
+@import "../../styles/variables.css?v=2";
+@import "../../styles/theme.css?v=2";
+@import "../../styles/layout.css?v=2";
+@import "../../styles/components.css?v=2";
 
-@import "dashboard.css";
+@import "dashboard.css?v=2";

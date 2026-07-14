@@ -148,128 +148,174 @@ html, body.pd-body { height:100%; overflow:hidden; }
 .pd-chart-area canvas { width:100% !important; height:100% !important; }
 
 /* ════════════════════════════════════
-   STAGE-GATE TIMELINE  (Figma node 197:10508)
-   Layout: labels row (stage names + gate target/actual) above gradient bar
+   PROJECT TIMELINE  (Figma node 593:2190)
+   GATES ribbon + MILESTONES row + Planned/Timeline/Approved/Outlook/Velocity table, one
+   shared 18-checkpoint column grid throughout (see timeline.js buildColumns/colCenterPct)
+   so every row — and the floating date chips + current-gate live pulse — line up vertically.
 ════════════════════════════════════ */
+/* Single shared horizontal scrollbar for GATES/MILESTONES + the Values table below, so the
+   two blocks always scroll in lockstep — keeping every chip/pulse/circle column-aligned with
+   the row beneath it even on a narrow viewport (see index.html's .pd-tl-scrollsync wrapper). */
+.pd-tl-scrollsync { overflow-x:auto; }
 .pd-stage-gate {
-  border:1px solid var(--color-blue-340); border-radius: var(--radius-8);
-  background:var(--panel);
-  padding: var(--space-10) var(--space-20) var(--space-14);
-  margin-bottom: var(--space-10); overflow-x:auto;
-  box-shadow: 0 4px 12px rgba(0,0,0,.05);
+  border:1px solid var(--color-blue-340); border-top-left-radius: var(--radius-8); border-top-right-radius: var(--radius-8);
+  border-bottom:0; background:var(--panel);
+  padding: var(--space-32) var(--space-20) var(--space-14);
 }
 
-/* ── Container: stacks labels-row above bar-row ── */
-.sg-container { display:flex; flex-direction:column; gap:0; min-width:860px; }
+.ptl-block { display:flex; flex-direction:column; gap:2px; min-width:900px; }
+.ptl-row { display:flex; align-items:stretch; }
 
-/* ── Track row: the flex area (labels + bar stacked) spans the full width, bar starts flush
-   at the left edge under the first stage's label — no separate "start" node. ── */
-.sg-track-row { display:flex; align-items:flex-end; gap:0; }
-.sg-flex-area  { flex:1; display:flex; flex-direction:column; gap:0; }
-
-/* ── Labels flex: stage wraps across segments ── */
-.sg-labels-flex { display:flex; margin-bottom: var(--space-4); }
-
-/* Each segment wrapper carries stage label + optional gate stub at right edge */
-.sg-seg-wrap {
-  position:relative; display:flex; flex-direction:column;
-  align-items:center; justify-content:flex-end; padding-bottom: var(--space-3); min-height:70px;
+/* Shared label column — plain text by default (Planned/Approved/Outlook/Velocity rows);
+   .ptl-row-gates/.ptl-row-milestones/.ptl-row-timeline override to the Figma gray pill look. */
+.ptl-label {
+  width:100px; min-width:100px; flex-shrink:0; display:flex; align-items:center;
+  font-size: var(--fs-11); font-weight: var(--fw-600); color:var(--color-slate-800);
+  padding: 0 var(--space-8);
 }
-
-/* Stage name label — centred above its bar segment */
-.sg-stage-lbl {
-  font-size: var(--fs-10); font-weight: var(--fw-600); color:var(--color-slate-680);
-  text-transform:uppercase; letter-spacing:.04em; white-space:nowrap;
-  text-align:center; line-height:1.2; margin-bottom: var(--space-4);
+.ptl-label-blue   { color:#007aff; }
+.ptl-label-green  { color:#34c759; }
+.ptl-label-orange { color:#ff9500; }
+.ptl-row-gates .ptl-label,
+.ptl-row-milestones .ptl-label,
+.ptl-row-timeline .ptl-label {
+  background:#e5e7eb; color:var(--color-blue-950); border-radius: var(--radius-8);
+  justify-content:center; text-align:center; font-size: var(--fs-11);
 }
 
-/* Gate stub (target date + circle node + actual date) — anchored to right edge of segment */
-.sg-gate-wrap {
-  position:absolute; right:0; bottom:0; transform:translateX(50%);
-  display:flex; flex-direction:column; align-items:center; gap:0;
-  z-index:3;
-}
-.sg-gate-top {
-  font-size: var(--fs-10); font-weight: var(--fw-700); white-space:nowrap;
-  color:#006b3f; margin-bottom: var(--space-4); line-height:1;
-}
-.sg-gate-bottom {
-  font-size: var(--fs-10); font-weight: var(--fw-700); color:var(--navy);
-  white-space:nowrap; margin-top: var(--space-4); line-height:1;
+.ptl-track { position:relative; flex:1; display:flex; min-width:0; }
+
+/* ── GATES ribbon: fixed per-stage identity color, 4px-rounded segments with a 2px gap ── */
+.ptl-row-gates .ptl-track { gap:2px; min-height:38px; }
+.ptl-gateseg {
+  display:flex; align-items:center; justify-content:center; min-width:0;
+  border-radius:4px; font-size: var(--fs-12); font-weight: var(--fw-700);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 var(--space-4);
 }
 
-/* ── Bar row ── */
-.sg-bar { display:flex; flex:1; height:10px; border-radius: var(--radius-8); overflow:visible; }
+/* ── MILESTONES row: bordered white cells, 2px gap, matches the GATES ribbon's column grid ── */
+.ptl-row-milestones .ptl-track { gap:2px; min-height:40px; padding-top: var(--space-14); }
+.ptl-mscell {
+  flex:1 1 0%; min-width:0; display:flex; align-items:center; justify-content:center;
+  text-align:center; background:var(--panel); border:1px solid var(--color-blue-340);
+  border-radius: var(--radius-8); font-size: var(--fs-10); color:var(--color-blue-950);
+  padding: var(--space-3) var(--space-4); line-height:1.25;
+}
 
-/* Bar segments */
-.sg-seg { height:10px; min-width:20px; }
-.sg-seg-done   { background:var(--navy); }
-.sg-seg-active { background:linear-gradient(90deg,var(--navy) 55%,#a2bdd7); }
-.sg-seg-todo   { background:#dee7ec; }
-.sg-seg:first-child { border-radius: var(--radius-8) 0 0 var(--radius-8); }
-.sg-seg:last-child  { border-radius: 0 var(--radius-8) var(--radius-8) 0; }
+/* ── Floating date chips — navy "start date" (above the GATES ribbon) / teal "end date"
+   (below the Timeline row's circles). Small triangle points at the gate it belongs to. ── */
+.ptl-chip {
+  position:absolute; transform:translateX(-50%); display:flex; flex-direction:column;
+  align-items:center; z-index:4; pointer-events:none;
+}
+.ptl-chip-start { top:-32px; }
+.ptl-chip-end   { top:6px; }
+.ptl-chip-body {
+  background:var(--navy); color:#fff; font-size: var(--fs-10); font-weight: var(--fw-700);
+  white-space:nowrap; border-radius:3px; padding: var(--space-2) var(--space-6); line-height:1.5;
+}
+.ptl-chip-end .ptl-chip-body { background:var(--teal); }
+.ptl-chip-tri { width:0; height:0; border-left:4px solid transparent; border-right:4px solid transparent; }
+.ptl-chip-start .ptl-chip-tri { border-top:5px solid var(--navy); margin-top:-1px; }
+.ptl-chip-end .ptl-chip-tri   { border-bottom:5px solid var(--teal); margin-bottom:-1px; }
 
-/* ── Gate node circle ── */
-.sg-gate-node {
-  width:32px; height:32px; border-radius:9999px; display:grid; place-items:center;
-  color:#fff; flex-shrink:0;
-  box-shadow: 0 0 0 4px var(--panel), 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1);
-  z-index:2; position:relative;
+/* ── Red "we are here" live pulse — the single In Progress gate, floated just above its own
+   milestone cell so it's unambiguous which milestone is current. ── */
+.ptl-live-pulse {
+  position:absolute; top:-11px; left:0; transform:translateX(-50%);
+  width:20px; height:20px; z-index:5; pointer-events:none;
 }
-.sg-gate-node svg { width:14px; height:14px; }
+.ptl-live-ring { position:absolute; inset:0; border-radius:50%; border:1px solid #ff3b30; }
+.ptl-live-ring1 { inset:2.5px; opacity:.5; animation: ptlPulse 1.8s ease-out infinite; }
+.ptl-live-ring2 { inset:0; opacity:.2; animation: ptlPulse 1.8s ease-out infinite .3s; }
+.ptl-live-dot {
+  position:absolute; inset:5px; border-radius:50%; background:#ff3b30;
+  box-shadow:0 0 0 2px var(--panel);
+}
+@keyframes ptlPulse {
+  0%   { transform:scale(.6); opacity:.6; }
+  100% { transform:scale(1.4); opacity:0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ptl-live-ring1, .ptl-live-ring2 { animation:none; }
+}
 
-/* Gate node colors — Figma: teal for completed/on-time, blue for in-progress,
-   amber for 15–60 day delay, red for >60 day delay, slate for pending */
-.sg-gate-node.st-ontime,
-.sg-gate-node.st-completed  { background:var(--teal); }
-.sg-gate-node.st-inprogress { background:var(--color-blue-540); }
-.sg-gate-node.st-delay-mid  { background:#f1c272; color:#1f2937; }
-.sg-gate-node.st-delay-high { background:#e53935; }
-.sg-gate-node.st-pending    { background:var(--color-blue-340); color:#64748b; }
+/* ── Values table: Planned Date / Timeline / Approved Date / Outlook / Velocity-Delay rows —
+   flush bordered cells (no gap), alternating column shading, matches the Figma reference. ── */
+.ptl-values {
+  border:1px solid var(--color-blue-340); border-radius: var(--radius-sm); overflow:hidden;
+}
+.ptl-values .ptl-row + .ptl-row { border-top:1px solid var(--border); }
+.ptl-values .ptl-label { border-radius:0; }
+.ptl-values .ptl-row-gates .ptl-label,
+.ptl-values .ptl-row-milestones .ptl-label { background:none; }
+.ptl-datatrack { min-height:28px; }
+.ptl-datacell {
+  flex:1 1 0%; min-width:0; display:flex; align-items:center; justify-content:center;
+  text-align:center; font-size: var(--fs-11); color:var(--color-slate-680); font-weight: var(--fw-500);
+  border-left:1px solid var(--border); padding: var(--space-6) var(--space-4);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.ptl-datacell:nth-child(even) { background:var(--panel-alt); }
 
-/* ── Timeline P/A/O table (Figma node 197:10602) ── */
-.pd-tl-tablewrap {
-  overflow-x:auto; border-radius: var(--radius-sm);
-  border:1px solid var(--color-blue-340); margin-bottom: var(--space-10);
+/* ── Timeline row: connecting line + one circle per real gate at its stageEnd column ── */
+.ptl-timelinetrack { min-height:48px; }
+/* Progress zones (see timeline.js buildTimelineLineSegments): solid #3D79EE through every
+   completed gate, dashed #60A5FA toward the gate currently In Progress, pale #CDDAEF beyond it. */
+.ptl-timeline-seg {
+  position:absolute; top:50%; height:0; border-top:2px solid; transform:translateY(-50%); z-index:0;
 }
-.tl-table { border-collapse:collapse; width:100%; }
-.tl-table th, .tl-table td {
-  border-right:1px solid var(--border); border-bottom:1px solid var(--border);
-  text-align:center; padding: var(--space-6) var(--space-10); font-size: var(--fs-10);
+.ptl-timeline-seg-dashed { border-top-style:dashed; }
+.ptl-gatecircle {
+  position:absolute; top:50%; transform:translate(-50%,-50%); z-index:2;
+  width:28px; height:28px; border-radius:9999px; display:grid; place-items:center;
+  color:#fff; font-size: var(--fs-11); font-weight: var(--fw-700);
+  box-shadow: 0 0 0 4px var(--panel), 0 2px 4px -1px rgba(0,0,0,.15);
 }
-.tl-table th:last-child, .tl-table td:last-child { border-right:0; }
-.tl-corner {
-  width:30px; min-width:30px; background:var(--panel-alt);
-  position:sticky; left:0; z-index:2; border-right:1px solid var(--border);
+.ptl-gatecircle svg { width:14px; height:14px; }
+.ptl-gatecircle.st-ontime,
+.ptl-gatecircle.st-completed  { background:var(--teal); }
+.ptl-gatecircle.st-inprogress { background:var(--color-blue-540); }
+.ptl-gatecircle.st-delay-mid  { background:#f1c272; color:#1f2937; }
+.ptl-gatecircle.st-delay-high { background:#e53935; }
+.ptl-gatecircle.st-pending    { background:var(--color-blue-340); color:#64748b; }
+.ptl-gatecircle.st-skipped    { background:#8b5cf6; color:#fff; }
+.ptl-gatecircle-skippable { cursor:pointer; }
+.ptl-gatecircle-skippable:hover { box-shadow: 0 0 0 4px var(--panel), 0 0 0 6.5px var(--brand-blue), 0 2px 4px -1px rgba(0,0,0,.15); }
+
+.ptl-row-endchips { min-height:22px; margin-top: var(--space-2); }
+.ptl-row-endchips .ptl-chip-end { top:0; }
+
+/* "Skip this gate" confirm popover — reuses .dlv-popover's box/shadow language */
+.pd-skip-popover { width: 280px; }
+.pd-skip-confirm h4 { margin:0 0 var(--space-6); font-size: var(--fs-13); color:var(--color-blue-950); }
+.pd-skip-confirm p { margin:0 0 var(--space-10); font-size: var(--fs-11); color:var(--color-slate-680); line-height:1.4; }
+.pd-skip-reason-lbl { display:block; font-size: var(--fs-11); font-weight:var(--fw-600); color:var(--color-slate-680); margin-bottom: var(--space-4); }
+.pd-skip-optional { font-weight:var(--fw-400); color:var(--color-slate-430); }
+.pd-skip-reason {
+  width:100%; box-sizing:border-box; padding: var(--space-6) var(--space-7);
+  border:1px solid var(--color-blue-340); border-radius: var(--radius-sm); font-family:inherit;
+  font-size: var(--fs-11); color:var(--color-blue-950); resize:vertical;
 }
-.tl-h {
-  min-width:80px; font-size: var(--fs-10); font-weight: var(--fw-600);
-  color:var(--navy); background:var(--panel-alt);
-  text-transform:uppercase; line-height:1.3; vertical-align:middle;
-  white-space:normal; word-break:break-word;
+.pd-skip-reason:focus { outline:none; border-color:var(--brand-blue); }
+.pd-skip-actions { display:flex; justify-content:flex-end; gap: var(--space-8); margin-top: var(--space-10); }
+.pd-skip-cancel {
+  font-size: var(--fs-11); font-weight:var(--fw-600); border-radius: var(--radius-sm);
+  padding: var(--space-4) var(--space-12); cursor:pointer; border:1px solid var(--color-blue-340);
+  background:var(--panel); color:var(--color-slate-680);
 }
-/* Figma: red-top headers — border-t-4 red + pink bg */
-.tl-h-red {
-  background:#fceeee;
-  border-top:3px solid #e53935 !important;
-  color:var(--navy);
+.pd-skip-cancel:hover { background: var(--color-blue-50); }
+.pd-skip-confirm-btn {
+  font-size: var(--fs-11); font-weight:var(--fw-600); border-radius: var(--radius-sm);
+  padding: var(--space-4) var(--space-12); cursor:pointer; border:1px solid #e53935;
+  background:#e53935; color:#fff;
 }
-/* Figma: teal-top header */
-.tl-h-teal {
-  border-top:3px solid var(--teal) !important;
-  color:var(--navy);
-}
-.tl-row-label {
-  width:30px; min-width:30px; font-weight: var(--fw-700); font-size: var(--fs-12);
-  color:var(--color-slate-900); background:var(--panel-alt);
-  position:sticky; left:0; z-index:1;
-}
-/* Alternate row bg — white / panel-alt */
-.tl-table tbody tr:nth-child(even) { background:var(--panel-alt); }
-.tl-table tbody tr:nth-child(odd)  { background:var(--panel); }
-.tl-cell { color:var(--color-slate-680); white-space:nowrap; min-width:70px; font-size: var(--fs-12); font-weight: var(--fw-500); }
-/* Stage boundary line (green) */
-.tl-stage-start { border-left:2px solid #006b3f !important; }
+.pd-skip-confirm-btn:hover { opacity:.9; }
+
+/* ── Values table wrap — horizontal scroll on narrow viewports, same min-width as the
+   GATES/MILESTONES block above so the two stay column-aligned when scrolled together. ── */
+.pd-tl-tablewrap { margin-bottom: var(--space-10); border:1px solid var(--color-blue-340); border-top:0; border-bottom-left-radius: var(--radius-8); border-bottom-right-radius: var(--radius-8); padding: 0 var(--space-20) var(--space-14); background:var(--panel); box-shadow: 0 4px 12px rgba(0,0,0,.05); }
+.pd-tl-tablewrap .ptl-values { min-width:900px; margin-top: var(--space-10); }
 
 /* Timeline legend — Figma: P/A/O keys + velocity chip-box */
 .pd-tl-legend { display:flex; align-items:center; justify-content:space-between; gap: var(--space-12); flex-wrap:wrap; }
@@ -288,6 +334,7 @@ html, body.pd-body { height:100%; overflow:hidden; }
 .tl-vel i.st-delay-mid  { background:#f1c272; }
 .tl-vel i.st-ontime     { background:var(--teal); }
 .tl-vel i.st-inprogress { background:var(--color-blue-540); }
+.tl-vel i.st-skipped    { background:#8b5cf6; }
 
 /* ════════════════════════════════════
    GATE CHECKLIST nested accordion
@@ -511,11 +558,11 @@ html, body.pd-body { height:100%; overflow:hidden; }
 .pd-acc-list::-webkit-scrollbar-thumb { background:var(--color-slate-380); border-radius: var(--radius-4); }
 
 /* ════════════════════════════════════
-   GANTT CHART TAB — full-screen layout
+   GANTT CHART TAB — Figma node 532:1621. Deliverables grouped by gate (same records the
+   Deliverables tab edits), left frozen table + right scrollable timeline, both driven from one
+   shared row model so heights always stay pixel-aligned between the two panes.
 ════════════════════════════════════ */
 
-/* The tab panel base already gives display:flex flex-direction:column.
-   We only override the specific gantt properties here. */
 #tab-gantt:not([hidden]) {
   display: flex;
   flex-direction: column;
@@ -524,364 +571,191 @@ html, body.pd-body { height:100%; overflow:hidden; }
   background: var(--color-white-950);
 }
 
-/* ── Intelligence Banner ── */
-.gc-banner {
+/* ── Top bar: KPI strip + filters ── */
+.gc2-topbar {
   flex-shrink: 0;
   background: var(--panel);
-  border-bottom: 1px solid var(--color-slate-150);
-  padding: 0 var(--space-24);
-  height: 48px;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
+  border-bottom: 1px solid var(--color-blue-340);
+  padding: var(--space-10) var(--space-20);
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-16);
+  flex-wrap: wrap;
 }
-.gc-banner-stats {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  height: 100%;
-  width: 100%;
+.gc2-kpi-strip { display: flex; align-items: center; gap: 0; }
+.gc2-kpi-card {
+  display: flex; flex-direction: column; gap: var(--space-2);
+  padding: 0 var(--space-18); border-right: 1px solid var(--color-blue-340);
 }
-.gc-stat {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: 0 var(--space-20) 0 0;
-  margin: 0 var(--space-20) 0 0;
-  border-right: 1px solid var(--color-blue-340);
-  flex-shrink: 0;
-}
-.gc-stat:last-child { border-right: 0; margin-right: 0; padding-right: 0; }
-.gc-stat-val {
-  font-size: var(--fs-18);
-  font-weight: var(--fw-800);
-  line-height: 1;
-}
-.gc-stat-lbl {
-  font-size: var(--fs-8-5);
-  font-weight: var(--fw-600);
-  color: var(--color-slate-780);
-  text-transform: uppercase;
-  letter-spacing: .03em;
-  white-space: nowrap;
-}
-.gc-stat-green { color: var(--color-teal-350); }
-.gc-stat-blue  { color: var(--color-blue-500); }
-.gc-stat-red   { color: var(--color-red-650); }
-.gc-stat-amber { color: var(--color-amber-410); }
-.gc-stat-teal  { color: var(--color-teal-200); }
+.gc2-kpi-card:first-child { padding-left: 0; }
+.gc2-kpi-card:last-child  { border-right: 0; }
+.gc2-kpi-val { font-size: var(--fs-19); font-weight: var(--fw-800); line-height: 1; color: var(--title); }
+.gc2-kpi-lbl { font-size: var(--fs-9); font-weight: var(--fw-600); color: var(--color-slate-680); text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+.gc2-kpi-red   .gc2-kpi-val { color: var(--color-red-450); }
+.gc2-kpi-amber .gc2-kpi-val { color: var(--color-amber-590); }
+.gc2-kpi-teal  .gc2-kpi-val { color: var(--teal); }
+.gc2-kpi-clickable { cursor: pointer; border-radius: var(--radius-5); transition: var(--transition-8); }
+.gc2-kpi-clickable:hover { background: var(--color-blue-50); }
+.gc2-kpi-clickable.gc2-kpi-active { background: var(--color-red-50); box-shadow: inset 0 0 0 1px var(--color-red-450); }
 
-/* ── AI Bar ── */
-.gc-ai-bar {
-  flex-shrink: 0;
-  background: var(--panel);
-  border-bottom: 1px solid var(--color-slate-150);
-  padding: var(--space-5) var(--space-20);
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  min-height: 44px;
-  max-height: 44px;
-  overflow: hidden;
+.gc2-filters { display: flex; align-items: center; gap: var(--space-8); flex-shrink: 0; }
+.gc2-filter-select {
+  border: 1px solid var(--color-blue-340); border-radius: var(--radius-sm); background: var(--panel);
+  font-family: inherit; font-size: var(--fs-11-5); color: var(--color-slate-880);
+  padding: var(--space-6) var(--space-10); height: 32px; cursor: pointer;
 }
-.gc-ai-pill {
-  display: flex;
-  align-items: center;
-  gap: var(--space-16);
-  border-radius: var(--radius-40);
-  padding: var(--space-5) var(--space-18);
-  font-size: var(--fs-11);
-  font-weight: var(--fw-600);
-  white-space: nowrap;
-}
-.gc-ai-green { background: var(--color-green-160); color: var(--color-teal-800); }
-.gc-ai-purple { background: var(--color-blue-210); color: var(--color-blue-620); flex-direction: column; align-items: flex-start; gap: var(--space-1); padding: var(--space-4) var(--space-18); }
-.gc-ai-pill-title { font-size: var(--fs-11); font-weight: var(--fw-700); color: var(--color-blue-620); }
-.gc-ai-pill-sub   { font-size: var(--fs-10); color: var(--color-purple-500); font-weight: var(--fw-500); }
-.gc-ai-badge {
-  background: var(--color-green-390);
-  border: 1px solid var(--color-green-610);
-  border-radius: var(--radius-9);
-  padding: var(--space-2) var(--space-10);
-  font-size: var(--fs-9);
-  font-weight: var(--fw-500);
-  color: var(--color-teal-500);
-}
-.gc-ai-insight {
-  display: flex;
-  align-items: center;
-  gap: var(--space-6);
-  background: var(--color-overlay-12);
-  border-radius: var(--radius-100);
-  padding: var(--space-7) var(--space-14);
-  font-size: var(--fs-11-5);
-  color: var(--color-red-850);
-  flex: 1;
-  min-width: 0;
-}
-.gc-ai-insight b { color: var(--color-red-850); }
-
-/* ── Main Gantt body ── */
-.gc-body {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  overflow: hidden;
-  background: var(--color-slate-100);
-  border-top: 1px solid var(--color-blue-340);
-}
-
-/* ── Left frozen pane ── */
-.gc-left-pane {
-  flex-shrink: 0;
-  width: 540px;
-  display: flex;
-  flex-direction: column;
-  border-right: 2px solid var(--color-slate-450);
-  background: var(--panel);
-  z-index: 2;
-}
-.gc-left-header {
-  display: flex;
-  align-items: stretch;
-  background: var(--color-slate-130);
-  border-bottom: 1px solid var(--color-slate-450);
-  height: 48px;
-  flex-shrink: 0;
-}
-.gc-lh-col {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--fs-9-5);
-  font-weight: var(--fw-700);
-  color: var(--color-slate-950);
-  text-align: center;
-  border-right: 1px solid var(--color-slate-330);
-  padding: var(--space-4) var(--space-2);
-  line-height: 1.3;
-}
-.gc-lh-col:last-child { border-right: 0; }
-.gc-lh-sno   { width: 40px;  flex-shrink: 0; }
-.gc-lh-deliv { flex: 1;      min-width: 0; }
-.gc-lh-id    { width: 38px;  flex-shrink: 0; }
-.gc-lh-resp  { width: 80px;  flex-shrink: 0; }
-.gc-lh-start { width: 70px;  flex-shrink: 0; }
-.gc-lh-end   { width: 70px;  flex-shrink: 0; }
-.gc-lh-days  { width: 38px;  flex-shrink: 0; }
-.gc-lh-rag   { width: 36px;  flex-shrink: 0; }
-
-.gc-left-rows {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-.gc-left-rows::-webkit-scrollbar { width: 5px; }
-.gc-left-rows::-webkit-scrollbar-thumb { background: var(--color-slate-480); border-radius: var(--radius-4); }
-.gc-left-rows::-webkit-scrollbar-track { background: var(--color-slate-130); }
-
-.gc-left-row {
-  display: flex;
-  align-items: center;
-  height: 36px;
-  border-bottom: 1px solid var(--color-slate-250);
-}
-.gc-left-row:nth-child(odd) { background: var(--color-slate-50); }
-.gc-left-row:nth-child(even) { background: var(--panel); }
-.gc-left-row:hover { background: var(--color-blue-130); }
-
-.gc-cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--fs-11);
-  color: var(--color-slate-930);
-  border-right: 1px solid var(--color-slate-230);
-  height: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.gc-cell:last-child { border-right: 0; }
-.gc-cell-sno   { width: 40px; flex-shrink: 0; color: var(--color-slate-630); font-weight: var(--fw-500); }
-.gc-cell-deliv { flex: 1; min-width: 0; justify-content: flex-start; padding: 0 var(--space-8); font-weight: var(--fw-600); color: var(--color-slate-930); font-size: var(--fs-11); }
-.gc-cell-id    { width: 38px; flex-shrink: 0; color: var(--color-slate-650); font-size: var(--fs-10); }
-.gc-cell-resp  { width: 80px; flex-shrink: 0; font-size: var(--fs-11); }
-.gc-cell-start { width: 70px; flex-shrink: 0; color: var(--color-slate-850); font-size: var(--fs-10); }
-.gc-cell-end   { width: 70px; flex-shrink: 0; color: var(--color-slate-850); font-size: var(--fs-10); }
-.gc-cell-days  { width: 38px; flex-shrink: 0; font-weight: var(--fw-500); }
-.gc-cell-rag   { width: 36px; flex-shrink: 0; }
-
-.gc-rag-dot {
-  width: 11px; height: 11px; border-radius: var(--radius-50);
-  display: inline-block;
-}
-.gc-rag-green  { background: var(--color-green-610); }
-.gc-rag-amber  { background: var(--color-amber-590); }
-.gc-rag-red    { background: var(--color-red-450); }
-.gc-rag-grey   { background: var(--color-slate-530); }
-
-/* ── Right scrollable pane ── */
-.gc-right-pane {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* The outer scroll wrapper — only scrolls horizontally, clipped vertically */
-.gc-chart-scroll {
-  flex: 1;
-  min-height: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  display: flex;
-  flex-direction: column;
-}
-.gc-chart-scroll::-webkit-scrollbar { height: 6px; }
-.gc-chart-scroll::-webkit-scrollbar-thumb { background: var(--color-slate-580); border-radius: var(--radius-4); }
-.gc-chart-scroll::-webkit-scrollbar-track { background: var(--color-slate-150); }
-
-/* Inner wrapper — matches the total chart pixel width, fills full height */
-.gc-chart-inner {
-  min-width: 900px;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Month header */
-.gc-month-row {
-  height: 26px;
-  display: flex;
-  background: var(--color-slate-130);
-  border-bottom: 1px solid var(--color-slate-450);
-  flex-shrink: 0;
-}
-.gc-month-cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--fs-10);
-  font-weight: var(--fw-700);
-  color: var(--color-slate-950);
-  border-right: 1px solid var(--color-slate-450);
-  flex-shrink: 0;
-}
-
-/* Week header */
-.gc-week-row {
-  height: 22px;
-  display: flex;
-  background: var(--color-slate-100);
-  border-bottom: 1px solid var(--color-slate-430);
-  flex-shrink: 0;
-}
-.gc-week-cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--fs-9);
-  color: var(--color-slate-730);
-  border-right: 1px solid var(--color-slate-300);
-  flex-shrink: 0;
-}
-.gc-week-cell.month-start { border-right-color: var(--color-slate-500); }
-
-/* Bars area — scrolls vertically, fills remaining height */
-.gc-bars-area {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  position: relative;
-}
-.gc-bars-area::-webkit-scrollbar { width: 5px; }
-.gc-bars-area::-webkit-scrollbar-thumb { background: var(--color-slate-480); border-radius: var(--radius-4); }
-.gc-bars-area::-webkit-scrollbar-track { background: var(--color-slate-130); }
-
-.gc-bar-row {
-  height: 36px;
-  position: relative;
-  border-bottom: 1px solid var(--color-slate-250);
-}
-.gc-bar-row:nth-child(odd) { background: var(--color-slate-50); }
-.gc-bar-row:nth-child(even) { background: var(--panel); }
-
-/* Vertical grid lines */
-.gc-vgrid {
-  position: absolute;
-  top: 0; bottom: 0;
-  width: 1px;
-  background: var(--color-slate-280);
-  pointer-events: none;
-}
-
-.gc-bar {
-  position: absolute;
-  top: 6px;
-  height: 11px;
-  border-radius: var(--radius-3);
-  opacity: .9;
-}
-.gc-bar-planned { background: var(--color-overlay-13); top: 6px; }
-.gc-bar-actual  { background: var(--color-overlay-14);  top: 20px; }
-
-/* Horizontal scrollbar at bottom of bars */
-.gc-hscroll-bar {
-  height: 12px;
-  background: var(--color-slate-150);
-  border-top: 1px solid var(--color-slate-430);
-  flex-shrink: 0;
-  position: relative;
-}
+.gc2-filter-select.gc2-filter-active { border-color: var(--brand-blue); color: var(--brand-blue); font-weight: var(--fw-600); }
 
 /* ── Legend ── */
-.gc-legend {
-  flex-shrink: 0;
-  height: 34px;
-  background: var(--panel);
-  border-top: 1px solid var(--color-slate-400);
-  display: flex;
-  align-items: center;
-  gap: var(--space-10);
-  padding: 0 var(--space-12);
-  font-size: var(--fs-11);
+.gc2-legend {
+  flex-shrink: 0; height: 30px; background: var(--panel-alt);
+  border-bottom: 1px solid var(--color-blue-340);
+  display: flex; align-items: center; gap: var(--space-16); padding: 0 var(--space-20);
+  font-size: var(--fs-11); color: var(--color-slate-800);
 }
-.gc-legend-label { font-size: var(--fs-9); font-weight: var(--fw-700); color: var(--color-slate-650); text-transform: uppercase; margin-right: var(--space-4); }
-.gc-legend-sep   { font-size: var(--fs-9); font-weight: var(--fw-700); color: var(--color-slate-650); text-transform: uppercase; margin: 0 var(--space-2); }
-.gc-legend-item  { display: flex; align-items: center; gap: var(--space-5); color: var(--color-slate-930); font-size: var(--fs-11); }
-.gc-swatch { width: 22px; height: 8px; border-radius: var(--radius-3); display: inline-block; }
-.gc-swatch-planned { background: var(--color-overlay-15); }
-.gc-swatch-actual  { background: var(--color-overlay-16); }
-.gc-dot { width: 10px; height: 10px; border-radius: var(--radius-50); display: inline-block; }
-.gc-dot-green { background: var(--color-green-610); }
-.gc-dot-amber { background: var(--color-amber-590); }
-.gc-dot-red   { background: var(--color-red-450); }
-.gc-hl-all  { background: var(--color-overlay-17); color: var(--color-blue-460); font-size: var(--fs-9); font-weight: var(--fw-600); padding: var(--space-2) var(--space-10); border-radius: var(--radius-9); cursor: pointer; border: none; transition: var(--transition-8); }
-.gc-hl-all.gc-hl-active { background: var(--color-blue-460); color: var(--panel); }
-.gc-hl-all:hover { background: var(--color-overlay-18); }
-.gc-hl-crit {
-  background: var(--color-overlay-19); color: var(--warning);
-  font-size: var(--fs-9); font-weight: var(--fw-600); padding: var(--space-3) var(--space-12); border-radius: var(--radius-9);
-  cursor: pointer; transition: var(--transition-12);
-  user-select: none; border: none; display: inline-flex; align-items: center; gap: var(--space-5);
+.gc2-leg-item { display: flex; align-items: center; gap: var(--space-6); }
+.gc2-sw { width: 18px; height: 7px; border-radius: var(--radius-3); display: inline-block; }
+.gc2-sw-planned { background: var(--navy); }
+.gc2-sw-actual  { background: var(--teal); }
+.gc2-sw-diamond { width: 8px; height: 8px; background: var(--teal); transform: rotate(45deg); display: inline-block; border-radius: 2px; }
+.gc2-leg-dep { color: var(--color-slate-680); }
+.gc2-dep-arrow { width: 20px; height: 0; border-top: 1.5px dashed var(--color-slate-550); display: inline-block; position: relative; }
+.gc2-dep-arrow::after {
+  content: ""; position: absolute; right: -1px; top: -3px;
+  border: 3px solid transparent; border-left-color: var(--color-slate-550);
 }
-.gc-hl-crit:hover { background: var(--color-overlay-20); }
-.gc-hl-crit-active {
-  background: var(--color-amber-590) !important;
-  color: var(--panel) !important;
-  box-shadow: var(--shadow-10);
-}
-.gc-stat-clickable { cursor: pointer; transition: var(--transition-13); }
-.gc-stat-clickable:hover { opacity: .8; }
-.gc-legend-right { margin-left: auto; font-size: var(--fs-9); color: var(--color-slate-600); white-space: nowrap; }
+.gc2-legend-right { margin-left: auto; font-size: var(--fs-10); color: var(--color-slate-600); }
 
-/* Sync vertical scroll between left rows and bars area */
-.gc-left-rows, .gc-bars-area { scroll-behavior: auto; }
+/* ── Main body: two panes ── */
+.gc2-body { flex: 1; min-height: 0; display: flex; overflow: hidden; border-top: 1px solid var(--color-blue-340); }
+
+/* ── Left frozen pane ── */
+.gc2-left { flex-shrink: 0; width: 520px; display: flex; flex-direction: column; border-right: 2px solid var(--color-slate-450); background: var(--panel); z-index: 2; }
+/* Height must equal the right pane's stacked gate-row + month-row + week-row (30+22+18=70px) —
+   both panes are independent flex columns, so their scroll areas only start at the same Y if
+   the header block above each is the same total height. */
+.gc2-left-head { display: flex; align-items: stretch; background: var(--color-slate-130); border-bottom: 1px solid var(--color-slate-450); height: 70px; flex-shrink: 0; }
+.gc2-lh { display: flex; align-items: center; justify-content: center; font-size: var(--fs-10); font-weight: var(--fw-700); color: var(--color-slate-950); text-transform: uppercase; border-right: 1px solid var(--color-slate-330); padding: 0 var(--space-4); }
+.gc2-lh:last-child { border-right: 0; }
+.gc2-lh-no     { width: 32px;  flex-shrink: 0; }
+.gc2-lh-deliv  { flex: 1; min-width: 0; justify-content: flex-start; padding-left: var(--space-10); }
+.gc2-lh-date   { width: 88px;  flex-shrink: 0; }
+.gc2-lh-days   { width: 42px;  flex-shrink: 0; }
+.gc2-lh-var    { width: 42px;  flex-shrink: 0; }
+.gc2-lh-status { width: 54px;  flex-shrink: 0; }
+
+.gc2-left-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+.gc2-left-scroll::-webkit-scrollbar { width: 5px; }
+.gc2-left-scroll::-webkit-scrollbar-thumb { background: var(--color-slate-480); border-radius: var(--radius-4); }
+.gc2-left-scroll::-webkit-scrollbar-track { background: var(--color-slate-130); }
+
+/* Gate accordion header row (left) */
+.gc2-gate-header-row {
+  display: flex; align-items: center; gap: var(--space-6); height: 34px; padding: 0 var(--space-12);
+  cursor: pointer; font-size: var(--fs-12); font-weight: var(--fw-700); user-select: none;
+  border-top: 2px solid var(--color-blue-340); border-bottom: 1px solid var(--color-blue-340);
+  background: var(--color-slate-100); color: var(--navy);
+}
+.gc2-gate-header-row:hover { filter: brightness(.97); }
+.gc2-gate-header-row.gc2-gate-completed { background: #E9F3FF; color:#333; }
+.gc2-gate-header-row.gc2-gate-active { background: #C6DEFC; color: #333; box-shadow: inset 0 0 0 1px var(--brand-blue); }
+.gc2-gate-header-row.gc2-gate-future { background: var(--color-slate-100); color: var(--color-slate-600); }
+.gc2-gate-chevron { width: 13px; height: 13px; flex-shrink: 0; transition: transform .15s; }
+.gc2-gate-chevron.gc2-open { transform: rotate(90deg); }
+.gc2-gate-current-tag { font-weight: var(--fw-600); font-size: var(--fs-10); opacity: .85; }
+
+/* Deliverable row (left) */
+.gc2-deliv-row { display: flex; align-items: stretch; height: 52px; border-bottom: 1px solid var(--color-slate-230); }
+.gc2-deliv-row:nth-child(odd) { background: var(--color-slate-50); }
+.gc2-deliv-row:nth-child(even) { background: var(--panel); }
+.gc2-deliv-row:hover { background: var(--color-blue-50); }
+.gc2-dc { display: flex; align-items: center; justify-content: center; font-size: var(--fs-11); border-right: 1px solid var(--color-slate-230); padding: var(--space-4); text-align: left; }
+.gc2-dc:last-child { border-right: 0; }
+.gc2-dc-no { width: 32px; flex-shrink: 0; color: var(--color-slate-630); }
+.gc2-dc-deliv { flex: 1; min-width: 0; flex-direction: column; align-items: flex-start; justify-content: center; gap: var(--space-3); padding: var(--space-6) var(--space-10); }
+.gc2-dc-name {
+  font-size: var(--fs-12); font-weight: var(--fw-600); color: var(--title); line-height: 1.3;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.gc2-dc-resp { display: flex; align-items: center; gap: var(--space-4); font-size: var(--fs-10); color: var(--color-slate-600); }
+.gc2-dc-resp svg { width: 10px; height: 10px; flex-shrink: 0; }
+.gc2-dc-date { width: 88px; flex-shrink: 0; flex-direction: column; gap: var(--space-2); font-size: var(--fs-10-5); line-height: 1.3; }
+.gc2-dc-date .p { color: var(--color-slate-680); }
+.gc2-dc-date .a { color: var(--color-slate-450); }
+.gc2-dc-days { width: 42px; flex-shrink: 0; color: var(--color-slate-800); }
+.gc2-dc-var  { width: 42px; flex-shrink: 0; font-weight: var(--fw-600); }
+.gc2-dc-var.gc2-var-green { color: var(--color-slate-600); }
+.gc2-dc-var.gc2-var-amber { color: var(--color-amber-590); }
+.gc2-dc-var.gc2-var-red   { color: var(--color-red-450); }
+.gc2-dc-var.gc2-var-grey  { color: var(--color-slate-450); }
+.gc2-dc-status { width: 54px; flex-shrink: 0; }
+
+.gc2-rag-dot { width: 11px; height: 11px; border-radius: var(--radius-50); display: inline-block; }
+.gc2-rag-green { background: var(--color-green-610); }
+.gc2-rag-amber { background: var(--color-amber-590); }
+.gc2-rag-red   { background: var(--color-red-450); }
+.gc2-rag-grey  { background: var(--color-slate-380); }
+
+/* Milestone summary row (left) */
+.gc2-milestone-row { display: flex; align-items: center; gap: var(--space-8); height: 30px; padding: 0 var(--space-16) 0 var(--space-32); border-top: 1px solid var(--color-blue-340); border-bottom: 1px solid var(--color-blue-340); font-size: var(--fs-10-5); font-weight: var(--fw-600); color: var(--color-slate-900); }
+.gc2-ms-done    { background: var(--color-green-50); }
+.gc2-ms-partial { background: var(--color-amber-50); }
+.gc2-ms-pending { background: var(--color-slate-100); }
+.gc2-ms-diamond { width: 9px; height: 9px; flex-shrink: 0; transform: rotate(45deg); border-radius: 2px; }
+.gc2-ms-done .gc2-ms-diamond, .gc2-ms-partial .gc2-ms-diamond { background: var(--teal); }
+.gc2-ms-pending .gc2-ms-diamond { background: var(--panel); border: 1.5px solid var(--color-slate-450); }
+.gc2-ms-label { flex: 1; min-width: 0; }
+.gc2-ms-bar { width: 60px; height: 6px; background: var(--color-slate-230); border-radius: var(--radius-20); overflow: hidden; flex-shrink: 0; }
+.gc2-ms-bar > div { height: 100%; background: var(--color-blue-540); border-radius: var(--radius-20); }
+
+/* ── Right scrollable pane ── */
+.gc2-right { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+.gc2-right-head-scroll { flex-shrink: 0; overflow: hidden; border-bottom: 1px solid var(--color-slate-450); }
+.gc2-right-head-inner { will-change: transform; }
+
+.gc2-gate-row { height: 30px; position: relative; }
+.gc2-gate-band { display: flex; align-items: center; justify-content: center; gap: var(--space-4); font-size: var(--fs-11); font-weight: var(--fw-700); border-right: 2px solid var(--panel); color: var(--navy); background: var(--color-slate-100); white-space: nowrap; overflow: hidden; cursor: pointer; }
+.gc2-gate-band.gc2-gate-completed { background: #E9F3FF; color: #333; }
+.gc2-gate-band.gc2-gate-active { background: #C6DEFC; color: #333; }
+.gc2-gate-band.gc2-gate-future { background: var(--color-slate-100); color: var(--color-slate-600); }
+
+.gc2-month-row { height: 22px; display: flex; background: var(--color-slate-130); border-bottom: 1px solid var(--color-slate-450); }
+.gc2-month-cell { display: flex; align-items: center; justify-content: center; font-size: var(--fs-10); font-weight: var(--fw-700); color: var(--color-slate-950); border-right: 1px solid var(--color-slate-450); flex-shrink: 0; }
+.gc2-week-row { height: 18px; display: flex; background: var(--color-slate-100); }
+.gc2-week-cell { display: flex; align-items: center; justify-content: center; font-size: var(--fs-8-5); color: var(--color-slate-650); border-right: 1px solid var(--color-slate-300); flex-shrink: 0; }
+.gc2-week-cell.gc2-month-start { border-right-color: var(--color-slate-500); }
+
+.gc2-right-scroll { flex: 1; min-height: 0; overflow: auto; position: relative; }
+.gc2-right-scroll::-webkit-scrollbar { width: 5px; height: 6px; }
+.gc2-right-scroll::-webkit-scrollbar-thumb { background: var(--color-slate-480); border-radius: var(--radius-4); }
+.gc2-right-scroll::-webkit-scrollbar-track { background: var(--color-slate-130); }
+
+.gc2-bars-inner { position: relative; }
+.gc2-vgrid-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0; }
+.gc2-vgrid-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--color-slate-230); }
+.gc2-dep-svg { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 1; }
+.gc2-today-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--color-red-450); z-index: 2; }
+.gc2-today-flag { position: absolute; top: 2px; transform: translateX(-50%); background: var(--color-red-450); color: #fff; font-size: var(--fs-8-5); font-weight: var(--fw-700); padding: 1px 5px; border-radius: var(--radius-3); white-space: nowrap; z-index: 3; }
+
+.gc2-bar-row { position: absolute; left: 0; border-bottom: 1px solid var(--color-slate-230); z-index: 1; }
+.gc2-bar-row.gc2-bar-row-gate { background: var(--color-slate-100); border-top: 2px solid var(--color-blue-340); border-bottom: 1px solid var(--color-blue-340); }
+.gc2-bar-row.gc2-bar-row-ms { border-top: 1px solid var(--color-blue-340); border-bottom: 1px solid var(--color-blue-340); }
+
+.gc2-bar { position: absolute; height: 12px; border-radius: var(--radius-3); display: flex; align-items: center; overflow: hidden; }
+.gc2-bar-planned { top: 8px; background: var(--navy); }
+.gc2-bar-actual  { top: 26px; background: var(--teal); }
+.gc2-bar-label { font-size: var(--fs-8-5); color: #fff; font-weight: var(--fw-600); padding: 0 4px; white-space: nowrap; }
+.gc2-bar-alert {
+  position: absolute; top: 4px; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--color-red-450); color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800; box-shadow: 0 0 0 2px var(--panel); z-index: 2;
+}
+
+.gc2-ms-diamond-track { position: absolute; width: 12px; height: 12px; transform: translate(-50%, -50%) rotate(45deg); border-radius: 2px; top: 50%; }
+.gc2-ms-diamond-track.done { background: var(--teal); }
+.gc2-ms-diamond-track.pending { background: var(--panel); border: 2px solid var(--color-slate-450); }
+
+@media (max-width: 1280px) {
+  .gc2-left { width: 440px; }
+}
 
 /* ════════════════════════════════════
    DELIVERABLES TAB — gate-wise workspace
@@ -1008,11 +882,18 @@ html, body.pd-body { height:100%; overflow:hidden; }
 }
 .dlv-gate-btn.dlv-gate-future .dlv-gate-label { color: var(--color-slate-430); }
 
+/* Skipped — PMO marked this gate not required; distinct from Future so it never reads as "not started yet" */
+.dlv-gate-btn.dlv-gate-skipped .dlv-gate-circle {
+  background: #c3cbd4; border-color: #c3cbd4; color: #4b5563;
+}
+.dlv-gate-btn.dlv-gate-skipped .dlv-gate-label { color: #6b7280; font-style: italic; }
+
 /* ── Legend row ── */
 .dlv-legend-row {
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-20);
   padding: var(--space-6) var(--space-16);
   background: var(--panel);
@@ -1020,7 +901,17 @@ html, body.pd-body { height:100%; overflow:hidden; }
   color: var(--color-slate-780);
   border-bottom: 1px solid var(--color-blue-90);
 }
+.dlv-legend-items { display: flex; align-items: center; gap: var(--space-20); }
 .dlv-leg-item { display: flex; align-items: center; gap: var(--space-5); }
+/* PMO/SA only — adds a real deliverable from the gate's master library to the currently
+   selected gate (see dlvAddBtn wiring in project-detail.js's renderDeliverables). */
+.dlv-add-btn {
+  font-size: var(--fs-11); font-weight: var(--fw-700); border-radius: var(--radius-sm);
+  padding: var(--space-5) var(--space-12); cursor: pointer; border: 1px solid var(--brand-blue);
+  background: var(--brand-blue); color: #fff; flex-shrink: 0;
+}
+.dlv-add-btn:hover { opacity: .9; }
+.dlv-add-btn:disabled { opacity: .4; cursor: not-allowed; }
 .dlv-leg-dot {
   width: 10px; height: 10px; border-radius: var(--radius-50);
   display: inline-block; flex-shrink: 0;
@@ -1059,15 +950,11 @@ html, body.pd-body { height:100%; overflow:hidden; }
 .dlv-table-wrap::-webkit-scrollbar { width: 5px; height: 5px; }
 .dlv-table-wrap::-webkit-scrollbar-thumb { background: var(--color-slate-380); border-radius: var(--radius-4); }
 
-/* ── Deliverables table (also reused, verbatim, by the Gate Checklist table) ──
-   table-layout:fixed so the shared columns (S.NO/RESPONSIBLE/OUTLOOK/STATUS/REMARKS/DOWNLOAD —
-   both tables give these the exact same <th style="width:…"> values) render at IDENTICAL pixel
-   widths in both tables. Without it, table-layout:auto redistributes each table's leftover space
-   differently depending on how many OTHER columns it has (Gate Checklist has 4 fewer date
-   columns than Deliverables), so the "same" declared widths ended up rendering unequal — only
-   the one column with no declared width (DELIVERABLE / CHECKLIST ITEM) is meant to absorb that
-   difference. Not the same table as .tl-table (Timeline), which deliberately avoids fixed
-   layout for a different reason — see that rule's own comment. */
+/* ── Deliverables table (base styling also reused by the Gate Checklist table — the two no
+   longer share every column since Checklist dropped OUTLOOK and widened DOCUMENT, but both
+   still want table-layout:fixed so a long remark/title can't force table-layout:auto to widen
+   a column unevenly). Not the same table as .tl-table (Timeline), which deliberately avoids
+   fixed layout for a different reason — see that rule's own comment. */
 .dlv-table { min-width: 1100px; table-layout: fixed; }
 /* .pd-data-table's default tbody td is white-space:nowrap, which is what silently drove the
    column-width mismatch in the first place (a long remark/name forced table-layout:auto to
@@ -1082,6 +969,10 @@ html, body.pd-body { height:100%; overflow:hidden; }
   white-space: nowrap;
 }
 .dlv-table tbody tr:hover { background: var(--color-blue-50) !important; }
+/* Alternating row shading — sits under .dlv-row-editable's own (!important) tint, so an
+   editable row still stands out; zebra just helps scan a long read-only table. */
+.dlv-table tbody tr:nth-child(even) { background: var(--panel-alt); }
+.dlv-table tbody tr:nth-child(odd)  { background: var(--panel); }
 
 /* Clickable deliverable name */
 .dlv-name-link {
@@ -1092,17 +983,26 @@ html, body.pd-body { height:100%; overflow:hidden; }
 }
 .dlv-name-link:hover { text-decoration: underline; }
 
-/* Outlook / Health RAG dot */
-.dlv-rag-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: var(--radius-50);
-  display: inline-block;
+/* Parent/child deliverable hierarchy — a child row's Name cell indents under its parent, with a
+   small tag below the name showing/editing the relationship (matches the Responsible cell's own
+   "chip + secondary line" pattern already used in this table). */
+.dlv-td-name-child { padding-left: var(--space-24) !important; position: relative; }
+.dlv-td-name-child::before {
+  content: ""; position: absolute; left: var(--space-12); top: 0; bottom: 50%;
+  width: 10px; border-left: 1.5px solid var(--color-blue-340); border-bottom: 1.5px solid var(--color-blue-340);
 }
-.dlv-rag-green { background: var(--color-green-610); }
-.dlv-rag-amber { background: var(--color-amber-590); }
-.dlv-rag-red   { background: var(--color-red-450); }
-.dlv-rag-grey  { background: var(--color-slate-380); }
+.dlv-row-child { background: var(--color-blue-50) !important; }
+.dlv-parent-tag {
+  display: block; margin-top: var(--space-2); font-size: var(--fs-10); color: var(--color-slate-600);
+  font-weight: var(--fw-500);
+}
+.dlv-parent-tag-btn {
+  border: 0; background: transparent; padding: 0; cursor: pointer; font-family: inherit;
+  text-align: left; color: var(--brand-blue);
+}
+.dlv-parent-tag-btn:hover { text-decoration: underline; }
+.dlv-parent-tag-empty { color: var(--color-slate-500); opacity: .75; }
+.dlv-parent-tag-empty:hover { opacity: 1; color: var(--brand-blue); }
 
 /* Status badges */
 .dlv-status {
@@ -1122,22 +1022,46 @@ html, body.pd-body { height:100%; overflow:hidden; }
 .dlv-s-rejected   { background: var(--color-red-50);    color: var(--danger); }
 .dlv-s-rework     { background: #fdf4ff;                color: #9333ea; }
 
-/* Download icon button */
-.dlv-dl-btn {
-  width: 28px;
-  height: 28px;
-  border: 1px solid var(--color-blue-340);
-  border-radius: var(--radius-sm);
-  background: var(--panel);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  color: var(--color-slate-680);
-  transition: var(--transition-8);
-  flex-shrink: 0;
+/* Deliverables tab STATUS column — colored by RAG (same signal as the Outlook dot: on-time vs.
+   how many days late), not by workflow stage, so a late item reads as late everywhere on the
+   row, not only in the Outlook column. Applies to both the read-only pill and the editable
+   select (border/background tint on the control itself). */
+.dlv-status-rag-green { background: var(--color-green-50); color: var(--color-green-730); }
+.dlv-status-rag-amber { background: var(--color-amber-50); color: var(--warning); }
+.dlv-status-rag-red   { background: var(--color-red-50);   color: var(--danger); }
+.dlv-status-rag-grey  { background: var(--color-slate-150); color: var(--color-slate-680); }
+select.dlv-status-rag-green { border-color: var(--color-green-610) !important; background: var(--color-green-50); color: var(--color-green-730); }
+select.dlv-status-rag-amber { border-color: var(--color-amber-590) !important; background: var(--color-amber-50); color: #92620a; }
+select.dlv-status-rag-red   { border-color: var(--color-red-450)   !important; background: var(--color-red-50);   color: var(--danger); }
+select.dlv-status-rag-grey  { border-color: var(--color-blue-340)  !important; }
+
+/* Remarks required — a delayed (amber/red RAG) row can't be updated without an explanation. */
+.dlv-edit-text-required { border-color: var(--color-red-450) !important; background: var(--color-red-50); }
+.dlv-edit-text-required::placeholder { color: var(--danger); opacity: .8; }
+
+/* Gate Checklist — Document cell: a clear "uploaded" badge (green check + filename) once
+   evidence exists — a Completed item always lands here — otherwise an Upload button. */
+.gc-doc-uploaded {
+  display: flex; align-items: center; gap: var(--space-6);
+  font-size: var(--fs-10); color: var(--color-green-730);
 }
-.dlv-dl-btn:hover { background: var(--color-blue-90); color: var(--brand-blue); }
-.dlv-dl-btn:disabled { opacity: .35; cursor: not-allowed; }
+.gc-doc-uploaded svg { flex-shrink: 0; }
+.gc-doc-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 110px; }
+.gc-doc-replace {
+  font-size: var(--fs-10); font-weight: var(--fw-600); color: var(--brand-blue);
+  background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline;
+  flex-shrink: 0; margin-left: auto;
+}
+.gc-doc-replace:hover { color: var(--color-blue-950); }
+.gc-upload-btn {
+  display: inline-flex; align-items: center; gap: var(--space-5);
+  font-size: var(--fs-10); font-weight: var(--fw-600); color: var(--brand-blue);
+  background: var(--color-blue-50); border: 1px solid var(--color-blue-340);
+  border-radius: var(--radius-20); padding: var(--space-3) var(--space-10); cursor: pointer;
+  white-space: nowrap; transition: var(--transition-8);
+}
+.gc-upload-btn:hover { background: var(--color-blue-90); }
+.dlv-td-doc { min-width: 130px; }
 
 /* Responsible member cell */
 .dlv-responsible {

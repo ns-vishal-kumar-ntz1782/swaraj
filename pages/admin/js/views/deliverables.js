@@ -4,6 +4,7 @@ import { ensureShell, contentEl, setBreadcrumb, setActiveMenu } from "./shell.js
 import {
   listDeliverables, updateDeliverable, createDeliverable,
   bulkImport, stages, CATEGORIES, DEPARTMENTS, listFormOptions,
+  topLevelOptionsFor, hierarchyLabels,
 } from "../store/deliverables.js";
 import { listTemplates } from "../store/projectTemplateAdmin.js";
 import { listAuditEntries } from "../store/audit.js";
@@ -27,7 +28,9 @@ export async function renderDeliverableLibrary() {
 
   const canManage = can(user.businessRole, "deliverable.library.manage");
   const canCreate = can(user.businessRole, "deliverable.create") || canManage;
-  const state = { gateCode: "", active: "", q: "", page: 1, sortKey: "", sortDir: "asc" };
+  // Default sort is the hierarchy sequence itself (1, 1.1, 1.2, 2…) so children land directly
+  // under their parent out of the box, without having to click the column header first.
+  const state = { gateCode: "", active: "", q: "", page: 1, sortKey: "_hier", sortDir: "asc" };
   // Linked-form changes are staged here (deliverableNo -> new formCode) and only written to the
   // store when "Save Changes" is clicked, same pattern as Gate Master's order.
   const pendingLinks = {};
@@ -38,7 +41,17 @@ export async function renderDeliverableLibrary() {
       active: state.active === "" ? undefined : state.active === "true",
       q: state.q || undefined,
     });
-    list = sortList(list, state.sortKey, state.sortDir);
+    const hierLabels = hierarchyLabels();
+    const gateOrder = stages();
+    // "_hier" isn't a real stored field — it's a composite of (gate pipeline order, hierarchy
+    // label), so gates stay grouped in Pre-KO→…→PPO order and children land right after their
+    // parent within each gate, rather than every gate's "1" tying together across the whole list.
+    list = sortList(list, state.sortKey, state.sortDir, (item, key) => {
+      if (key !== "_hier") return item[key];
+      const gi = gateOrder.indexOf(item.gateCode);
+      const label = (hierLabels.get(item.deliverableNo) || {}).label || "9999";
+      return `${String(gi < 0 ? 99 : gi).padStart(2, "0")}::${label}`;
+    });
     const allList = listDeliverables();
     const forms = listFormOptions();
     const formByCode = Object.fromEntries(forms.map((f) => [f.formCode, f]));
@@ -75,23 +88,28 @@ export async function renderDeliverableLibrary() {
       <div class="sg-table-wrap">
         <table class="sg-table">
           <thead><tr>
-            ${sortableTh("No", "deliverableNo", state)}${sortableTh("Code", "deliverableCode", state)}${sortableTh("Name", "deliverableName", state)}${sortableTh("Stage", "gateCode", state)}
-            <th>Mandatory</th><th>Linked Form</th>${sortableTh("Version", "version", state)}<th>Status</th><th>Actions</th>
+            ${sortableTh("Seq.", "_hier", state)}${sortableTh("No", "deliverableNo", state)}${sortableTh("Code", "deliverableCode", state)}${sortableTh("Name", "deliverableName", state)}${sortableTh("Stage", "gateCode", state)}
+            <th>Parent</th><th>Mandatory</th><th>Linked Form</th>${sortableTh("Version", "version", state)}<th>Status</th><th>Actions</th>
           </tr></thead>
           <tbody>
-            ${pageItems.length ? pageItems.map((d) => `
-              <tr class="${d.active ? "" : "sg-row-muted"}" data-no="${escapeHtml(d.deliverableNo)}">
+            ${pageItems.length ? pageItems.map((d) => {
+              const hier = hierLabels.get(d.deliverableNo) || { label: "—", parentNo: null, parentName: null };
+              const isChild = !!hier.parentNo;
+              return `
+              <tr class="${d.active ? "" : "sg-row-muted"}${isChild ? " sg-row-child" : ""}" data-no="${escapeHtml(d.deliverableNo)}">
+                <td class="sg-hier-seq">${escapeHtml(hier.label)}</td>
                 <td>${escapeHtml(d.deliverableNo)}</td>
                 <td class="sg-link-text" data-act="edit" data-no="${escapeHtml(d.deliverableNo)}">${escapeHtml(d.deliverableCode)}</td>
-                <td>${escapeHtml(d.deliverableName)}</td>
+                <td class="${isChild ? "sg-hier-child-name" : ""}">${isChild ? "↳ " : ""}${escapeHtml(d.deliverableName)}</td>
                 <td>${escapeHtml(d.gateCode)}</td>
+                <td>${isChild ? `<span class="sg-subtle">${escapeHtml(hier.parentName)}</span>` : "—"}</td>
                 <td>${d.mandatory ? `<span class="pill pill-red">Mandatory</span>` : `<span class="pill pill-slate">Optional</span>`}</td>
                 <td>${renderLinkedFormCell(d, forms, pendingLinks[d.deliverableNo])}</td>
                 <td>v${escapeHtml(d.version)}</td>
                 <td><span class="pill ${d.active ? "pill-green" : "pill-slate"}">${d.active ? "Active" : "Inactive"}</span></td>
                 <td class="sg-row-actions">${canManage || canCreate ? iconBtn("edit", { act: "edit", id: d.deliverableNo, title: "Edit deliverable" }) : ""}</td>
               </tr>
-            `).join("") : `<tr><td colspan="9" class="sg-empty-cell">No deliverables match your filters.</td></tr>`}
+            `; }).join("") : `<tr><td colspan="11" class="sg-empty-cell">No deliverables match your filters.</td></tr>`}
           </tbody>
         </table>
       </div>
@@ -172,6 +190,9 @@ function openDeliverableModal(deliverable, onDone) {
   const forms = listFormOptions();
   const history = editing ? listAuditEntries({ entityType: "Deliverable" }).filter((e) => e.entityId === deliverable.deliverableNo) : [];
   const usedBy = editing ? usedByTemplates(deliverable.deliverableNo) : [];
+  // A deliverable that already has children of its own can't also become someone else's child —
+  // only one level of nesting is supported (see updateDeliverable's own guard for the same rule).
+  const hasChildren = editing && listDeliverables().some((d) => d.parentDeliverableCode === deliverable.deliverableNo);
 
   function readForm(backdrop) {
     return {
@@ -186,6 +207,7 @@ function openDeliverableModal(deliverable, onDone) {
       mandatory: backdrop.querySelector("#dMandatory").checked,
       active: backdrop.querySelector("#dActive").checked,
       version: backdrop.querySelector("#dVersion").value.trim(),
+      parentDeliverableCode: hasChildren ? null : (backdrop.querySelector("#dParent")?.value || null),
     };
   }
   const original = {
@@ -194,7 +216,14 @@ function openDeliverableModal(deliverable, onDone) {
     category: deliverable?.category || "", department: deliverable?.department || "",
     estimatedDuration: deliverable?.estimatedDuration || "5 days", linkedFormCode: deliverable?.linkedFormCode || null,
     mandatory: !!deliverable?.mandatory, active: deliverable?.active !== false, version: deliverable?.version || "1.0",
+    parentDeliverableCode: hasChildren ? null : (deliverable?.parentDeliverableCode || null),
   };
+
+  function parentOptionsHtml(gateCode) {
+    return topLevelOptionsFor(gateCode, deliverable?.deliverableNo || null)
+      .map((d) => `<option value="${escapeHtml(d.deliverableNo)}" ${original.parentDeliverableCode === d.deliverableNo ? "selected" : ""}>${escapeHtml(d.deliverableNo)} — ${escapeHtml(d.deliverableName)}</option>`)
+      .join("");
+  }
 
   let backdropRef = null;
   openDrawer({
@@ -235,6 +264,15 @@ function openDeliverableModal(deliverable, onDone) {
         </div>
       </div>
       <div class="drawer-section">
+        <h4 class="drawer-section-title">Parent Deliverable</h4>
+        ${hasChildren
+          ? `<p class="sg-subtle" style="margin:0">This deliverable already has children of its own, so it can't also become a child — only one level of nesting is supported.</p>`
+          : `<div class="sg-form-grid one-col">
+              <label>Parent<select id="dParent"><option value="">— none (top-level) —</option>${parentOptionsHtml(original.gateCode)}</select></label>
+            </div>
+            <p class="sg-subtle" style="margin:var(--space-6) 0 0">Only top-level deliverables in the same Gate / Stage can be a parent. Children are numbered 1.1, 1.2… under their parent's own sequence number.</p>`}
+      </div>
+      <div class="drawer-section">
         <h4 class="drawer-section-title">Version</h4>
         <p class="sg-subtle" style="margin:0">Current version: v${escapeHtml(original.version)} (editable in General Information above).</p>
       </div>
@@ -264,6 +302,12 @@ function openDeliverableModal(deliverable, onDone) {
     onMount: (backdrop, close, requestClose) => {
       backdropRef = backdrop;
       backdrop.querySelector('[data-act="cancel"]').addEventListener("click", requestClose);
+      // Parent options are scoped to the currently-selected Gate/Stage — repopulate them live if
+      // the user changes the stage, so the dropdown never offers a cross-gate parent.
+      backdrop.querySelector("#dStage")?.addEventListener("change", (e) => {
+        const dParent = backdrop.querySelector("#dParent");
+        if (dParent) dParent.innerHTML = `<option value="">— none (top-level) —</option>${parentOptionsHtml(e.target.value)}`;
+      });
       backdrop.querySelector('[data-act="save"]').addEventListener("click", () => {
         const payload = readForm(backdrop);
         if (!payload.deliverableCode || !payload.deliverableName) { toast("Deliverable code and name are required.", "error"); return; }

@@ -10,7 +10,7 @@
 ═══════════════════════════════════════════ */
 .main-content {
   width: 100%; padding: var(--space-10) var(--space-20) var(--space-10);
-  display: flex; flex-direction: column; gap: var(--space-10);
+  display: flex; flex-direction: column; gap: 20px;
 }
 .row { display: flex; gap: var(--space-20); width: 100%; }
 
@@ -150,6 +150,11 @@
    key re-triggers the currently-selected quarter's drill-down — same target, discoverable affordance. */
 .gate-status-legend .legend-key { cursor: pointer; }
 .gate-status-legend .legend-key:hover { color: var(--title); }
+/* "Gate Status: 2026-2027" — clickable to open the full Q1-Q4 comparison table (every individual
+   ring instead only opens its own single quarter), with the same hover affordance as the legend
+   keys next to it. */
+.gate-status-title { cursor: pointer; border-radius: var(--radius-4); padding: var(--space-2) var(--space-6); margin: calc(var(--space-2) * -1) calc(var(--space-6) * -1); transition: var(--transition-6); }
+.gate-status-title:hover, .gate-status-title:focus-visible { color: var(--title); background: var(--color-blue-90); }
 
 /* Table */
 .classification-table-wrap { flex: 1; min-height: 0; overflow: hidden; }
@@ -203,20 +208,50 @@
 .widget-chart-area canvas { display: block; width: 100% !important; height: 100% !important; }
 
 /* ═══════════════════════════════════════════
-   DRILL-DOWN PANEL
+   DRILL-DOWN ZONE — holds any number of independent, persistent panel instances (see
+   dashboard.js buildPanelHTML/showDrillDown). Wraps so two panels naturally sit side-by-side
+   for comparison; drag a panel's handle to reorder which one sits next to which.
 ═══════════════════════════════════════════ */
-.drill-down {
-  width: 100%; background: var(--panel); border-radius: var(--radius) var(--radius) 0 0;
-  border: 5px solid var(--dd-border);
-  box-shadow: 0 12px 40px rgba(0,0,0,.15);
-  overflow: hidden; max-height: 0; opacity: 0; pointer-events: none;
-  transition: var(--transition-4);
+.drill-down-zone {
+  width: 100%; display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-16);
 }
-.drill-down.open     { max-height: 520px; opacity: 1; pointer-events: auto; }
-.drill-down.dd-expanded { max-height: 700px; }
-.drill-down.dd-expanded .dd-table-wrap { max-height: 440px; }
-.dd-inner { padding: var(--space-16) var(--space-20) var(--space-12); display: flex; flex-direction: column; gap: var(--space-10); }
-.dd-header { display: flex; align-items: flex-start; justify-content: space-between; }
+.drill-down-zone:empty { display: none; }
+
+/* Width is NOT fixed — a lone panel fills the whole row; only once a second (or third) panel
+   is actually open in the same zone does it shrink to share the row for comparison. The zone's
+   data-count attribute (kept in sync by dashboard.js's syncZoneWidths) drives which of these
+   applies, so dragging a panel next to another is what makes the compare layout happen, not a
+   hardcoded width. */
+.dd-panel {
+  flex: 1 1 100%; max-width: 100%; min-width: 0;
+  background: var(--panel); border-radius: var(--radius);
+  border: 2px solid var(--dd-border);
+  box-shadow: 0 12px 40px rgba(0,0,0,.15);
+  overflow: hidden;
+  padding: var(--space-16) var(--space-20) var(--space-12);
+  display: flex; flex-direction: column; gap: var(--space-10);
+}
+/* Two per row, max — every count from 2 upward uses the same 50% column so a 3rd (or 4th) panel
+   wraps onto its own new row instead of shrinking to fit alongside the first two. */
+.drill-down-zone[data-count="2"] .dd-panel,
+.drill-down-zone[data-count="3"] .dd-panel,
+.drill-down-zone[data-count="4"] .dd-panel {
+  flex-basis: calc(50% - (var(--space-16) / 2)); max-width: calc(50% - (var(--space-16) / 2)); min-width: 420px;
+}
+.dd-panel.dd-expanded .dd-table-wrap { max-height: 440px; }
+.dd-panel.dragging        { opacity: .45; }
+.dd-panel.drag-over-before{ box-shadow: inset 4px 0 0 0 var(--brand-blue); }
+.dd-panel.drag-over-after { box-shadow: inset -4px 0 0 0 var(--brand-blue); }
+
+.dd-drag-handle {
+  border: 0; background: transparent; color: var(--color-slate-700);
+  width: 20px; height: 20px; display: grid; place-items: center; padding: 0;
+  cursor: grab; flex-shrink: 0; margin-top: var(--space-2);
+}
+.dd-drag-handle:active { cursor: grabbing; }
+
+.dd-header { display: flex; align-items: flex-start; gap: var(--space-8); justify-content: space-between; }
+.dd-title-block { flex: 1; min-width: 0; }
 .dd-filter-label {
   display: inline-block; background: var(--color-blue-50); color: var(--color-blue-580);
   border: 1px solid var(--color-blue-380); border-radius: var(--radius-20); padding: var(--space-2) var(--space-10);
@@ -242,8 +277,16 @@
   position: sticky; top: 0; z-index: 1; height: 40px;
   background: var(--color-blue-90); border-bottom: 1px solid var(--border);
   color: var(--muted); font-size: var(--fs-10); font-weight: var(--fw-700); padding: 0 var(--space-12);
+  /* The all-quarters table has TWO header rows (Q1-Q4/TOTAL group labels, then Planned/Actual
+     sub-labels) — every th defaulting to top:0 stuck both rows on top of each other, and the
+     tbody's first row(s) showed through the gap. Row 2's cells stick just below row 1's own
+     40px-tall band instead; row 1's cells (including the rowspan="2" SR NO/PROJECT NAME ones,
+     which span both rows) correctly stay pinned at top:0. */
   text-align: left; white-space: nowrap; letter-spacing: .03em; text-transform: uppercase;
 }
+/* :not(:first-child) so this only fires for tables that actually HAVE a 2nd header row — a
+   single-row thead's only <tr> is both first and last child, and must stay at top:0. */
+.dd-table thead tr:last-child:not(:first-child) th { top: 40px; }
 .dd-table tbody td {
   height: 65px; border-bottom: 1px solid var(--border);
   font-size: var(--fs-13); color: var(--color-blue-950); padding: 0 var(--space-12); white-space: nowrap;
@@ -260,6 +303,9 @@
 /* Classification — BB flat gray, N-BB soft green (reuses the app's existing green-500/teal-950 tokens) */
 .dd-chip-bb  { display: inline-block; background: var(--color-blue-90); color: var(--color-blue-950); border-radius: var(--radius-4); padding: var(--space-3) var(--space-8); font-size: var(--fs-12); font-weight: var(--fw-700); }
 .dd-chip-nbb { display: inline-block; background: var(--color-green-500); color: var(--color-teal-950); border-radius: var(--radius-4); padding: var(--space-3) var(--space-8); font-size: var(--fs-12); font-weight: var(--fw-700); }
+/* Deliverable (Actual/Planned) — plain count, slash de-emphasized so the two numbers read clearly */
+.dd-deliv-ap { font-weight: var(--fw-700); font-variant-numeric: tabular-nums; }
+.dd-deliv-ap .dd-slash { color: var(--color-slate-500); font-weight: var(--fw-500); margin: 0 1px; }
 /* Risk score — rounded pill, red (critical/high) or amber (medium) */
 .dd-risk-pill { display: inline-block; border-radius: var(--radius-100); padding: var(--space-4) var(--space-10); font-size: var(--fs-13); font-weight: var(--fw-700); }
 .dd-risk-high { background: var(--color-red-50); color: var(--color-red-750); }
@@ -282,6 +328,27 @@
 .dd-status-high     { background: var(--color-amber-230); color: var(--color-amber-770); }
 .dd-status-ontrack  { background: var(--color-green-50); color: var(--color-green-730); }
 .dd-has-tip { cursor: help; }
+
+/* Delay-story row — the arrow next to a Delayed/At Risk STATUS chip expands a real, derived
+   ~50-60 word explanation inline (see buildDelayStory/toggleStoryRow in dashboard.js). */
+.dd-story-toggle {
+  border: 0; background: var(--color-blue-90); color: var(--color-blue-950);
+  border-radius: var(--radius-4); width: 20px; height: 20px; margin-left: var(--space-6);
+  font-size: var(--fs-11); line-height: 1; cursor: pointer; display: inline-grid; place-items: center;
+}
+.dd-story-toggle:hover, .dd-story-toggle.open { background: var(--color-blue-340); }
+.dd-story-row td {
+  background: var(--color-blue-50) !important; height: auto !important;
+  padding: var(--space-10) var(--space-14) !important; white-space: normal !important;
+}
+.dd-story-box { display: flex; align-items: flex-start; gap: var(--space-12); }
+.dd-story-box span { flex: 1; font-size: var(--fs-12); line-height: 1.5; color: var(--color-blue-950); }
+.dd-story-close {
+  border: 1px solid var(--border); background: var(--panel); border-radius: var(--radius-sm);
+  width: 22px; height: 22px; flex-shrink: 0; cursor: pointer;
+  display: grid; place-items: center; color: var(--color-slate-680);
+}
+.dd-story-close:hover { background: var(--color-blue-90); }
 
 /* Shared floating "AI Corrective Actions Summary" card for the Status badge — appended to
    <body>, positioned "fixed" via JS (see wireRiskTooltip in dashboard.js) so it escapes the
@@ -382,6 +449,7 @@
   .main-content { width: 100%; padding: var(--space-16); gap: var(--space-16); }
   .row { flex-direction: column; gap: var(--space-16); }
   .widget { width: 100%; }
-  .drill-down { width: 100%; }
+  .drill-down-zone { flex-direction: column; }
+  .dd-panel { width: 100% !important; max-width: 100% !important; min-width: 0 !important; }
   .classification-table-wrap { overflow-x: auto; }
 }

@@ -1,17 +1,33 @@
 // ==========================================================
-//  TIMELINE — Stage-Gate bar + P/A/O date table + legend.
-//  Matches Figma node 197:10483. Data-driven, no hardcoded dates.
+//  PROJECT TIMELINE — GATES ribbon + MILESTONES row + Planned/Timeline/Approved/Outlook/
+//  Velocity table, one shared 18-checkpoint column grid throughout so every row (and the
+//  floating start/end date chips + the current-gate "live" pulse) lines up vertically.
+//  Matches Figma node 593:2190. Data-driven — every date/status/delay value below comes from
+//  detail.gates (see assets/js/data/project-detail-seed.js), nothing hardcoded.
 // ==========================================================
 (function (global) {
   "use strict";
 
   function esc(s) { return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
-  // Relative flex weights matching Figma stage proportions
-  const STAGE_WEIGHT = { "Pre-KO": 3, "CVPA": 2, "VV": 1, "PC": 2.6, "PR": 3, "PPO": 1.4, "SOP": 1 };
+  // Fixed per-stage identity color for the GATES ribbon (Figma: navy → light blue gradient
+  // across Pre-KO...PPO, gray for the trailing SOP milestone) — decorative "which stage is
+  // this," independent of real progress. Real status lives entirely in the Timeline row below.
+  const STAGE_COLOR = {
+    "Pre-KO": { bg: "#003b88", fg: "#fff" },
+    "CVPA":   { bg: "#1e40af", fg: "#fff" },
+    "VV":     { bg: "#1d4ed8", fg: "#fff" },
+    "PC":     { bg: "#3d79ee", fg: "#fff" },
+    "PR":     { bg: "#60a5fa", fg: "#1f2937" },
+    "PPO":    { bg: "#cddaef", fg: "#1f2937" },
+    "SOP":    { bg: "#e5e7eb", fg: "#4b5563" },
+  };
 
   const COMPLETED_STATUSES = new Set(["On Time","Completed","Delayed 15-60","Delayed >60"]);
 
+  // Real per-gate status → circle fill in the Timeline row, the one place actual progress is
+  // shown (kept as CSS classes, same names project-detail.css already defines elsewhere on
+  // this page, so a status reads identically everywhere).
   function statusClass(status) {
     switch (status) {
       case "On Time":       return "st-ontime";
@@ -19,79 +35,16 @@
       case "In Progress":   return "st-inprogress";
       case "Delayed 15-60": return "st-delay-mid";
       case "Delayed >60":   return "st-delay-high";
+      case "Skipped":       return "st-skipped";
       default:              return "st-pending";
     }
   }
 
-  // SVG icons for gate nodes — one distinct shape per state (not just a color swap), so a
-  // delayed gate reads as "delayed" even at a glance: check (on time/completed), warning
-  // triangle (delayed — same shape the rest of the app already uses for alerts, just recreated
-  // here since this outer-app page is a plain script with no shared icon module to import from),
-  // clock (in progress), hourglass (pending / not started yet).
-  const ICON_CHECK     = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-  const ICON_CLOCK     = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>';
-  const ICON_WARNING   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
-  const ICON_HOURGLASS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12M17 2c0 5-3.5 6.5-5 8-1.5-1.5-5-3-5-8M7 22c0-5 3.5-6.5 5-8 1.5 1.5 5 3 5 8"/></svg>';
-  const ICON_PENDING = ICON_HOURGLASS; // kept as an alias so any external reference to the old name still resolves
-
-  function gateIcon(status) {
-    if (status === "On Time" || status === "Completed") return ICON_CHECK;
-    if (status === "In Progress") return ICON_CLOCK;
-    if (status === "Delayed 15-60" || status === "Delayed >60") return ICON_WARNING;
-    return ICON_HOURGLASS;
-  }
-
-  // ── Stage-gate bar: gradient bar + stage labels + circular gate nodes ──
-  function renderStageGate(el, detail) {
-    const stages = global.PD_STAGES;
-
-    let labelsHtml = '';
-    let barSegsHtml = '';
-
-    stages.forEach((st, i) => {
-      const g = detail.gates[i];
-      const isLast = i === stages.length - 1;
-      const stCls = g ? statusClass(g.status) : 'st-pending';
-      const icon = g ? gateIcon(g.status) : ICON_PENDING;
-      const targetDate = g ? esc(g.id) + '-' + esc(g.target) : '';
-      const actualDate = g ? esc(g.actual || '-') : '-';
-      const w = STAGE_WEIGHT[st] || 1;
-
-      // Labels row: stage name centred + gate stub at right boundary
-      labelsHtml += `<div class="sg-seg-wrap" style="flex:${w}">
-        <span class="sg-stage-lbl">${esc(st.toUpperCase())}</span>
-        ${(!isLast && g) ? `<div class="sg-gate-wrap">
-          <span class="sg-gate-top">${targetDate}</span>
-          <span class="sg-gate-node ${stCls}" title="${esc(g.id)} · ${esc(g.status)}">${icon}</span>
-          <span class="sg-gate-bottom">${actualDate}</span>
-        </div>` : ''}
-      </div>`;
-
-      // Bar segments
-      let segCls = 'sg-seg-todo';
-      if (g && COMPLETED_STATUSES.has(g.status)) segCls = 'sg-seg-done';
-      else if (g && g.status === 'In Progress') segCls = 'sg-seg-active';
-      barSegsHtml += `<div class="sg-seg ${segCls}" style="flex:${w}"></div>`;
-    });
-
-    el.innerHTML = `
-      <div class="sg-container">
-        <div class="sg-track-row">
-          <div class="sg-flex-area">
-            <div class="sg-labels-flex">${labelsHtml}</div>
-            <div class="sg-bar">${barSegsHtml}</div>
-          </div>
-        </div>
-      </div>`;
-  }
-
-  // ── P/A/O data table ──
-  // Fixed checkpoint labels per gate (matches the Figma reference exactly — these are generic
-  // stage-gate milestone names, not this project's own deliverable list, which is what the
-  // Deliverables tab is for). Each checkpoint's P/A/O dates come from its own real gate instance
-  // (gate-wise, not per-deliverable) — every column within a gate shares that gate's real
-  // planned/actual/outlook dates, since the fixed labels don't map 1:1 to real per-project
-  // deliverable records.
+  // ── P/A/O + Velocity checkpoint labels — the fixed generic stage-gate milestone names
+  // (matches the Figma reference), not this project's own deliverable list (that's what the
+  // Deliverables tab is for). Every checkpoint within a gate shares that gate's own real
+  // planned/actual/outlook/delay values, since the fixed labels don't map 1:1 to real
+  // per-project deliverable records. ──
   const GATE_CHECKPOINTS = {
     "Pre-KO": ["PRF Approval", "QA & CC Inputs", "Technical Feasibility", "BC Approval", "Target Approval"],
     "CVPA":   ["DR0", "DFMEA-DVP Matrix"],
@@ -101,56 +54,254 @@
     "PPO":    ["ER-SOVP", "PP Batch"],
   };
 
-  // Header treatment stays derived from real signals, never a hardcoded label match: red-top+pink
-  // = that checkpoint's own gate is currently delayed (a real status already on the gate
-  // instance); teal-top = the last checkpoint in its gate — the gate's real closing/approval
-  // milestone, a structural fact, not a guessed name.
-  function renderTimelineTable(el, detail) {
+  // Builds the flat 18-checkpoint column list (+ trailing SOP pseudo-column) that every row —
+  // MILESTONES, Planned/Timeline/Approved/Outlook/Velocity — is laid out against, so a value in
+  // any row sits directly under/over its real milestone regardless of which function rendered it.
+  function buildColumns(detail) {
     const stages = global.PD_STAGES;
     const columns = [];
     stages.forEach((stageCode, gi) => {
       const g = detail.gates[gi] || null;
-      const delayed = g && (g.status === "Delayed 15-60" || g.status === "Delayed >60");
       const labels = GATE_CHECKPOINTS[stageCode] || [stageCode];
       labels.forEach((label, li) => {
-        columns.push({ label, gate: g, stageStart: li === 0, stageEnd: li === labels.length - 1, delayed });
+        columns.push({ label, stageCode, gate: g, gateIdx: gi, stageStart: li === 0, stageEnd: li === labels.length - 1 });
       });
     });
     // Trailing SOP column — a real project-level milestone date (targetSOP/forecastSOP, already
     // shown elsewhere on this same Snapshot tab), not a 7th process gate — this app's data model
     // only has the 6 real gates above, so no gate instance is invented for it.
     columns.push({
-      label: "SOP",
+      label: "SOP", stageCode: "SOP", gateIdx: -1, stageStart: true, stageEnd: true,
       gate: { target: detail.sopDate || "-", actual: "-", outlook: detail.targetLaunch || detail.sopDate || "-" },
-      stageStart: true, stageEnd: true, delayed: false,
     });
+    return columns;
+  }
 
-    let headCells = '<th class="tl-corner"></th>';
+  // Groups the flat column list back into per-stage spans (for the GATES ribbon's merged cells).
+  function buildStageSpans(columns) {
+    const spans = [];
     columns.forEach((c) => {
-      let thCls = 'tl-h';
-      if (c.stageStart) thCls += ' tl-stage-start';
-      if (c.delayed) thCls += ' tl-h-red';
-      else if (c.stageEnd) thCls += ' tl-h-teal';
-      headCells += `<th class="${thCls}">${esc(c.label)}</th>`;
+      const last = spans[spans.length - 1];
+      if (last && last.stageCode === c.stageCode) last.count += 1;
+      else spans.push({ stageCode: c.stageCode, count: 1 });
     });
+    return spans;
+  }
 
-    const rowFor = (label, field) => {
-      let cells = `<td class="tl-row-label">${label}</td>`;
-      columns.forEach((c) => {
+  // Horizontal center of column i as a percentage of the shared track width — every floating
+  // element (start/end date chip, live pulse, gate circle) is positioned with this, so they all
+  // line up under/over the same milestone regardless of which row rendered them.
+  function colCenterPct(i, total) { return ((i + 0.5) / total) * 100; }
+
+  // Timeline connecting line, split into up to 3 real-progress zones instead of one flat
+  // color: solid dark blue through every completed gate, a dashed mid-blue stretch toward the
+  // gate currently In Progress, and a pale future-blue tail beyond it. Falls back to a single
+  // pale line when nothing has started, or a single solid line when everything has.
+  function buildTimelineLineSegments(columns, total) {
+    const stageEndCols = columns
+      .map((c, i) => ({ c, i }))
+      .filter(({ c }) => c.stageEnd && c.gate && c.gateIdx >= 0);
+    let lastDoneIdx = -1;
+    let currentIdx = -1;
+    stageEndCols.forEach(({ c, i }) => {
+      if (COMPLETED_STATUSES.has(c.gate.status)) lastDoneIdx = i;
+      if (c.gate.status === "In Progress") currentIdx = i;
+    });
+    const donePct = lastDoneIdx >= 0 ? colCenterPct(lastDoneIdx, total) : 0;
+    const segs = [];
+    if (currentIdx >= 0) {
+      const currentPct = colCenterPct(currentIdx, total);
+      if (donePct > 0) segs.push({ left: 0, width: donePct, color: "#3D79EE" });
+      segs.push({ left: donePct, width: Math.max(0, currentPct - donePct), color: "#60A5FA", dashed: true });
+      if (currentPct < 100) segs.push({ left: currentPct, width: 100 - currentPct, color: "#CDDAEF" });
+    } else if (lastDoneIdx >= 0) {
+      segs.push({ left: 0, width: donePct, color: "#3D79EE" });
+      if (donePct < 100) segs.push({ left: donePct, width: 100 - donePct, color: "#CDDAEF" });
+    } else {
+      segs.push({ left: 0, width: 100, color: "#CDDAEF" });
+    }
+    return segs;
+  }
+
+  // ── Stage-gate bar: GATES ribbon + MILESTONES row + floating "start date" chips (navy) +
+  // the red "current gate" live pulse, positioned just above the active gate's milestone. ──
+  function renderStageGate(el, detail) {
+    const columns = buildColumns(detail);
+    const spans = buildStageSpans(columns);
+    const total = columns.length;
+
+    const gatesHtml = spans.map((s) => {
+      const c = STAGE_COLOR[s.stageCode] || STAGE_COLOR.SOP;
+      return `<div class="ptl-gateseg" style="flex:${s.count} 1 0%;background:${c.bg};color:${c.fg}">${esc(s.stageCode.toUpperCase())}</div>`;
+    }).join("");
+
+    const msCellsHtml = columns.map((c) => `<div class="ptl-mscell">${esc(c.label)}</div>`).join("");
+
+    // A gate has "started" once it's In Progress or finished (any of the 4 completed-family
+    // statuses) — Pending (not reached yet) and Skipped (never runs) show no start chip.
+    const startChipsHtml = columns.filter((c) => c.stageEnd && c.gate && c.gateIdx >= 0)
+      .map((c) => {
+        const g = c.gate;
+        const started = g.status !== "Pending" && g.status !== "Skipped" && g.plannedStart && g.plannedStart !== "-";
+        if (!started) return "";
+        const left = colCenterPct(columns.indexOf(c), total);
+        return `<div class="ptl-chip ptl-chip-start" style="left:${left}%" title="${esc(g.stage)} started ${esc(g.plannedStart)}">
+          <span class="ptl-chip-body">${esc(g.plannedStart)}</span><span class="ptl-chip-tri"></span>
+        </div>`;
+      }).join("");
+
+    // Red "we are here" pulse — the single gate currently In Progress, placed just above its
+    // own milestone cell so it's unambiguous which milestone the project is currently working on.
+    const currentCol = columns.find((c) => c.stageEnd && c.gate && c.gate.status === "In Progress");
+    const pulseHtml = currentCol
+      ? `<div class="ptl-live-pulse" style="left:${colCenterPct(columns.indexOf(currentCol), total)}%" title="Current gate: ${esc(currentCol.stageCode)}">
+          <span class="ptl-live-ring ptl-live-ring2"></span><span class="ptl-live-ring ptl-live-ring1"></span><span class="ptl-live-dot"></span>
+        </div>`
+      : "";
+
+    el.innerHTML = `
+      <div class="ptl-block">
+        <div class="ptl-row ptl-row-gates">
+          <div class="ptl-label">GATES</div>
+          <div class="ptl-track">${gatesHtml}${startChipsHtml}</div>
+        </div>
+        <div class="ptl-row ptl-row-milestones">
+          <div class="ptl-label">MILESTONES</div>
+          <div class="ptl-track">${pulseHtml}${msCellsHtml}</div>
+        </div>
+      </div>`;
+  }
+
+  // ── "Skip this gate" confirm — PMO/SA only, future gates only. Reuses the shared popover
+  // helper project-detail.js exposes on window.PDPopover (same one the Deliverables tab's
+  // Assign/Documents/History controls use) so there's only one floating-popover implementation
+  // on this page. Confirming records the skip in the shared registry (assets/js/data/gate-skip.js)
+  // and reloads — this page has no partial-refresh path that safely rebuilds the Chart.js gauges,
+  // Gantt, and every other tab that a skip affects, so a reload is the simplest correct option. ──
+  function openSkipConfirm(anchorEl, projectCode, gateCode, gateName, currentRole) {
+    if (!global.PDPopover) return;
+    const html = `
+      <div class="pd-skip-confirm">
+        <h4>Skip ${esc(gateName)} gate?</h4>
+        <p>This gate will require no approval and no deliverables, and will be excluded from progress and compliance calculations for this project.</p>
+        <label class="pd-skip-reason-lbl">Reason <span class="pd-skip-optional">(optional)</span></label>
+        <textarea class="pd-skip-reason" rows="2" placeholder="e.g. Not applicable for this variant"></textarea>
+        <div class="pd-skip-actions">
+          <button type="button" class="pd-skip-cancel">Cancel</button>
+          <button type="button" class="pd-skip-confirm-btn">Yes, skip this gate</button>
+        </div>
+      </div>`;
+    const pop = global.PDPopover.open(anchorEl, html, 'pd-skip-popover');
+    pop.querySelector('.pd-skip-cancel').addEventListener('click', () => global.PDPopover.close());
+    pop.querySelector('.pd-skip-confirm-btn').addEventListener('click', () => {
+      const reason = pop.querySelector('.pd-skip-reason').value.trim();
+      const actorName = (typeof roleDirectory !== 'undefined' && roleDirectory[currentRole]) ? roleDirectory[currentRole].name : currentRole;
+      if (typeof skipGate === 'function') skipGate(projectCode, gateCode, actorName, currentRole, reason);
+      global.PDPopover.close();
+      location.reload();
+    });
+  }
+
+  // Real day-count per checkpoint, reusing its parent gate's own delayDays (checkpoints don't
+  // carry independent real data — see the GATE_CHECKPOINTS comment above).
+  function velocityCell(c) {
+    if (c.stageCode === "SOP" || !c.gate || c.gate.status === "Pending" || c.gate.status === "Skipped") {
+      return { text: "-", color: "#9ca3af" };
+    }
+    const dd = c.gate.delayDays || 0;
+    if (dd <= 0)  return { text: "On Time", color: "#14b8a6" };
+    if (dd <= 15) return { text: `${dd} Day${dd === 1 ? "" : "s"}`, color: "#006b3f" };
+    if (dd <= 60) return { text: `${dd} Days`, color: "#f1c272" };
+    return { text: `${dd} Days`, color: "#e53935" };
+  }
+
+  // ── Values table: Planned Date / Timeline (gate circles + skip click) / Approved Date /
+  // Outlook / Velocity-Delay rows, plus the floating "end date" chips (teal) below completed
+  // gates' circles. ──
+  function renderTimelineTable(el, detail) {
+    const columns = buildColumns(detail);
+    const total = columns.length;
+    const currentRole = (typeof getCurrentRole === "function") ? getCurrentRole() : (sessionStorage.getItem("snpdRole") || "");
+    const canSkip = currentRole === "SA" || currentRole === "PMO";
+
+    const dateRow = (labelText, labelCls, field) => {
+      const cells = columns.map((c) => {
         const val = c.gate ? c.gate[field] : null;
-        cells += `<td class="tl-cell${c.stageStart ? ' tl-stage-start' : ''}">${esc(val || '-')}</td>`;
-      });
-      return `<tr>${cells}</tr>`;
+        return `<div class="ptl-datacell">${esc(val || "-")}</div>`;
+      }).join("");
+      return `<div class="ptl-row">
+        <div class="ptl-label ${labelCls}">${labelText}</div>
+        <div class="ptl-track ptl-datatrack">${cells}</div>
+      </div>`;
     };
 
-    el.innerHTML = `<table class="tl-table">
-      <thead><tr>${headCells}</tr></thead>
-      <tbody>
-        ${rowFor('P','target')}
-        ${rowFor('A','actual')}
-        ${rowFor('O','outlook')}
-      </tbody>
-    </table>`;
+    // Timeline row: connecting line + one circle per real gate at its own stageEnd column,
+    // colored by real status — this is the sole progress indicator in the whole component.
+    const lineHtml = buildTimelineLineSegments(columns, total).map((s) =>
+      `<div class="ptl-timeline-seg${s.dashed ? " ptl-timeline-seg-dashed" : ""}" style="left:${s.left}%;width:${s.width}%;border-color:${s.color}"></div>`
+    ).join("");
+
+    const circlesHtml = columns.filter((c) => c.stageEnd && c.gate && c.gateIdx >= 0).map((c) => {
+      const g = c.gate;
+      const left = colCenterPct(columns.indexOf(c), total);
+      const skippable = canSkip && g.status === "Pending";
+      const cls = ["ptl-gatecircle", statusClass(g.status), skippable ? "ptl-gatecircle-skippable" : ""].filter(Boolean).join(" ");
+      const attrs = skippable ? ` data-skip-gate="${esc(g.stage)}" data-skip-name="${esc(g.name || g.stage)}"` : "";
+      const title = skippable ? "Click to skip this gate" : `${esc(g.id)} · ${esc(g.status)}`;
+      // A Skipped gate gets a slash icon instead of its "G_" label — relying on color alone
+      // (slate vs. the very-similar light-gray Pending fill) isn't a reliable enough signal.
+      const inner = g.status === "Skipped"
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="6" y1="18" x2="18" y2="6"/></svg>'
+        : esc(g.id);
+      return `<div class="${cls}" style="left:${left}%" title="${title}"${attrs}>${inner}</div>`;
+    }).join("");
+
+    const endChipsHtml = columns.filter((c) => c.stageEnd && c.gate && c.gateIdx >= 0).map((c) => {
+      const g = c.gate;
+      if (!COMPLETED_STATUSES.has(g.status) || !g.actual || g.actual === "-") return "";
+      const left = colCenterPct(columns.indexOf(c), total);
+      return `<div class="ptl-chip ptl-chip-end" style="left:${left}%" title="${esc(g.stage)} completed ${esc(g.actual)}">
+        <span class="ptl-chip-tri"></span><span class="ptl-chip-body">${esc(g.actual)}</span>
+      </div>`;
+    }).join("");
+
+    const timelineRow = `<div class="ptl-row ptl-row-timeline">
+      <div class="ptl-label">Timeline</div>
+      <div class="ptl-track ptl-timelinetrack">
+        ${lineHtml}
+        ${circlesHtml}
+      </div>
+    </div>`;
+
+    const velocityRow = `<div class="ptl-row">
+      <div class="ptl-label">Velocity / Delay</div>
+      <div class="ptl-track ptl-datatrack">
+        ${columns.map((c) => { const v = velocityCell(c); return `<div class="ptl-datacell" style="color:${v.color};font-weight:var(--fw-600)">${esc(v.text)}</div>`; }).join("")}
+      </div>
+    </div>`;
+
+    const endChipsRow = `<div class="ptl-row ptl-row-endchips">
+      <div class="ptl-label"></div>
+      <div class="ptl-track">${endChipsHtml}</div>
+    </div>`;
+
+    el.innerHTML = `
+      <div class="ptl-values">
+        ${dateRow("Planned Date", "ptl-label-blue", "target")}
+        ${timelineRow}
+        ${dateRow("Approved Date", "ptl-label-green", "actual")}
+        ${dateRow("Outlook", "ptl-label-orange", "outlook")}
+        ${velocityRow}
+        ${endChipsRow}
+      </div>`;
+
+    if (canSkip) {
+      el.querySelectorAll('[data-skip-gate]').forEach((node) => {
+        node.addEventListener('click', () => {
+          openSkipConfirm(node, detail.projectCode, node.dataset.skipGate, node.dataset.skipName, currentRole);
+        });
+      });
+    }
   }
 
   // ── Legend row: P/A/O keys + velocity colour legend ──
@@ -158,7 +309,7 @@
     el.innerHTML = `
       <div class="tl-legend-keys">
         <span><b>P</b> - Planned Date</span>
-        <span><b>A</b> - Actual Date</span>
+        <span><b>A</b> - Approved Date</span>
         <span><b>O</b> - Outlook Date</span>
       </div>
       <div class="tl-legend-velocity">
@@ -168,6 +319,7 @@
         <span class="tl-vel"><i class="st-delay-high"></i>Delayed (&gt;60 Days)</span>
         <span class="tl-vel"><i class="st-delay-mid"></i>Delayed (15-60 Days)</span>
         <span class="tl-vel"><i class="st-ontime"></i>On Time</span>
+        <span class="tl-vel"><i class="st-skipped"></i>Skipped</span>
       </div>`;
   }
 

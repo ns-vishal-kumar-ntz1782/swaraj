@@ -71,6 +71,7 @@ export const ENTITY_KEYS = {
   GATE_MASTER: "gate_master",
   PROJECT_TEMPLATES_ADMIN: "project_templates_admin",
   FORM_SCHEMAS: "form_schemas",
+  SKIPPED_GATES: "skipped_gates",
   ORG_USERS: "org_users",
   ORG_ROLES: "org_roles",
   ACTION_REGISTER: "action_register",

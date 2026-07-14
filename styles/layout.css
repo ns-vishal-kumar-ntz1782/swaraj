@@ -20,7 +20,12 @@
 @media (max-width: 1024px) {
   .viewport-fit { overflow-y: auto !important; }
 }
-
+button#navAiBtn {
+    background: red;
+    border-radius: 5px;
+    background: #7A57C7;
+    color: #ffffff;
+}
 /* ── HEADER / TOPNAV ── */
 .topnav {
   flex: 0 0 56px; width: 100%; background: var(--panel);

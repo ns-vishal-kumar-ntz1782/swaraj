@@ -7,7 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=2" />
+  <script src="assets/js/data/gate-skip.js"></script>
   <script src="assets/js/data/app-config.js"></script>
   <script src="assets/js/auth.js"></script>
   <script>guardPage("dashboard");</script>
@@ -177,7 +178,7 @@
             </div>
           </div>
           <div class="gate-status-legend">
-            <span>Gate Status: 2026-2027</span>
+            <span class="gate-status-title" id="gateStatusAllLabel" role="button" tabindex="0" title="View all quarters">Gate Status: 2026-2027</span>
             <span class="legend-key" data-series="planned"><span class="legend-swatch sw-planned"></span>Planned</span>
             <span class="legend-key" data-series="actual"><span class="legend-swatch sw-actual"></span>Actual</span>
           </div>
@@ -185,32 +186,10 @@
         </article>
       </section>
 
-      <!-- DRILL-DOWN ROW 1 -->
-      <section class="drill-down" id="drillDownRow1" aria-live="polite">
-        <div class="dd-inner">
-          <div class="dd-header">
-            <div class="dd-title-block">
-              <span class="dd-filter-label" id="ddFilterLabel1"></span>
-              <h3 id="ddTitle1">Project Details</h3>
-              <p id="ddSubTitle1">As on 07 Jul 2026</p>
-            </div>
-            <div class="dd-header-right">
-              <button class="dd-icon-btn dd-expand-toggle" id="ddExpand1" type="button" title="Expand">⤢</button>
-              <button class="dd-close-btn" id="ddClose1" type="button" aria-label="Close">✕</button>
-            </div>
-          </div>
-          <div class="dd-table-wrap">
-            <table class="dd-table"><thead id="ddTH1"></thead><tbody id="ddTB1"></tbody></table>
-          </div>
-          <div class="dd-footer">
-            <div class="dd-ai-note" id="ddAI1">Click any chart element to drill down.</div>
-            <div class="dd-footer-btns">
-              <button type="button" class="dd-footer-btn" id="ddExportCsv1">↗ Export CSV</button>
-              <button type="button" class="dd-footer-btn" id="ddRefresh1">⟳ Refresh</button>
-            </div>
-          </div>
-        </div>
-      </section>
+      <!-- DRILL-DOWN ROW 1 — zone that holds any number of independent, persistent panel
+           instances (see dashboard.js buildPanelHTML/showDrillDown); panels only close via
+           their own ✕ and can be dragged to sit side-by-side for comparison. -->
+      <section class="drill-down-zone" id="drillDownRow1" aria-live="polite"></section>
 
       <!-- ROW 2 -->
       <section class="row row-2">
@@ -260,32 +239,8 @@
         </article>
       </section>
 
-      <!-- DRILL-DOWN ROW 2 -->
-      <section class="drill-down" id="drillDownRow2" aria-live="polite">
-        <div class="dd-inner">
-          <div class="dd-header">
-            <div class="dd-title-block">
-              <span class="dd-filter-label" id="ddFilterLabel2"></span>
-              <h3 id="ddTitle2">Compliance Details</h3>
-              <p id="ddSubTitle2">As on 07 Jul 2026</p>
-            </div>
-            <div class="dd-header-right">
-              <button class="dd-icon-btn dd-expand-toggle" id="ddExpand2" type="button" title="Expand">⤢</button>
-              <button class="dd-close-btn" id="ddClose2" type="button" aria-label="Close">✕</button>
-            </div>
-          </div>
-          <div class="dd-table-wrap">
-            <table class="dd-table"><thead id="ddTH2"></thead><tbody id="ddTB2"></tbody></table>
-          </div>
-          <div class="dd-footer">
-            <div class="dd-ai-note" id="ddAI2">Click any bar or data point to drill into compliance details.</div>
-            <div class="dd-footer-btns">
-              <button type="button" class="dd-footer-btn" id="ddExportCsv2">↗ Export CSV</button>
-              <button type="button" class="dd-footer-btn" id="ddRefresh2">⟳ Refresh</button>
-            </div>
-          </div>
-        </div>
-      </section>
+      <!-- DRILL-DOWN ROW 2 — same dynamic zone pattern as row 1. -->
+      <section class="drill-down-zone" id="drillDownRow2" aria-live="polite"></section>
 
     </main>
   </div>
@@ -295,6 +250,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 <script src="assets/js/shared.js"></script>
+<script src="assets/js/chatbot.js?v=2"></script>
 <script src="assets/js/dashboard.js"></script>
 </body>
 </html>

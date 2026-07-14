@@ -61,6 +61,26 @@
   const { projects, gateInstances, deliverableAssignments } = mergeLiveProjects(
     loadJsonSync("projects.json"), loadJsonSync("projectGateInstances.json"), loadJsonSync("projectDeliverableAssignments.json")
   );
+
+  // Gate Skip Registry resolution — same in-memory-only stamp-and-filter as app-config.js's
+  // applyGateSkips (see that file's comment for the full rationale); this page has its own
+  // separate load/merge of gateInstances/deliverableAssignments so it needs its own resolution.
+  (function applyGateSkips() {
+    if (typeof isGateSkipped !== "function") return;
+    const skippedInstanceIds = new Set();
+    gateInstances.forEach(g => {
+      if (isGateSkipped(g.projectCode, g.gateCode)) {
+        g.currentStatus = "Skipped";
+        skippedInstanceIds.add(g.id);
+      }
+    });
+    if (skippedInstanceIds.size) {
+      for (let i = deliverableAssignments.length - 1; i >= 0; i--) {
+        if (skippedInstanceIds.has(deliverableAssignments[i].gateInstanceId)) deliverableAssignments.splice(i, 1);
+      }
+    }
+  })();
+
   const risksAll              = loadJsonSync("projectRisks.json");
   const milestonesAll         = loadJsonSync("projectMilestones.json");
   const approvalHistoryAll    = loadJsonSync("gateApprovalHistory.json");
@@ -90,8 +110,13 @@
     }
     const actualD = d.actualEnd ? parseISO(d.actualEnd) : null;
     // Real delay is actual-vs-plan against this same (now-corrected) planned end, not a
-    // stale precomputed figure — so the RAG dot and the two visible dates can never disagree.
+    // stale precomputed figure — so the Status pill's RAG color and the two visible dates can
+    // never disagree.
     const delayDays = actualD && plannedEndD ? Math.max(0, diffDays(plannedEndD, actualD)) : (d.delayDays || 0);
+    // Outlook — a revised "we now expect to finish by" date the responsible member can propose;
+    // no seed record has ever had one, so it starts blank rather than defaulting to some other
+    // date, and only ever holds a real value once someone explicitly sets it.
+    const outlookD = d.outlookDate ? parseISO(d.outlookDate) : null;
     const ownerId = (d.responsibleMemberUserIds || [])[0];
     const responsibleNames = (d.responsibleMemberUserIds || []).map(userName);
     const depId = (d.dependencyAssignments || [])[0];
@@ -106,6 +131,7 @@
       plannedDate: plannedStartD ? fmtDate(plannedStartD) : "-",
       plannedEndDate: plannedEndD ? fmtDate(plannedEndD) : "-",
       actualDate: actualD ? fmtDate(actualD) : "-",
+      outlookDate: outlookD ? fmtDate(outlookD) : "-",
       // Raw status (Not Started/Assigned/In Progress/Ready for Review/Completed/Rejected/Rework),
       // NOT the collapsed on-time/delayed "legacy" vocabulary used elsewhere in this file (activities/
       // gates) — the Deliverables tab has its own purpose-built status-pill system (statusClass/
@@ -120,6 +146,10 @@
       evidence: uploaded ? uploaded.fileName : ((d.requiredDocuments || [])[0] || "Pending"),
       uploadedDocuments: d.uploadedDocuments || [],
       requiredDocuments: d.requiredDocuments || [],
+      // Parent/child deliverable hierarchy (one level only) — real assignmentId reference set via
+      // PDWorkspace.setAssignmentParent, or inherited from the library's parentDeliverableCode
+      // when this row was first added to the gate. Null/undefined = top-level.
+      parentAssignmentId: d.parentAssignmentId || null,
     };
   }
   global.mapAssignmentToDisplay = mapAssignmentToDisplay;
@@ -202,6 +232,7 @@
   const TODAY = new Date(2026, 6, 7); // 07 Jul 2026 — the app's fixed "today", used throughout
 
   function gateStatusToLegacy(currentStatus, delayDays) {
+    if (currentStatus === "Skipped") return "Skipped";
     if (currentStatus === "Completed") {
       if (delayDays <= 0) return "On Time";
       if (delayDays <= 15) return "Completed";
@@ -238,6 +269,11 @@
       if (!inst) {
         return { id: "G" + (gi + 1), stage: stageCode, name: stageCode, plannedStart: "-", target: "-", actual: "-", outlook: "-", status: "Pending", owner: "-", delayDays: 0, reason: "-", correctiveAction: "-", milestone: stageCode + " Gate Review", approval: "Pending" };
       }
+      // A Skipped gate needs no approval/deliverables and is never scheduled — blank its dates
+      // rather than show the plan it would have had, matching "no approval no deliverable".
+      if (inst.currentStatus === "Skipped") {
+        return { id: "G" + (gi + 1), stage: stageCode, name: stageCode, plannedStart: "-", target: "-", actual: "-", outlook: "-", status: "Skipped", owner: "-", delayDays: 0, reason: "-", correctiveAction: "-", milestone: stageCode + " Gate Review", approval: "Skipped" };
+      }
       const plannedStart = parseISO(inst.plannedStart);
       const plannedFinish = parseISO(inst.plannedFinish);
       const actualFinish = parseISO(inst.actualFinish);
@@ -268,7 +304,11 @@
     const currentGateIdx = STAGES.indexOf(project.currentGate);
     const currentG = currentGateIdx >= 0 ? currentGateIdx + 1 : gateReached + 1;
 
-    const goals = { done: gateReached, total: 6, pct: +(gateReached / 6 * 100).toFixed(2) };
+    // A Skipped gate is never "required" — it doesn't count toward how many gates this project
+    // has to clear, so it can't drag the percentage down like an incomplete real gate would.
+    const skippedGateCount = projGateInstances.filter(g => g.currentStatus === "Skipped").length;
+    const realGateCount = Math.max(1, STAGES.length - skippedGateCount);
+    const goals = { done: gateReached, total: realGateCount, pct: +(gateReached / realGateCount * 100).toFixed(2) };
 
     const delivDone = projDeliv.filter(d => d.status === "Completed").length;
     const delivTotal = projDeliv.length || 1;
@@ -306,9 +346,17 @@
       const inMonth = projDeliv.filter(d => monthLabelOf(d.targetDate) === m);
       return { month: m, planned: inMonth.length, actual: inMonth.filter(d => d.status === "Completed").length };
     });
-    const monthlyRate = monthly.map(r => ({ month: r.month, pct: r.planned ? Math.round(r.actual / r.planned * 100) : null }));
-    const known = monthlyRate.map(r => r.pct).filter(v => v != null);
+    const monthlyRateRaw = monthly.map(r => ({ month: r.month, pct: r.planned ? Math.round(r.actual / r.planned * 100) : null }));
+    const known = monthlyRateRaw.map(r => r.pct).filter(v => v != null);
     const fallback = known.length ? Math.round(known.reduce((a, b) => a + b, 0) / known.length) : 60;
+    // Leading FY months with no deliverables due yet (before the project's first real data
+    // point) would otherwise start the Process Compliance Rate chart with a blank gap —
+    // spanGaps only bridges a gap BETWEEN two known points, not one with nothing before it.
+    // Backfill those leading months with this project's own average rate so the line always
+    // starts at the first month of the fiscal year; interior gaps (a month with no deliverables
+    // due between two real ones) are untouched and still bridged visually by spanGaps.
+    const firstKnownIdx = monthlyRateRaw.findIndex(r => r.pct != null);
+    const monthlyRate = monthlyRateRaw.map((r, i) => (r.pct == null && firstKnownIdx > i) ? { month: r.month, pct: fallback } : r);
     const clamp = v => Math.max(0, Math.min(100, v));
     const fy26 = monthlyRate.map(r => ({ month: r.month, pct: r.pct == null ? null : clamp(r.pct - between(3, 9)) }));
     const predicted = monthlyRate.map(r => ({ month: r.month, pct: r.pct == null ? null : clamp(r.pct + between(4, 14)) }));
@@ -369,10 +417,14 @@
       });
 
       const completedItems = items.filter(x => x.status === "Completed").length;
+      // A Skipped gate has no checklist to complete — reads as "N/A", never blocks approval
+      // gating downstream (project-detail.js's renderApprovalSection reads allComplete directly).
+      const isSkipped = (projGateInstances.find(g => g.gateCode === stageCode) || {}).currentStatus === "Skipped";
       return {
-        gate: "G" + (si + 1), stage: stageCode, items,
-        totalItems: items.length, completedItems,
-        allComplete: items.length > 0 && completedItems === items.length,
+        gate: "G" + (si + 1), stage: stageCode, items: isSkipped ? [] : items,
+        totalItems: isSkipped ? 0 : items.length, completedItems: isSkipped ? 0 : completedItems,
+        allComplete: isSkipped ? true : (items.length > 0 && completedItems === items.length),
+        skipped: isSkipped,
       };
     });
 

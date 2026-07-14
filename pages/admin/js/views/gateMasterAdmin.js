@@ -98,7 +98,6 @@ function openGateModal(gate, onDone) {
         <label>Gate Name<input type="text" id="gName" value="${escapeHtml(gate?.gateName || "")}" required /></label>
         <label class="span-2">Description<textarea id="gDesc" rows="3">${escapeHtml(gate?.description || "")}</textarea></label>
         <label>Default Duration<input type="text" id="gDuration" value="${escapeHtml(gate?.defaultDuration || "4 weeks")}" /></label>
-        <label>Color<input type="color" id="gColor" value="${gate?.color || "#64748b"}" /></label>
       </div>
     `,
     footerHtml: `<button class="btn btn-ghost" data-act="cancel">Cancel</button><button class="btn btn-primary" data-act="save">${editing ? "Save" : "Create"}</button>`,
@@ -110,7 +109,6 @@ function openGateModal(gate, onDone) {
           gateName: document.getElementById("gName").value.trim(),
           description: document.getElementById("gDesc").value.trim(),
           defaultDuration: document.getElementById("gDuration").value.trim(),
-          color: document.getElementById("gColor").value,
         };
         if (!payload.gateCode || !payload.gateName) { toast("Gate code and name are required.", "error"); return; }
         try {

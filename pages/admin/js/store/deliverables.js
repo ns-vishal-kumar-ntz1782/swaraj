@@ -68,6 +68,54 @@ export function getDeliverable(no) {
   return all().find((d) => d.deliverableNo === no) || null;
 }
 
+// ---- parent/child hierarchy — one level only (a child can't itself have children), so every
+// deliverable is either top-level or a direct child of a top-level one in the SAME gate. Kept to
+// one level deliberately: it's exactly what "1.1 / 2.1" numbering needs, and avoids the cycle- and
+// deep-tree bookkeeping a multi-level model would require for no real requirement here. ----
+export function topLevelOptionsFor(gateCode, excludeNo) {
+  return all().filter((d) => d.gateCode === gateCode && d.deliverableNo !== excludeNo && !d.parentDeliverableCode);
+}
+
+// Stable hierarchical numbering (1, 1.1, 1.2, 2, 2.1…), computed per gate from the store's own
+// canonical deliverableNo order — independent of whatever sort/filter/page the view is currently
+// showing, so the label never changes just because the user re-sorted the table.
+export function hierarchyLabels() {
+  const byGate = new Map();
+  all().slice().sort((a, b) => String(a.deliverableNo || "").localeCompare(String(b.deliverableNo || ""), undefined, { numeric: true }))
+    .forEach((d) => {
+      if (!byGate.has(d.gateCode)) byGate.set(d.gateCode, []);
+      byGate.get(d.gateCode).push(d);
+    });
+  const labels = new Map(); // deliverableNo -> { label, parentNo, parentName }
+  byGate.forEach((rows) => {
+    const byNo = new Map(rows.map((d) => [d.deliverableNo, d]));
+    // Pass 1: top-level items get their number first — a child's deliverableNo can sort earlier
+    // than its parent's (e.g. parent "D010", child "D005"), so children can't be numbered in the
+    // same single pass without risking an unresolved parent label.
+    let topIdx = 0;
+    rows.forEach((d) => {
+      if (!d.parentDeliverableCode || !byNo.has(d.parentDeliverableCode)) {
+        topIdx += 1;
+        labels.set(d.deliverableNo, { label: String(topIdx), parentNo: null, parentName: null });
+      }
+    });
+    // Pass 2: children, now that every top-level label in this gate is resolved.
+    const childIdx = new Map(); // parentNo -> count so far
+    rows.forEach((d) => {
+      const parent = d.parentDeliverableCode && byNo.get(d.parentDeliverableCode);
+      if (!parent) return;
+      const n = (childIdx.get(parent.deliverableNo) || 0) + 1;
+      childIdx.set(parent.deliverableNo, n);
+      const parentLabel = labels.get(parent.deliverableNo);
+      labels.set(d.deliverableNo, {
+        label: `${parentLabel.label}.${n}`,
+        parentNo: parent.deliverableNo, parentName: parent.deliverableName,
+      });
+    });
+  });
+  return labels;
+}
+
 function assertUniqueCode(list, deliverableCode, excludeNo) {
   const clash = list.find((d) => d.deliverableCode.toLowerCase() === deliverableCode.toLowerCase() && d.deliverableNo !== excludeNo);
   if (clash) throw new Error(`Deliverable code "${deliverableCode}" is already used by ${clash.deliverableNo} — codes must be unique.`);
@@ -100,6 +148,7 @@ export function createDeliverable(data, actor, actorRole) {
     linkedFormCode: data.linkedFormCode || null,
     version: data.version || "1.0",
     active: data.active !== false,
+    parentDeliverableCode: data.parentDeliverableCode || null,
   };
   list.push(deliverable);
   persist(list);
@@ -115,6 +164,14 @@ export function updateDeliverable(no, patch, actor, actorRole) {
   const idx = list.findIndex((d) => d.deliverableNo === no);
   if (idx === -1) throw new Error("Deliverable not found.");
   if (patch.deliverableCode) assertUniqueCode(list, patch.deliverableCode, no);
+  if (patch.parentDeliverableCode) {
+    if (patch.parentDeliverableCode === no) throw new Error("A deliverable can't be its own parent.");
+    const parent = list.find((d) => d.deliverableNo === patch.parentDeliverableCode);
+    if (!parent) throw new Error("Selected parent deliverable not found.");
+    if (parent.parentDeliverableCode) throw new Error("The selected parent is itself a child — only one level of nesting is supported.");
+    if (parent.gateCode !== (patch.gateCode || list[idx].gateCode)) throw new Error("Parent must be in the same gate/stage.");
+    if (list.some((d) => d.parentDeliverableCode === no)) throw new Error("This deliverable already has children — it can't also become a child (only one level of nesting is supported).");
+  }
   const before = { ...list[idx] };
   list[idx] = { ...list[idx], ...patch };
   persist(list);

@@ -8,8 +8,8 @@
   const NAVY = "#1e3a5f", TEAL = "#14b8a6";
 
   // Half-circle gauge matching the Figma:
-  // - value arc split navy (lead) + teal (trailing ~25 pts) — always fully colored, only these
-  //   two colors, no separate grey "remaining" track
+  // - navy from 0 up to the real value (completed), teal for the remainder up to 100 (pending)
+  //   — teal always trails at the end of the arc, never sandwiched between two navy segments
   // - large % centred inside the arc, auto-shrunk to fit the small (130x74) canvas
   // - "0" and "100" end labels drawn below the arc endpoints
   const centerTextPlugin = {
@@ -55,20 +55,18 @@
     const el = document.getElementById(canvasId);
     if (!el || !global.Chart) return null;
     const value = Math.max(0, Math.min(100, pct));
-    const tealLen = Math.min(25, value);
-    const navyLen = Math.max(0, value - tealLen);
-    const rest    = Math.max(0, 100 - value);
+    const rest  = Math.max(0, 100 - value);
     const ctx = el.getContext("2d");
     return new global.Chart(ctx, {
       type: "doughnut",
       data: {
-        labels: ["", "", ""],
+        labels: ["", ""],
         datasets: [{
-          // Same value-proportional geometry as before (navy lead, teal for the trailing ~25
-          // points up to the actual value) — the "rest" beyond the value is now colored navy
-          // too instead of a third grey track color, so only two colors ever render.
-          data: [navyLen, tealLen, rest],
-          backgroundColor: [NAVY, TEAL, NAVY],
+          // Two segments only, always in this order — navy for the completed value (0..pct),
+          // teal for what's left (pct..100) — so pending/remaining always renders as the
+          // trailing end of the arc, never a band sandwiched inside the navy portion.
+          data: [value, rest],
+          backgroundColor: [NAVY, TEAL],
           borderWidth: 0, cutout: "72%",
         }]
       },

@@ -5,7 +5,7 @@
 import { getActiveUser } from "../store/users.js";
 import { can } from "../rbac.js";
 import { ensureShell, contentEl, setBreadcrumb, setActiveMenu } from "./shell.js";
-import { listProjects, createProject, cloneProject, archiveProject, planProjectFromTemplate } from "../store/projectExecution.js";
+import { listProjects, createProject, cloneProject, archiveProject, planProjectFromTemplate, skipGate } from "../store/projectExecution.js";
 import { listTemplates, getTemplate } from "../store/projectTemplateAdmin.js";
 import { getGate as getGateMasterRecord } from "../store/gateMasterAdmin.js";
 import { getForm } from "../store/forms.js";
@@ -191,6 +191,7 @@ function openCreateWizard(user, onCreated) {
       budget: "", startDate: nowIso().slice(0, 10), targetEndDate: "", description: "",
     },
     templateCode: "",
+    skippedGates: new Set(),
     touched: false,
   };
   let backdropRef = null;
@@ -214,7 +215,7 @@ function openCreateWizard(user, onCreated) {
   }
 
   function stepIndicatorHtml() {
-    const labels = ["Project Info", "Select Template", "Preview", "Create"];
+    const labels = ["Project Info", "Select Template", "Configure Gates", "Preview", "Create"];
     return `<div class="sg-wizard-steps">${labels.map((label, i) => {
       const n = i + 1;
       const cls = n < state.step ? "done" : n === state.step ? "active" : "";
@@ -284,7 +285,38 @@ function openCreateWizard(user, onCreated) {
     `;
   }
 
+  // "Configure Gates" — lets a PMO mark a gate as not applicable to this project (e.g. a child/
+  // derivative project that doesn't need every gate its parent does) before the project is even
+  // created. Unchecking a gate here doesn't change what createProject() generates — every gate
+  // instance is still created for every gate in the template (see planProjectFromTemplate) — it
+  // just queues a skipGate() call, made right after creation succeeds, in doCreate() below. That
+  // keeps this the same non-destructive registry overlay used everywhere else in this feature.
   function step3Html() {
+    const template = getTemplate(state.templateCode);
+    if (!template) return `<div class="drawer-section"><p class="sg-subtle">Go back and select a template.</p></div>`;
+    return `
+      <div class="drawer-section">
+        <h4 class="drawer-section-title">Configure Gates</h4>
+        <p class="sg-subtle" style="margin-top:0">Uncheck any gate that doesn't apply to this project. A skipped gate requires no deliverables or approval, and is excluded from progress and compliance calculations.</p>
+        <div class="sg-gate-toggle-list">
+          ${template.defaultGateSequence.map((gateCode) => {
+            const gm = getGateMasterRecord(gateCode);
+            const checked = !state.skippedGates.has(gateCode);
+            return `
+              <label class="sg-gate-toggle-row ${checked ? "" : "sg-gate-toggle-skipped"}">
+                <input type="checkbox" data-act="toggle-gate" data-gate="${escapeHtml(gateCode)}" ${checked ? "checked" : ""} />
+                <span class="sg-gate-toggle-name"><strong>${escapeHtml(gateCode)}</strong> — ${escapeHtml(gm ? gm.gateName : "")}</span>
+                ${checked ? "" : `<span class="pill pill-slate sg-gate-toggle-pill">Not required — will be skipped</span>`}
+              </label>
+            `;
+          }).join("")}
+        </div>
+        <div class="sg-form-error" id="wStepError" hidden></div>
+      </div>
+    `;
+  }
+
+  function step4Html() {
     const template = getTemplate(state.templateCode);
     if (!template) return `<div class="drawer-section"><p class="sg-subtle">Go back and select a template.</p></div>`;
     const { gateInstances, deliverableAssignments } = planProjectFromTemplate(template, state.info.code || "NEW", state.info.startDate || nowIso().slice(0, 10));
@@ -308,6 +340,17 @@ function openCreateWizard(user, onCreated) {
             const gateAssignments = deliverableAssignments.filter((a) => a.gateCode === gateCode);
             const formCodes = [...new Set(gateAssignments.map((a) => a.linkedFormCode).filter(Boolean))];
             const checklistDocs = gc.checklistDocuments || [];
+            const skipped = state.skippedGates.has(gateCode);
+            if (skipped) {
+              return `
+                <div class="sg-preview-gate sg-preview-gate-skipped">
+                  <div class="sg-preview-gate-head">
+                    <div class="sg-preview-gate-title"><span class="sg-preview-gate-num">${i + 1}</span><strong>${escapeHtml(gateCode)}</strong></div>
+                    <span class="pill pill-slate">Skipped — not required</span>
+                  </div>
+                </div>
+              `;
+            }
             return `
               <div class="sg-preview-gate">
                 <div class="sg-preview-gate-head">
@@ -342,7 +385,7 @@ function openCreateWizard(user, onCreated) {
     const footer = backdropRef.querySelector(".drawer-footer");
     footer.innerHTML = `
       ${state.step > 1 ? `<button class="btn btn-ghost" data-act="back">Back</button>` : `<button class="btn btn-ghost" data-act="cancel">Cancel</button>`}
-      ${state.step < 3 ? `<button class="btn btn-primary" data-act="next">Next</button>` : `<button class="btn btn-primary" data-act="create">Create Project</button>`}
+      ${state.step < 4 ? `<button class="btn btn-primary" data-act="next">Next</button>` : `<button class="btn btn-primary" data-act="create">Create Project</button>`}
     `;
     footer.querySelector('[data-act="cancel"]')?.addEventListener("click", () => wizardApi.requestClose());
     footer.querySelector('[data-act="back"]')?.addEventListener("click", () => { state.step -= 1; render(); });
@@ -358,14 +401,26 @@ function openCreateWizard(user, onCreated) {
       });
     } else if (state.step === 2) {
       backdropRef.querySelectorAll('[data-act="pick-template"]').forEach((btn) => {
-        btn.addEventListener("click", () => { state.templateCode = btn.dataset.code; state.touched = true; render(); });
+        btn.addEventListener("click", () => {
+          if (state.templateCode !== btn.dataset.code) state.skippedGates = new Set();
+          state.templateCode = btn.dataset.code; state.touched = true; render();
+        });
+      });
+    } else if (state.step === 3) {
+      backdropRef.querySelectorAll('[data-act="toggle-gate"]').forEach((cb) => {
+        cb.addEventListener("change", () => {
+          if (cb.checked) state.skippedGates.delete(cb.dataset.gate);
+          else state.skippedGates.add(cb.dataset.gate);
+          state.touched = true;
+          render();
+        });
       });
     }
   }
 
   function render() {
     const body = backdropRef.querySelector(".drawer-body");
-    body.innerHTML = stepIndicatorHtml() + (state.step === 1 ? step1Html() : state.step === 2 ? step2Html() : step3Html());
+    body.innerHTML = stepIndicatorHtml() + (state.step === 1 ? step1Html() : state.step === 2 ? step2Html() : state.step === 3 ? step3Html() : step4Html());
     wireStep();
     renderFooter();
   }
@@ -393,6 +448,15 @@ function openCreateWizard(user, onCreated) {
       if (!state.templateCode) { errEl.textContent = "Select a template to continue."; errEl.hidden = false; return; }
       state.step = 3;
       render();
+      return;
+    }
+    if (state.step === 3) {
+      const template = getTemplate(state.templateCode);
+      if (template && state.skippedGates.size >= template.defaultGateSequence.length) {
+        errEl.textContent = "At least one gate must remain active — a project can't skip every gate."; errEl.hidden = false; return;
+      }
+      state.step = 4;
+      render();
     }
   }
 
@@ -400,7 +464,10 @@ function openCreateWizard(user, onCreated) {
     if (!state.templateCode) { toast("Select a template first.", "error"); return; }
     try {
       const project = createProject(state.info, state.templateCode, user.name, user.businessRole);
-      state.step = 4;
+      state.skippedGates.forEach((gateCode) => {
+        skipGate(project.code, gateCode, user.name, user.businessRole, "Marked not required during project creation.");
+      });
+      state.step = 5;
       wizardApi.close();
       onCreated(project.code);
       return true;
@@ -417,8 +484,8 @@ function openCreateWizard(user, onCreated) {
     footerHtml: `<div></div>`,
     isDirty: () => state.touched,
     onSaveFromWarning: async () => {
-      if (state.step < 3 || !state.templateCode) {
-        toast("Finish all 3 steps before saving — or Discard to abandon this project.", "error");
+      if (state.step < 4 || !state.templateCode) {
+        toast("Finish all 4 steps before saving — or Discard to abandon this project.", "error");
         return false;
       }
       return doCreate();
