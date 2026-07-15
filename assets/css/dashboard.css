@@ -238,7 +238,6 @@
 .drill-down-zone[data-count="4"] .dd-panel {
   flex-basis: calc(50% - (var(--space-16) / 2)); max-width: calc(50% - (var(--space-16) / 2)); min-width: 420px;
 }
-.dd-panel.dd-expanded .dd-table-wrap { max-height: 440px; }
 .dd-panel.dragging        { opacity: .45; }
 .dd-panel.drag-over-before{ box-shadow: inset 4px 0 0 0 var(--brand-blue); }
 .dd-panel.drag-over-after { box-shadow: inset -4px 0 0 0 var(--brand-blue); }
@@ -266,8 +265,8 @@
   display: grid; place-items: center; color: var(--color-slate-680); padding: 0;
 }
 .dd-close-btn:hover, .dd-icon-btn:hover { background: var(--color-blue-340); }
-.dd-expand-toggle { font-size: var(--fs-14); }
-.drill-down.dd-expanded .dd-expand-toggle { color: var(--brand-blue); background: var(--color-blue-50); transform: rotate(180deg); }
+.dd-expand-toggle { font-size: var(--fs-14); transition: var(--transition-8); }
+.dd-panel.dd-fullscreen .dd-expand-toggle { color: var(--brand-blue); background: var(--color-blue-50); transform: rotate(180deg); }
 .dd-table-wrap {
   max-height: 260px; overflow: auto;
   border: 1px solid var(--border); border-radius: var(--radius-sm);
@@ -440,6 +439,9 @@
 }
 .widget-fullscreen .health-chart-area { flex: 1; }
 .widget-fullscreen .widget-chart-area { flex: 1; }
+/* Drill-down panel fullscreen — the table wrap grows to fill the whole overlay (header/footer
+   keep their natural height) instead of staying pinned to its normal in-card 260px scroll box. */
+.widget-fullscreen.dd-fullscreen .dd-table-wrap { flex: 1; max-height: none; }
 
 /* ═══════════════════════════════════════════
    TABLET ≤ 1024px

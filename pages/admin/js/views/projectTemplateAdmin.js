@@ -8,8 +8,9 @@ import { can } from "../rbac.js";
 import { ensureShell, contentEl, setBreadcrumb, setActiveMenu } from "./shell.js";
 import {
   listTemplates, getTemplate, updateBasicInfo, setGateSequence, setDeliverableStatuses,
-  setLinkedForms, setGateDuration, setApprovalRules, getApprovalRules, dependencyLabel,
-  deliverablesForGate, formsForGate, PROJECT_ROLE_SLOTS, availableGatesToAdd,
+  setGateDuration, setApprovalRules, getApprovalRules, dependencyLabel,
+  deliverablesForGate, getDeliverableMeta, getFormMeta, linkedFormCodesForGate,
+  PROJECT_ROLE_SLOTS, availableGatesToAdd,
   addGateToSequence, removeGateFromSequence, resetTemplateToDefaults,
   addChecklistDocument, updateChecklistDocument, removeChecklistDocument, reorderChecklistDocuments,
   FILE_TYPE_OPTIONS,
@@ -92,7 +93,7 @@ export async function renderProjectTemplates() {
     const expanded = state.expandedCode === t.templateCode;
     const gateCount = t.defaultGateSequence.length;
     const deliverableCount = t.gates.reduce((s, g) => s + g.defaultDeliverables.length, 0);
-    const formCount = t.gates.reduce((s, g) => s + (g.linkedForms || []).length, 0);
+    const formCount = t.gates.reduce((s, g) => s + linkedFormCodesForGate(g).length, 0);
     return `
       <div class="sg-tpl-row-wrap">
         <div class="sg-tpl-row sg-row-clickable ${expanded ? "active" : ""}" data-code="${escapeHtml(t.templateCode)}">
@@ -150,7 +151,7 @@ export async function renderProjectTemplates() {
           <span class="pd-gate-item-label">${escapeHtml(gateCode)} — ${escapeHtml(gateMeta ? gateMeta.gateName : "")}</span>
           <span class="pd-gate-item-meta">
             <button type="button" class="chip chip-clickable" data-act="goto-subtab" data-goto="deliverables" title="Open Deliverables">${gc.defaultDeliverables.length} deliverables</button>
-            <button type="button" class="chip chip-clickable" data-act="goto-subtab" data-goto="forms" title="Open Forms">${(gc.linkedForms || []).length} forms</button>
+            <button type="button" class="chip chip-clickable" data-act="goto-subtab" data-goto="forms" title="Open Forms">${linkedFormCodesForGate(gc).length} forms</button>
             <button type="button" class="chip chip-clickable" data-act="goto-subtab" data-goto="checklist" title="Open Checklist Documents">${checklistDocs.length} checklist docs</button>
             ${canManage ? `<button type="button" class="btn btn-ghost btn-sm danger" data-act="remove-gate">Remove Gate</button>` : ""}
           </span>
@@ -186,16 +187,24 @@ export async function renderProjectTemplates() {
           </div>
 
           <div class="sg-gate-subpanel" data-subpanel="forms" ${activeTab === "forms" ? "" : "hidden"}>
-            <p class="sg-subtle" style="margin-top:0">Default Forms — from Forms Library</p>
+            <p class="sg-subtle" style="margin-top:0">Read-only — each deliverable's linked form is set in the Deliverable Library, not here. Add or remove a deliverable in the Deliverables tab to change which forms appear.</p>
             <div class="sg-scroll-panel" style="flex:1">
-              ${formsForGate(gateCode).length ? formsForGate(gateCode).map((f) => `
-                <label class="sg-check-chip">
-                  <input type="checkbox" data-act="form" value="${escapeHtml(f.formCode)}" ${(gc.linkedForms || []).includes(f.formCode) ? "checked" : ""} ${canManage ? "" : "disabled"} />
-                  ${escapeHtml(f.formCode)} — ${escapeHtml(f.formName)}
-                </label>
-              `).join("") : `<div class="sg-empty-state">No forms in the library for ${escapeHtml(gateCode)}.</div>`}
+              <table class="sg-table sg-table-compact">
+                <thead><tr><th>Deliverable</th><th>Linked Form</th></tr></thead>
+                <tbody>
+                  ${gc.defaultDeliverables.length ? gc.defaultDeliverables.map((no) => {
+                    const d = getDeliverableMeta(no);
+                    const f = d?.linkedFormCode ? getFormMeta(d.linkedFormCode) : null;
+                    return `
+                      <tr>
+                        <td>${escapeHtml(d ? d.deliverableName : no)}</td>
+                        <td>${f ? escapeHtml(f.formCode) + " — " + escapeHtml(f.formName) : `<span class="sg-subtle">Not linked</span>`}</td>
+                      </tr>
+                    `;
+                  }).join("") : `<tr><td colspan="2" class="sg-empty-cell">No deliverables included in this gate yet — add some in the Deliverables tab first.</td></tr>`}
+                </tbody>
+              </table>
             </div>
-            ${canManage ? `<button class="btn btn-primary btn-sm" style="margin-top:12px;align-self:flex-start" data-act="save-gate">Save Forms</button>` : ""}
           </div>
 
           <div class="sg-gate-subpanel" data-subpanel="checklist" ${activeTab === "checklist" ? "" : "hidden"}>
@@ -333,11 +342,9 @@ export async function renderProjectTemplates() {
         const duration = item.querySelector('[data-act="duration"]').value.trim();
         const minApprovers = Number(item.querySelector('[data-act="minappr"]').value) || 1;
         const requiredRoles = Array.from(item.querySelectorAll('[data-act="reqrole"]:checked')).map((el) => el.value);
-        const linkedForms = Array.from(item.querySelectorAll('[data-act="form"]:checked')).map((el) => el.value);
         try {
           setGateDuration(t.templateCode, gateCode, duration, user.name, user.businessRole);
           setApprovalRules(t.templateCode, gateCode, { minApprovers, requiredRoles }, user.name, user.businessRole);
-          setLinkedForms(t.templateCode, gateCode, linkedForms, user.name, user.businessRole);
           toast(`Gate ${gateCode} settings saved`, "success");
           draw();
         } catch (err) {

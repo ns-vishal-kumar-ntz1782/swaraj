@@ -160,6 +160,8 @@ html, body.pd-body { height:100%; overflow:hidden; }
 .pd-stage-gate {
   border:1px solid var(--color-blue-340); border-top-left-radius: var(--radius-8); border-top-right-radius: var(--radius-8);
   border-bottom:0; background:var(--panel);
+  /* Extra top padding reserves room for the navy "start date" chips floating above the GATES
+     ribbon (top:-32px). */
   padding: var(--space-32) var(--space-20) var(--space-14);
 }
 
@@ -183,27 +185,36 @@ html, body.pd-body { height:100%; overflow:hidden; }
   justify-content:center; text-align:center; font-size: var(--fs-11);
 }
 
-.ptl-track { position:relative; flex:1; display:flex; min-width:0; }
+/* Every column-based row (GATES, MILESTONES, and every Planned/Timeline/Actual/Outlook/Velocity
+   value row) positions its cells with absolute left/width percentages against this ONE shared
+   track, all computed from the identical column total in timeline.js's buildColumns() — never
+   flex+gap, whose per-gap pixel overhead scales differently depending on how many siblings a
+   row happens to have (that mismatch between the 7-segment GATES ribbon and the 18-cell
+   MILESTONES row was the root cause of milestones drifting past their gate's boundary). */
+.ptl-track { position:relative; flex:1; min-width:0; }
 
-/* ── GATES ribbon: fixed per-stage identity color, 4px-rounded segments with a 2px gap ── */
-.ptl-row-gates .ptl-track { gap:2px; min-height:38px; }
+/* ── GATES ribbon: fixed per-stage identity color, 4px-rounded segments ── */
+.ptl-row-gates .ptl-track { min-height:38px; }
 .ptl-gateseg {
+  position:absolute; top:0; bottom:0;
   display:flex; align-items:center; justify-content:center; min-width:0;
   border-radius:4px; font-size: var(--fs-12); font-weight: var(--fw-700);
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 var(--space-4);
 }
 
-/* ── MILESTONES row: bordered white cells, 2px gap, matches the GATES ribbon's column grid ── */
-.ptl-row-milestones .ptl-track { gap:2px; min-height:40px; padding-top: var(--space-14); }
+/* ── MILESTONES row: bordered white cells, matches the GATES ribbon's column grid exactly ── */
+.ptl-row-milestones .ptl-track { min-height:40px; padding-top: var(--space-2); }
 .ptl-mscell {
-  flex:1 1 0%; min-width:0; display:flex; align-items:center; justify-content:center;
+  position:absolute; top: var(--space-2); bottom:0;
+  display:flex; align-items:center; justify-content:center; min-width:0;
   text-align:center; background:var(--panel); border:1px solid var(--color-blue-340);
   border-radius: var(--radius-8); font-size: var(--fs-10); color:var(--color-blue-950);
-  padding: var(--space-3) var(--space-4); line-height:1.25;
+  padding: var(--space-3) var(--space-4); line-height:1.25; overflow:hidden;
 }
 
-/* ── Floating date chips — navy "start date" (above the GATES ribbon) / teal "end date"
-   (below the Timeline row's circles). Small triangle points at the gate it belongs to. ── */
+/* ── Floating date chips — navy "start date" (above the GATES ribbon, anchored to each gate's
+   left edge) / teal "end date" (below the Timeline row's circles, anchored to each gate's right
+   edge). Small triangle points at the gate it belongs to. ── */
 .ptl-chip {
   position:absolute; transform:translateX(-50%); display:flex; flex-direction:column;
   align-items:center; z-index:4; pointer-events:none;
@@ -251,12 +262,22 @@ html, body.pd-body { height:100%; overflow:hidden; }
 .ptl-values .ptl-row-milestones .ptl-label { background:none; }
 .ptl-datatrack { min-height:28px; }
 .ptl-datacell {
-  flex:1 1 0%; min-width:0; display:flex; align-items:center; justify-content:center;
+  position:absolute; top:0; bottom:0;
+  display:flex; align-items:center; justify-content:center; min-width:0;
   text-align:center; font-size: var(--fs-11); color:var(--color-slate-680); font-weight: var(--fw-500);
   border-left:1px solid var(--border); padding: var(--space-6) var(--space-4);
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .ptl-datacell:nth-child(even) { background:var(--panel-alt); }
+/* Outlook row — click-to-edit: plain "-"/date text (matching every other blank cell on this
+   page) until clicked, only then does it become a real date input. */
+.ptl-outlook-cell { cursor:pointer; border-radius: var(--radius-4); transition: var(--transition-8); }
+.ptl-outlook-cell:hover { background:var(--color-blue-50); color:var(--brand-blue); font-weight: var(--fw-600); }
+.ptl-outlook-input {
+  width:100%; height:100%; border:1px solid var(--brand-blue); border-radius: var(--radius-4);
+  background:var(--panel); font-family:inherit; font-size: var(--fs-10-5); color:var(--color-slate-680);
+  text-align:center; padding:0 2px; outline:none;
+}
 
 /* ── Timeline row: connecting line + one circle per real gate at its stageEnd column ── */
 .ptl-timelinetrack { min-height:48px; }
@@ -571,7 +592,7 @@ html, body.pd-body { height:100%; overflow:hidden; }
   background: var(--color-white-950);
 }
 
-/* ── Top bar: KPI strip + filters ── */
+/* ── Top bar: KPI strip + legend ── */
 .gc2-topbar {
   flex-shrink: 0;
   background: var(--panel);
@@ -594,7 +615,8 @@ html, body.pd-body { height:100%; overflow:hidden; }
 .gc2-kpi-teal  .gc2-kpi-val { color: var(--teal); }
 .gc2-kpi-clickable { cursor: pointer; border-radius: var(--radius-5); transition: var(--transition-8); }
 .gc2-kpi-clickable:hover { background: var(--color-blue-50); }
-.gc2-kpi-clickable.gc2-kpi-active { background: var(--color-red-50); box-shadow: inset 0 0 0 1px var(--color-red-450); }
+.gc2-kpi-clickable.gc2-kpi-active { background: var(--color-red-50); box-shadow: inset 0 0 0 1px var(--color-red-450);     padding: 6px 5px; }
+.gc2-kpi-clickable.gc2-kpi-active-neutral { background: var(--color-blue-50); box-shadow: inset 0 0 0 1px var(--brand-blue);  padding: 6px 5px; }
 
 .gc2-filters { display: flex; align-items: center; gap: var(--space-8); flex-shrink: 0; }
 .gc2-filter-select {
@@ -604,14 +626,12 @@ html, body.pd-body { height:100%; overflow:hidden; }
 }
 .gc2-filter-select.gc2-filter-active { border-color: var(--brand-blue); color: var(--brand-blue); font-weight: var(--fw-600); }
 
-/* ── Legend ── */
+/* ── Legend — top-right of the header strip, alongside the KPIs (Figma node 646:5708) ── */
 .gc2-legend {
-  flex-shrink: 0; height: 30px; background: var(--panel-alt);
-  border-bottom: 1px solid var(--color-blue-340);
-  display: flex; align-items: center; gap: var(--space-16); padding: 0 var(--space-20);
+  flex-shrink: 0; display: flex; align-items: center; gap: var(--space-14);
   font-size: var(--fs-11); color: var(--color-slate-800);
 }
-.gc2-leg-item { display: flex; align-items: center; gap: var(--space-6); }
+.gc2-leg-item { display: flex; align-items: center; gap: var(--space-6); white-space: nowrap; }
 .gc2-sw { width: 18px; height: 7px; border-radius: var(--radius-3); display: inline-block; }
 .gc2-sw-planned { background: var(--navy); }
 .gc2-sw-actual  { background: var(--teal); }
@@ -622,13 +642,47 @@ html, body.pd-body { height:100%; overflow:hidden; }
   content: ""; position: absolute; right: -1px; top: -3px;
   border: 3px solid transparent; border-left-color: var(--color-slate-550);
 }
-.gc2-legend-right { margin-left: auto; font-size: var(--fs-10); color: var(--color-slate-600); }
+
+/* ── Sub-bar: filter summary (left) + timeline prev/next nav — per the Figma reference the two
+   arrows flank the timeline (one pinned to its left edge, one to its right edge) rather than
+   sitting together as a pair. The left arrow tracks the resizable divider via --gc2-left-w (same
+   custom property .gc2-left's own width uses), the right arrow just pins to the subbar's edge. ── */
+.gc2-subbar {
+  flex-shrink: 0; height: 32px; position: relative;
+  display: flex; align-items: center; justify-content: flex-start;
+  padding: 0 var(--space-20); background: var(--panel); border-bottom: 1px solid var(--color-blue-340);
+}
+.gc2-legend-right { font-size: var(--fs-10); color: var(--color-slate-600); }
+.gc2-nav-btn {
+  width: 24px; height: 24px; border-radius: var(--radius-5); border: 1px solid var(--color-blue-340);
+  background: var(--panel); color: var(--brand-blue); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; padding: 0; transition: var(--transition-8); user-select: none;
+  position: absolute; top: 50%; transform: translateY(-50%);
+}
+.gc2-nav-btn-left { margin-left: var(--space-8); }
+.gc2-nav-btn-right { right: var(--space-20); }
+.gc2-nav-btn svg { width: 14px; height: 14px; pointer-events: none; }
+.gc2-nav-btn:hover { background: var(--color-blue-50); border-color: var(--brand-blue); }
+.gc2-nav-btn:active,
+.gc2-nav-btn.gc2-nav-pressed { background: var(--brand-blue); color: #fff; border-color: var(--brand-blue); }
 
 /* ── Main body: two panes ── */
 .gc2-body { flex: 1; min-height: 0; display: flex; overflow: hidden; border-top: 1px solid var(--color-blue-340); }
 
-/* ── Left frozen pane ── */
-.gc2-left { flex-shrink: 0; width: 520px; display: flex; flex-direction: column; border-right: 2px solid var(--color-slate-450); background: var(--panel); z-index: 2; }
+/* ── Resizable divider between the left info panel and the right timeline ── */
+.gc2-resizer {
+  flex-shrink: 0; width: 7px; cursor: col-resize; position: relative; background: transparent; z-index: 3;
+}
+.gc2-resizer::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: 3px; width: 1px; background: var(--color-slate-450);
+  transition: var(--transition-8);
+}
+.gc2-resizer:hover::after, .gc2-resizer.gc2-resizing::after { left: 1px; width: 5px; background: var(--brand-blue); border-radius: var(--radius-3); }
+
+/* ── Left frozen pane — width driven by --gc2-left-w (set on #tab-gantt by the resizer's drag
+   handler and persisted to sessionStorage), so both this and .gc2-timeline-nav's offset above
+   stay in lockstep with the user's chosen split. ── */
+.gc2-left { flex-shrink: 0; width: var(--gc2-left-w, 640px); display: flex; flex-direction: column; background: var(--panel); z-index: 2; }
 /* Height must equal the right pane's stacked gate-row + month-row + week-row (30+22+18=70px) —
    both panes are independent flex columns, so their scroll areas only start at the same Y if
    the header block above each is the same total height. */
@@ -637,6 +691,8 @@ html, body.pd-body { height:100%; overflow:hidden; }
 .gc2-lh:last-child { border-right: 0; }
 .gc2-lh-no     { width: 32px;  flex-shrink: 0; }
 .gc2-lh-deliv  { flex: 1; min-width: 0; justify-content: flex-start; padding-left: var(--space-10); }
+.gc2-lh-sd     { width: 40px;  flex-shrink: 0; }
+.gc2-lh-resp   { width: 104px; flex-shrink: 0; }
 .gc2-lh-date   { width: 88px;  flex-shrink: 0; }
 .gc2-lh-days   { width: 42px;  flex-shrink: 0; }
 .gc2-lh-var    { width: 42px;  flex-shrink: 0; }
@@ -647,20 +703,29 @@ html, body.pd-body { height:100%; overflow:hidden; }
 .gc2-left-scroll::-webkit-scrollbar-thumb { background: var(--color-slate-480); border-radius: var(--radius-4); }
 .gc2-left-scroll::-webkit-scrollbar-track { background: var(--color-slate-130); }
 
-/* Gate accordion header row (left) */
+/* Gate accordion header row (left) — compact "G1/G2/G3" label, tight padding so the row reads as
+   a slim section divider rather than a wide tab; hover/active states share the same blue family
+   the right-pane gate band below uses, so the accordion reads as one cohesive control. */
 .gc2-gate-header-row {
-  display: flex; align-items: center; gap: var(--space-6); height: 34px; padding: 0 var(--space-12);
-  cursor: pointer; font-size: var(--fs-12); font-weight: var(--fw-700); user-select: none;
+  display: flex; align-items: center; gap: var(--space-5); height: 34px; padding: 0 var(--space-10);
+  cursor: pointer; font-size: var(--fs-11-5); font-weight: var(--fw-700); user-select: none;
   border-top: 2px solid var(--color-blue-340); border-bottom: 1px solid var(--color-blue-340);
-  background: var(--color-slate-100); color: var(--navy);
+  background: var(--color-blue-130); color: var(--navy); transition: var(--transition-8);
 }
-.gc2-gate-header-row:hover { filter: brightness(.97); }
-.gc2-gate-header-row.gc2-gate-completed { background: #E9F3FF; color:#333; }
-.gc2-gate-header-row.gc2-gate-active { background: #C6DEFC; color: #333; box-shadow: inset 0 0 0 1px var(--brand-blue); }
+.gc2-gate-header-row:hover { background: var(--color-blue-250); }
+.gc2-gate-header-row.gc2-gate-completed { background: var(--color-blue-220); color: var(--navy); }
+.gc2-gate-header-row.gc2-gate-active { background: var(--color-blue-360); color: var(--navy); }
+.gc2-gate-header-row.gc2-gate-active:hover { background: var(--color-blue-380); }
 .gc2-gate-header-row.gc2-gate-future { background: var(--color-slate-100); color: var(--color-slate-600); }
-.gc2-gate-chevron { width: 13px; height: 13px; flex-shrink: 0; transition: transform .15s; }
+.gc2-gate-chevron { width: 12px; height: 12px; flex-shrink: 0; transition: transform .15s; }
 .gc2-gate-chevron.gc2-open { transform: rotate(90deg); }
-.gc2-gate-current-tag { font-weight: var(--fw-600); font-size: var(--fs-10); opacity: .85; }
+.gc2-gate-current-tag { font-weight: var(--fw-600); font-size: var(--fs-9-5); opacity: .9; white-space: nowrap; }
+.gc2-gate-risk-badge {
+  display: inline-flex; align-items: center; gap: 2px; margin-left: var(--space-4);
+  background: rgba(0,0,0,.08); border-radius: var(--radius-20); padding: 1px 6px 1px 5px;
+  font-size: var(--fs-9); font-weight: var(--fw-700); cursor: default; flex-shrink: 0;
+}
+.gc2-gate-risk-badge svg { width: 9px; height: 9px; }
 
 /* Deliverable row (left) */
 .gc2-deliv-row { display: flex; align-items: stretch; height: 52px; border-bottom: 1px solid var(--color-slate-230); }
@@ -673,10 +738,15 @@ html, body.pd-body { height:100%; overflow:hidden; }
 .gc2-dc-deliv { flex: 1; min-width: 0; flex-direction: column; align-items: flex-start; justify-content: center; gap: var(--space-3); padding: var(--space-6) var(--space-10); }
 .gc2-dc-name {
   font-size: var(--fs-12); font-weight: var(--fw-600); color: var(--title); line-height: 1.3;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
-.gc2-dc-resp { display: flex; align-items: center; gap: var(--space-4); font-size: var(--fs-10); color: var(--color-slate-600); }
-.gc2-dc-resp svg { width: 10px; height: 10px; flex-shrink: 0; }
+.gc2-dc-sd { width: 40px; flex-shrink: 0; color: var(--color-slate-680); font-weight: var(--fw-600); }
+.gc2-dc-resp {
+  width: 104px; flex-shrink: 0; display: flex; align-items: center; gap: var(--space-4);
+  font-size: var(--fs-10-5); color: var(--color-slate-680); overflow: hidden;
+}
+.gc2-dc-resp span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gc2-dc-resp svg { width: 11px; height: 11px; flex-shrink: 0; color: var(--color-slate-500); }
 .gc2-dc-date { width: 88px; flex-shrink: 0; flex-direction: column; gap: var(--space-2); font-size: var(--fs-10-5); line-height: 1.3; }
 .gc2-dc-date .p { color: var(--color-slate-680); }
 .gc2-dc-date .a { color: var(--color-slate-450); }
@@ -711,17 +781,33 @@ html, body.pd-body { height:100%; overflow:hidden; }
 .gc2-right-head-scroll { flex-shrink: 0; overflow: hidden; border-bottom: 1px solid var(--color-slate-450); }
 .gc2-right-head-inner { will-change: transform; }
 
-.gc2-gate-row { height: 30px; position: relative; }
-.gc2-gate-band { display: flex; align-items: center; justify-content: center; gap: var(--space-4); font-size: var(--fs-11); font-weight: var(--fw-700); border-right: 2px solid var(--panel); color: var(--navy); background: var(--color-slate-100); white-space: nowrap; overflow: hidden; cursor: pointer; }
-.gc2-gate-band.gc2-gate-completed { background: #E9F3FF; color: #333; }
-.gc2-gate-band.gc2-gate-active { background: #C6DEFC; color: #333; }
+.gc2-gate-row { height: 30px; position: relative; background: var(--color-blue-220); }
+.gc2-gate-band {
+  display: flex; align-items: center; justify-content: center; gap: var(--space-4);
+  font-size: var(--fs-10-5); font-weight: var(--fw-700);
+  /* A thin same-family divider, not a thick white gap — adjacent gate segments should read as
+     one closed, connected header strip, not tiles with visible seams between them. */
+  border-right: 1px solid var(--color-blue-380);
+  color: var(--navy); background: var(--color-blue-220); white-space: nowrap; overflow: hidden;
+  cursor: pointer; transition: var(--transition-8);
+}
+.gc2-gate-band:last-child { border-right: 0; }
+.gc2-gate-band:hover { background: var(--color-blue-250); }
+.gc2-gate-band.gc2-gate-completed { background: var(--color-blue-220); color: var(--navy); }
+.gc2-gate-band.gc2-gate-active { background: var(--color-blue-360); color: var(--navy); }
+.gc2-gate-band.gc2-gate-active:hover { background: var(--color-blue-380); }
 .gc2-gate-band.gc2-gate-future { background: var(--color-slate-100); color: var(--color-slate-600); }
+.gc2-gate-band-collapse { font-weight: var(--fw-500); opacity: .8; flex-shrink: 0; }
 
-.gc2-month-row { height: 22px; display: flex; background: var(--color-slate-130); border-bottom: 1px solid var(--color-slate-450); }
-.gc2-month-cell { display: flex; align-items: center; justify-content: center; font-size: var(--fs-10); font-weight: var(--fw-700); color: var(--color-slate-950); border-right: 1px solid var(--color-slate-450); flex-shrink: 0; }
-.gc2-week-row { height: 18px; display: flex; background: var(--color-slate-100); }
-.gc2-week-cell { display: flex; align-items: center; justify-content: center; font-size: var(--fs-8-5); color: var(--color-slate-650); border-right: 1px solid var(--color-slate-300); flex-shrink: 0; }
+/* Header block background — deep-to-light blue enterprise treatment, consistent typography */
+.gc2-month-row { height: 22px; display: flex; background: var(--color-blue-90); border-bottom: 1px solid var(--color-blue-380); }
+.gc2-month-cell { display: flex; align-items: center; justify-content: center; font-size: var(--fs-10); font-weight: var(--fw-700); color: var(--navy); border-right: 1px solid var(--color-blue-380); flex-shrink: 0; }
+.gc2-week-row { height: 18px; display: flex; background: var(--panel); }
+.gc2-week-cell { display: flex; align-items: center; justify-content: center; font-size: var(--fs-8-5); color: var(--color-slate-650); border-right: 1px solid var(--color-blue-300); flex-shrink: 0; }
 .gc2-week-cell.gc2-month-start { border-right-color: var(--color-slate-500); }
+/* Alternating week columns (Week 1 white / Week 2 light gray / …) for scan-ability — applied by
+   JS via nth-of-type-equivalent parity when it builds each week cell (gc2-week-alt). */
+.gc2-week-cell.gc2-week-alt { background: var(--color-blue-90); }
 
 .gc2-right-scroll { flex: 1; min-height: 0; overflow: auto; position: relative; }
 .gc2-right-scroll::-webkit-scrollbar { width: 5px; height: 6px; }
@@ -729,6 +815,10 @@ html, body.pd-body { height:100%; overflow:hidden; }
 .gc2-right-scroll::-webkit-scrollbar-track { background: var(--color-slate-130); }
 
 .gc2-bars-inner { position: relative; }
+/* Alternating week-column backdrop (Week 1 white / Week 2 light gray / …), drawn once behind
+   everything else so it never interferes with bar/dependency hit-testing. */
+.gc2-altcol-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0; }
+.gc2-altcol { position: absolute; top: 0; bottom: 0; background: var(--color-blue-90); }
 .gc2-vgrid-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0; }
 .gc2-vgrid-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--color-slate-230); }
 .gc2-dep-svg { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 1; }
@@ -736,25 +826,54 @@ html, body.pd-body { height:100%; overflow:hidden; }
 .gc2-today-flag { position: absolute; top: 2px; transform: translateX(-50%); background: var(--color-red-450); color: #fff; font-size: var(--fs-8-5); font-weight: var(--fw-700); padding: 1px 5px; border-radius: var(--radius-3); white-space: nowrap; z-index: 3; }
 
 .gc2-bar-row { position: absolute; left: 0; border-bottom: 1px solid var(--color-slate-230); z-index: 1; }
-.gc2-bar-row.gc2-bar-row-gate { background: var(--color-slate-100); border-top: 2px solid var(--color-blue-340); border-bottom: 1px solid var(--color-blue-340); }
+.gc2-bar-row.gc2-bar-row-gate { background: var(--color-blue-130); border-top: 2px solid var(--color-blue-340); border-bottom: 1px solid var(--color-blue-340); }
 .gc2-bar-row.gc2-bar-row-ms { border-top: 1px solid var(--color-blue-340); border-bottom: 1px solid var(--color-blue-340); }
 
-.gc2-bar { position: absolute; height: 12px; border-radius: var(--radius-3); display: flex; align-items: center; overflow: hidden; }
-.gc2-bar-planned { top: 8px; background: var(--navy); }
-.gc2-bar-actual  { top: 26px; background: var(--teal); }
-.gc2-bar-label { font-size: var(--fs-8-5); color: #fff; font-weight: var(--fw-600); padding: 0 4px; white-space: nowrap; }
+/* Bars — thicker (16px) with the date range set directly on the bar; when a bar is too narrow
+   for its own label to fit, JS adds gc2-bar-label-outside so the label renders just past the
+   bar's right edge in dark text instead of being clipped/hidden. */
+.gc2-bar { position: absolute; height: 16px; border-radius: var(--radius-4); display: flex; align-items: center; overflow: visible; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.gc2-bar-planned { top: 9px; background: var(--navy); }
+.gc2-bar-actual  { top: 30px; background: var(--teal); }
+.gc2-bar-label {
+  font-size: var(--fs-9); color: #fff; font-weight: var(--fw-600); padding: 0 6px; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
+.gc2-bar-label-outside {
+  position: absolute; left: 100%; margin-left: var(--space-6); color: var(--color-slate-880);
+  background: var(--panel); padding: 0 4px; border-radius: var(--radius-3); box-shadow: 0 0 0 1px var(--color-blue-340);
+  /* Override the base .gc2-bar-label's max-width:100% — that 100% resolves against the bar's OWN
+     (often tiny) width since the bar is this label's positioned containing block, which silently
+     re-clipped the very label this class exists to un-clip. Outside labels have the whole row's
+     free space to spill into, not just the bar's width. */
+  max-width: none; overflow: visible; text-overflow: clip;
+}
 .gc2-bar-alert {
   position: absolute; top: 4px; width: 16px; height: 16px; border-radius: 50%;
   background: var(--color-red-450); color: #fff; display: flex; align-items: center; justify-content: center;
-  font-size: 10px; font-weight: 800; box-shadow: 0 0 0 2px var(--panel); z-index: 2;
+  font-size: 10px; font-weight: 800; box-shadow: 0 0 0 2px var(--panel); z-index: 2; cursor: default;
 }
+
+/* ── Bubble indicators — real, data-driven signals (blocked status, linked comments, real
+   dependency reference). One shared visual language: 15px circle, white ring so they read
+   clearly whichever bar color they sit beside, hover scale + tooltip (title attr) for detail. ── */
+.gc2-bubble {
+  position: absolute; width: 15px; height: 15px; border-radius: 50%; z-index: 2;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  font-size: 8px; font-weight: 800; box-shadow: 0 0 0 2px var(--panel); transition: transform .1s ease;
+}
+.gc2-bubble:hover { transform: scale(1.18); z-index: 4; }
+.gc2-bubble svg { width: 9px; height: 9px; pointer-events: none; }
+.gc2-bubble-blocked { background: #6b7280; }
+.gc2-bubble-comment { background: var(--color-blue-540); cursor: pointer; }
+.gc2-bubble-dep { background: #8b5cf6; }
 
 .gc2-ms-diamond-track { position: absolute; width: 12px; height: 12px; transform: translate(-50%, -50%) rotate(45deg); border-radius: 2px; top: 50%; }
 .gc2-ms-diamond-track.done { background: var(--teal); }
 .gc2-ms-diamond-track.pending { background: var(--panel); border: 2px solid var(--color-slate-450); }
 
 @media (max-width: 1280px) {
-  .gc2-left { width: 440px; }
+  .gc2-left { width: 580px; }
 }
 
 /* ════════════════════════════════════
@@ -840,12 +959,12 @@ html, body.pd-body { height:100%; overflow:hidden; }
 
 /* Completed */
 .dlv-gate-btn.dlv-gate-completed .dlv-gate-circle {
-  background: var(--success);
-  border-color: var(--success);
+  background: var(--teal);
+  border-color: var(--teal);
   color: var(--panel);
 }
-.dlv-gate-btn.dlv-gate-completed .dlv-gate-label { color: var(--success); }
-.dlv-gate-step.dlv-gate-step-done .dlv-gate-connector { background: var(--success); }
+.dlv-gate-btn.dlv-gate-completed .dlv-gate-label { color: var(--teal); }
+.dlv-gate-step.dlv-gate-step-done .dlv-gate-connector { background: var(--teal); }
 
 /* Active / selected */
 .dlv-gate-btn.dlv-gate-active {
@@ -1358,3 +1477,15 @@ select.dlv-status-rag-grey  { border-color: var(--color-blue-340)  !important; }
   border-radius: var(--radius-sm); background: var(--panel); font-family: inherit; font-size: var(--fs-12); color: var(--color-blue-950);
 }
 .ar-form .sg-form-grid textarea { height: auto; padding: var(--space-6) var(--space-8); resize: vertical; }
+
+/* ==========================================================
+   JUMP-TO-DELIVERABLE — brief highlight when the Gantt tab's left-pane deliverable name
+   links into the Deliverables tab's matching row (box-shadow, not background, so it doesn't
+   fight the row's own !important background states like .dlv-row-editable/.dlv-row-child)
+========================================================== */
+@keyframes gc2RowFlash {
+  0%   { box-shadow: inset 0 0 0 2px var(--brand-blue); }
+  70%  { box-shadow: inset 0 0 0 2px var(--brand-blue); }
+  100% { box-shadow: inset 0 0 0 0 transparent; }
+}
+.gc2-row-flash { animation: gc2RowFlash 1.6s ease-out; }

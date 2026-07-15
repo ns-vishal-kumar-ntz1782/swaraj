@@ -26,7 +26,7 @@
     <!-- Sub-header row: back + tabs + actions -->
     <div class="pd-subhead">
       <div class="pd-tabs-row">
-        <a class="pd-back" href="../../index.html" title="Back" aria-label="Back">
+        <a class="pd-back" href="../../index.html" id="pdBackBtn" title="Back" aria-label="Back">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
         </a>
         <button class="pd-tab pd-tab-active" data-tab="snapshot" type="button">Snapshot</button>
@@ -50,7 +50,7 @@
       <div>
         <h2>Project not found</h2>
         <p id="pdNotFoundMsg">The requested project could not be located.</p>
-        <a class="pd-pdf-btn" href="../../index.html">← Back to Dashboard</a>
+        <a class="pd-pdf-btn" href="../../index.html" id="pdNotFoundBackBtn">← Back</a>
       </div>
     </div>
 
@@ -172,14 +172,14 @@
               <th style="width:42px">S.NO</th>
               <th style="width:100px">CODE</th>
               <th>DELIVERABLE</th>
-              <th style="width:160px">RESPONSIBLE</th>
-              <th style="width:140px">PLANNED START</th>
-              <th style="width:140px">PLANNED END</th>
-              <th style="width:120px">ACTUAL CLOSURE</th>
-              <th style="width:120px">OUTLOOK</th>
+              <th style="width:140px">RESPONSIBLE</th>
+              <th style="width:120px">PLANNED START</th>
+              <th style="width:115px">PLANNED END</th>
+              <th style="width:115px">ACTUAL CLOSURE</th>
+              <th style="width:115px">OUTLOOK</th>
               <th style="width:130px">STATUS</th>
               <th style="width:170px">REMARKS</th>
-              <th style="width:96px">DOCUMENTS</th>
+              <th style="width:116px">DOCUMENTS</th>
               <th style="width:70px">ACTIONS</th>
             </tr>
           </thead>
@@ -275,23 +275,32 @@
     <section class="pd-tabpanel pd-tab-content-panel" id="tab-gantt" hidden>
       <div class="gc2-topbar">
         <div class="gc2-kpi-strip" id="gcKpiStrip"></div>
-        
+        <div class="gc2-legend" id="gcLegend">
+          <span class="gc2-leg-item"><i class="gc2-sw gc2-sw-planned"></i>Planned</span>
+          <span class="gc2-leg-item"><i class="gc2-sw gc2-sw-actual"></i>Actual</span>
+          <span class="gc2-leg-item"><i class="gc2-sw-diamond"></i>Milestone achieved</span>
+          <span class="gc2-leg-item gc2-leg-dep"><i class="gc2-dep-arrow"></i>Dependency</span>
+        </div>
       </div>
 
-      <div class="gc2-legend">
-        <span class="gc2-leg-item"><i class="gc2-sw gc2-sw-planned"></i>Planned</span>
-        <span class="gc2-leg-item"><i class="gc2-sw gc2-sw-actual"></i>Actual</span>
-        <span class="gc2-leg-item"><i class="gc2-sw-diamond"></i>Milestone achieved</span>
-        <span class="gc2-leg-item gc2-leg-dep"><i class="gc2-dep-arrow"></i>Dependency</span>
+      <div class="gc2-subbar">
         <span class="gc2-legend-right" id="gcFilterSummary"></span>
+        <button type="button" class="gc2-nav-btn gc2-nav-btn-left" id="gcNavPrev" style="left:var(--gc2-left-w,640px)" aria-label="Scroll timeline earlier" title="Previous week (hold to scroll)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button type="button" class="gc2-nav-btn gc2-nav-btn-right" id="gcNavNext" aria-label="Scroll timeline later" title="Next week (hold to scroll)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
       </div>
 
       <div class="gc2-body" id="gcBody">
         <!-- Left frozen pane -->
-        <div class="gc2-left">
+        <div class="gc2-left" id="gcLeft">
           <div class="gc2-left-head">
             <div class="gc2-lh gc2-lh-no">#</div>
             <div class="gc2-lh gc2-lh-deliv">Deliverables</div>
+            <div class="gc2-lh gc2-lh-sd">SD</div>
+            <div class="gc2-lh gc2-lh-resp">Responsible</div>
             <div class="gc2-lh gc2-lh-date">Start</div>
             <div class="gc2-lh gc2-lh-date">End</div>
             <div class="gc2-lh gc2-lh-days">Days</div>
@@ -300,6 +309,8 @@
           </div>
           <div class="gc2-left-scroll" id="gcLeftScroll"></div>
         </div>
+        <!-- Draggable resize divider -->
+        <div class="gc2-resizer" id="gcResizer" role="separator" aria-orientation="vertical" aria-label="Resize deliverable panel" tabindex="0"></div>
         <!-- Right scrollable timeline -->
         <div class="gc2-right">
           <div class="gc2-right-head-scroll" id="gcRightHeadScroll">

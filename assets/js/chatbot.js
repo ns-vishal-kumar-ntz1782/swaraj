@@ -286,18 +286,84 @@
     }
     renderSuggestions();
 
+    // ── Adaptive positioning — the panel is a fixed element placed relative to the launcher's
+    // REAL on-screen position (measured, not assumed), so it works no matter where the
+    // launcher ends up: default corner, dragged elsewhere, header/sidebar, whatever. Picks
+    // downward when there's room below the launcher (or more room below than above), upward
+    // otherwise; picks right-aligned to the launcher unless that would push the panel off the
+    // left edge, in which case it left-aligns instead (or clamps, on a very narrow viewport).
+    // The max-height clamp below is a hard ceiling at whatever space is actually available —
+    // never a fixed floor that could push the panel past the viewport edge on a very short
+    // screen — "never overflow" wins over "never look cramped". ──
+    const PANEL_GAP = 12, PANEL_MARGIN = 12;
+    function positionPanel() {
+      const toggleRect = toggleBtn.getBoundingClientRect();
+      const vw = window.innerWidth, vh = window.innerHeight;
+
+      // Remeasure against the panel's natural CSS size (480px, or the mobile media query's own
+      // calc()) rather than a stale max-height this function set the last time it ran.
+      panel.style.maxHeight = "";
+      const panelRect = panel.getBoundingClientRect();
+
+      const spaceBelow = vh - toggleRect.bottom - PANEL_GAP - PANEL_MARGIN;
+      const spaceAbove = toggleRect.top - PANEL_GAP - PANEL_MARGIN;
+      const openDown = spaceBelow >= panelRect.height || spaceBelow >= spaceAbove;
+
+      panel.classList.toggle("aichat-panel-down", openDown);
+      panel.classList.toggle("aichat-panel-up", !openDown);
+
+      if (openDown) {
+        const top = toggleRect.bottom + PANEL_GAP;
+        panel.style.top = top + "px";
+        panel.style.bottom = "auto";
+        panel.style.maxHeight = Math.max(0, Math.min(panelRect.height, vh - top - PANEL_MARGIN)) + "px";
+      } else {
+        const bottom = vh - toggleRect.top + PANEL_GAP;
+        panel.style.bottom = bottom + "px";
+        panel.style.top = "auto";
+        panel.style.maxHeight = Math.max(0, Math.min(panelRect.height, spaceAbove)) + "px";
+      }
+
+      const panelWidth = panelRect.width;
+      if (toggleRect.right - panelWidth >= PANEL_MARGIN) {
+        panel.style.right = (vw - toggleRect.right) + "px";
+        panel.style.left = "auto";
+      } else if (toggleRect.left + panelWidth <= vw - PANEL_MARGIN) {
+        panel.style.left = toggleRect.left + "px";
+        panel.style.right = "auto";
+      } else {
+        const left = Math.min(Math.max(PANEL_MARGIN, toggleRect.left), Math.max(PANEL_MARGIN, vw - panelWidth - PANEL_MARGIN));
+        panel.style.left = left + "px";
+        panel.style.right = "auto";
+      }
+    }
+
     // ── Open / close — always starts closed on a fresh page load (never auto-restored), so the
     // widget is only ever open because the user just clicked it open in this page view. ──
+    let closeTimer = null;
     function setOpen(open) {
-      panel.hidden = !open;
       dock.classList.toggle("aichat-open", open);
-      if (open) setTimeout(() => inputEl.focus(), 150);
+      if (open) {
+        clearTimeout(closeTimer);
+        panel.hidden = false;
+        positionPanel();
+        // Flush layout so the pre-reveal offset (aichat-panel-down/-up, just set inside
+        // positionPanel) actually applies before -visible is added a frame later — otherwise
+        // the browser can coalesce both class changes into one frame and skip the transition.
+        void panel.offsetHeight;
+        requestAnimationFrame(() => panel.classList.add("aichat-panel-visible"));
+        setTimeout(() => inputEl.focus(), 150);
+      } else {
+        panel.classList.remove("aichat-panel-visible");
+        closeTimer = setTimeout(() => { panel.hidden = true; }, 180); // matches the CSS transition duration
+      }
     }
-    toggleBtn.addEventListener("click", () => setOpen(panel.hidden));
+    toggleBtn.addEventListener("click", () => setOpen(!dock.classList.contains("aichat-open")));
     panel.querySelector("#aichatHeadClose").addEventListener("click", () => setOpen(false));
 
     // ── Dragging — mousedown on the toggle icon (closed) or the panel header (open) repositions
-    // the whole dock anywhere on screen; position is clamped to stay fully on-screen and persisted. ──
+    // the whole dock anywhere on screen; position is clamped to stay fully on-screen and persisted.
+    // The panel (independently fixed) follows along live so it never lags behind the launcher. ──
     function startDrag(source, downEvt) {
       downEvt.preventDefault();
       const rect = dock.getBoundingClientRect();
@@ -317,6 +383,7 @@
         dock.style.top = top + "px";
         dock.style.right = "auto";
         dock.style.bottom = "auto";
+        if (!panel.hidden) positionPanel();
       }
       function onUp() {
         document.removeEventListener("mousemove", onMove);
@@ -324,6 +391,7 @@
         dock.classList.remove("aichat-dragging");
         const r = dock.getBoundingClientRect();
         saveState({ pos: { left: r.left, top: r.top } });
+        if (!panel.hidden) positionPanel();
         // Only a drag started FROM the toggle button itself produces a spurious trailing click
         // on that same button (mousedown → drag → mouseup all target it) — swallow just that
         // one. A drag started from the header targets a different element on mousedown, so it
@@ -344,15 +412,26 @@
       startDrag(panel, e);
     });
 
-    // Keep the dock fully on-screen if the window is resized after a drag.
-    window.addEventListener("resize", () => {
-      if (!dock.style.left) return;
-      const r = dock.getBoundingClientRect();
-      const left = Math.min(parseFloat(dock.style.left), Math.max(4, window.innerWidth - r.width - 4));
-      const top  = Math.min(parseFloat(dock.style.top), Math.max(4, window.innerHeight - r.height - 4));
-      dock.style.left = Math.max(4, left) + "px";
-      dock.style.top = Math.max(4, top) + "px";
-    });
+    // Keep the dock fully on-screen if the window is resized after a drag, and keep the open
+    // panel correctly positioned/sized across resize, zoom (visualViewport), and scroll — a
+    // launcher that scrolls out of its original spot (e.g. one embedded in page content rather
+    // than a floating fixed button) must never leave the panel stranded off-screen.
+    function onViewportChange() {
+      if (dock.style.left) {
+        const r = dock.getBoundingClientRect();
+        const left = Math.min(parseFloat(dock.style.left), Math.max(4, window.innerWidth - r.width - 4));
+        const top  = Math.min(parseFloat(dock.style.top), Math.max(4, window.innerHeight - r.height - 4));
+        dock.style.left = Math.max(4, left) + "px";
+        dock.style.top = Math.max(4, top) + "px";
+      }
+      if (!panel.hidden) positionPanel();
+    }
+    window.addEventListener("resize", onViewportChange);
+    window.addEventListener("scroll", onViewportChange, true); // capture — catches any scrollable ancestor, not just window
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", onViewportChange);
+      window.visualViewport.addEventListener("scroll", onViewportChange);
+    }
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount);

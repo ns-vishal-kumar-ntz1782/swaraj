@@ -187,6 +187,9 @@ function usedByTemplates(deliverableNo) {
 function openDeliverableModal(deliverable, onDone) {
   const editing = !!deliverable;
   const user = getActiveUser();
+  // Standard Duration is the one field the Gantt Chart's "SD" column reads for every project —
+  // only System Administrator may set it, everyone else with access to this drawer views it read-only.
+  const canEditDuration = user?.businessRole === "System Administrator";
   const forms = listFormOptions();
   const history = editing ? listAuditEntries({ entityType: "Deliverable" }).filter((e) => e.entityId === deliverable.deliverableNo) : [];
   const usedBy = editing ? usedByTemplates(deliverable.deliverableNo) : [];
@@ -238,7 +241,7 @@ function openDeliverableModal(deliverable, onDone) {
           <label class="span-2">Name<input type="text" id="dName" value="${escapeHtml(original.deliverableName)}" required /></label>
           <label class="span-2">Description<textarea id="dDesc" rows="2">${escapeHtml(original.description)}</textarea></label>
           <label>Category<input type="text" id="dCategory" value="${escapeHtml(original.category)}" list="dCategoryList" /></label>
-          <label>Estimated Duration<input type="text" id="dDuration" value="${escapeHtml(original.estimatedDuration)}" /></label>
+          <label>Standard Duration${canEditDuration ? "" : ' <span class="sg-subtle">(Admin only)</span>'}<input type="text" id="dDuration" value="${escapeHtml(original.estimatedDuration)}" ${canEditDuration ? "" : "disabled title=\"Only System Administrator can set Standard Duration\""} /></label>
           <label class="sg-check-inline"><input type="checkbox" id="dMandatory" ${original.mandatory ? "checked" : ""} /> Mandatory</label>
           <label class="sg-check-inline"><input type="checkbox" id="dActive" ${original.active ? "checked" : ""} /> Active</label>
         </div>

@@ -145,17 +145,24 @@
       return "Future";
     }
 
-    // State: which gate index is currently selected
-    let selectedGateIdx = -1;
-    for (let i = 0; i < gateDetails.length; i++) {
-      if (gateStatus(i) === "Active") { selectedGateIdx = i; break; }
-    }
-    if (selectedGateIdx === -1) {
-      for (let i = gateDetails.length - 1; i >= 0; i--) {
-        if (gateStatus(i) === "Completed") { selectedGateIdx = i; break; }
+    // State: which gate index is currently selected — persisted on the function itself (like
+    // renderGantt._state) so a re-render triggered from elsewhere (e.g. the Timeline tab's
+    // Outlook edit syncing back into this tab) doesn't silently snap the user back to the
+    // default gate if they'd manually selected a different one.
+    if (renderDeliverables._selectedGateIdx === undefined) {
+      let initIdx = -1;
+      for (let i = 0; i < gateDetails.length; i++) {
+        if (gateStatus(i) === "Active") { initIdx = i; break; }
       }
+      if (initIdx === -1) {
+        for (let i = gateDetails.length - 1; i >= 0; i--) {
+          if (gateStatus(i) === "Completed") { initIdx = i; break; }
+        }
+      }
+      if (initIdx === -1) initIdx = 0;
+      renderDeliverables._selectedGateIdx = initIdx;
     }
-    if (selectedGateIdx === -1) selectedGateIdx = 0;
+    let selectedGateIdx = renderDeliverables._selectedGateIdx;
 
     // ── Build gate progress bar ──
     function buildGateBar() {
@@ -193,7 +200,7 @@
       gateBar.innerHTML = steps;
       gateBar.querySelectorAll(".dlv-gate-btn").forEach(btn => {
         btn.addEventListener("click", () => {
-          selectedGateIdx = parseInt(btn.dataset.gateIdx, 10);
+          selectedGateIdx = renderDeliverables._selectedGateIdx = parseInt(btn.dataset.gateIdx, 10);
           buildGateBar();
           buildTable();
         });
@@ -656,6 +663,9 @@
                 fresh = bridge.updateAssignmentFields(x.assignmentId, { [fieldMap[field]]: val || null }, actorName, actorRoleBiz);
               }
               refreshRow(idx, fresh);
+              // The Timeline tab's Planned/Actual/Outlook rows pull from these same deliverable
+              // records (matched by name) — keep it live-synced with whatever was just edited here.
+              if (typeof renderTimeline === "function") renderTimeline(d);
             } catch (e) { showToast("Could not save: " + e.message, "error"); }
           });
         });
@@ -1472,7 +1482,26 @@
     const catFilterEl    = $("gcCategoryFilter");
     const statusFilterEl = $("gcStatusFilter");
     const filterSummaryEl = $("gcFilterSummary");
+    const tabGanttEl     = document.getElementById("tab-gantt");
+    const leftPaneEl     = $("gcLeft");
+    const resizerEl      = $("gcResizer");
+    const navPrevEl      = $("gcNavPrev");
+    const navNextEl      = $("gcNavNext");
     if (!leftScroll || !rightScroll) return;
+
+    // Real per-gate OPEN risk counts and real per-deliverable comment counts — used by the
+    // bubble indicators below. Built once per render, not per-row, to stay fast at 100+ rows.
+    const openRiskCountByGate = {};
+    (d.risks || []).forEach(rk => {
+      if (rk.status === "Closed") return;
+      openRiskCountByGate[rk.gateCode] = (openRiskCountByGate[rk.gateCode] || 0) + 1;
+    });
+    const commentCountByAssignment = {};
+    const commentsByAssignmentMap = {};
+    (d.commentsByAssignment || []).forEach(c => {
+      commentCountByAssignment[c.deliverableAssignmentId] = (commentCountByAssignment[c.deliverableAssignmentId] || 0) + 1;
+      (commentsByAssignmentMap[c.deliverableAssignmentId] = commentsByAssignmentMap[c.deliverableAssignmentId] || []).push(c);
+    });
 
     if (!gateDetails.length) {
       leftScroll.innerHTML = '<div style="padding:24px;color:var(--color-slate-600);font-style:italic">No deliverables found for this project.</div>';
@@ -1510,7 +1539,19 @@
 
     // State persists across re-renders of this tab (expand/collapse + filters survive a redraw).
     if (!renderGantt._state) {
-      renderGantt._state = { gateExpanded: {}, category: "", status: "", scrolledOnce: false };
+      // Default view: only the current/active gate starts expanded — every other gate (past
+      // Completed or future NotStarted) starts collapsed. The user can still expand any of them
+      // by clicking its header; this only sets the INITIAL state on first load of this tab.
+      const gateExpanded = {};
+      let activeGi = -1;
+      gateDetails.forEach((gd, gi) => { if (gateStatusOf(gi) === "Active") activeGi = gi; });
+      // No gate is Active (e.g. a fully-completed project) — fall back to the last Completed gate
+      // so something is always open by default, rather than every section starting collapsed.
+      if (activeGi === -1) {
+        for (let gi = gateDetails.length - 1; gi >= 0; gi--) { if (gateStatusOf(gi) === "Completed") { activeGi = gi; break; } }
+      }
+      gateDetails.forEach((gd, gi) => { gateExpanded[gi] = gi === activeGi; });
+      renderGantt._state = { gateExpanded, category: "", status: "", scrolledOnce: false };
     }
     const state = renderGantt._state;
 
@@ -1533,15 +1574,16 @@
     const completedCount = allEntries.filter(e => e.x.status === "Completed").length;
 
     if (kpiStrip) {
+      const avgDelayTitle = "Avg. Delay = average of (Actual End − Planned End) in days, across deliverables currently running late (delay > 0 days). A deliverable is counted as delayed once its actual/tracked completion slips past its planned end date; the same day-count bands its status color — Green 0–15d, Amber 15–60d, Red 60d+ (“Critical”).";
       const cards = [
-        { val: totalDeliverables, lbl: "Total Deliverables" },
+        { val: totalDeliverables, lbl: "Total Deliverables", id: "gcKpiTotal", cls: "gc2-kpi-clickable", title: "Click to show all deliverables" },
         { val: plannedDurationDays + " days", lbl: "Planned Duration" },
         { val: criticalCount, lbl: "Critical", id: "gcKpiCritical", cls: "gc2-kpi-red gc2-kpi-clickable" },
-        { val: avgDelay + "d", lbl: "Avg. Delay", cls: "gc2-kpi-amber" },
+        { val: avgDelay + "d", lbl: "Avg. Delay", cls: "gc2-kpi-amber", title: avgDelayTitle },
         { val: completedCount, lbl: "Completed", cls: "gc2-kpi-teal" },
       ];
       kpiStrip.innerHTML = cards.map(c =>
-        `<div class="gc2-kpi-card ${c.cls || ""}" ${c.id ? `id="${c.id}"` : ""}>
+        `<div class="gc2-kpi-card ${c.cls || ""}" ${c.id ? `id="${c.id}"` : ""} ${c.title ? `title="${esc(c.title)}"` : ""}>
            <div class="gc2-kpi-val">${c.val}</div>
            <div class="gc2-kpi-lbl">${esc(c.lbl)}</div>
          </div>`
@@ -1561,8 +1603,20 @@
       return true;
     }
 
+    // A gate only renders its deliverable rows when state.gateExpanded[gi] is true (see the row
+    // model below) — so turning on a filter (Critical KPI, Status/Category dropdown) without also
+    // opening every gate that actually has a match leaves most matches hidden inside whichever
+    // gates happened to already be collapsed (by default, only the current/active gate starts
+    // open). That made the "Critical" KPI's total look wrong: it counts every red-RAG deliverable
+    // project-wide, but only the ones in the one open gate were ever visible. Expand every gate
+    // with at least one match whenever a filter is switched on, so the visible rows always account
+    // for the full filtered count.
+    function expandGatesMatching(matchFn) {
+      allEntries.forEach(e => { if (matchFn(e)) state.gateExpanded[e.gi] = true; });
+    }
+
     // ── Row model — one flat, ordered list driving BOTH panes ──
-    const GATE_H = 34, DELIV_H = 52, MS_H = 30;
+    const GATE_H = 34, DELIV_H = 58, MS_H = 30;
     const rows = [];
     gateDetails.forEach((gd, gi) => {
       const status = gateStatusOf(gi);
@@ -1586,6 +1640,8 @@
       return `<svg class="gc2-gate-chevron${open ? " gc2-open" : ""}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
     }
     const USER_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>';
+    const BLOCK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><line x1="6" y1="18" x2="18" y2="6"/></svg>';
+    const LINK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 17H7a5 5 0 0 1 0-10h2"/><path d="M15 7h2a5 5 0 0 1 0 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>';
     function respText(x) {
       const list = x.responsible || [];
       if (!list.length) return "Unassigned";
@@ -1593,13 +1649,29 @@
       return list[0] + " +" + (list.length - 1);
     }
 
+    const RISK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+
+    // Same floating-popover shell/classes the Deliverables tab's own history popover uses
+    // (dlv-pop-head / dlv-pop-hist-list / dlv-pop-hist-row) — keeps this visually consistent
+    // with zero new popover CSS needed.
+    function buildCommentsPopoverHtml(comments) {
+      const rows = comments.slice(0, 25).map(c => `
+        <div class="dlv-pop-hist-row">
+          <div class="dlv-pop-hist-top"><strong>${esc(c.author || "Unknown")}</strong><span>${esc(c.date || "")}</span></div>
+          <div class="dlv-pop-hist-sub">${esc(c.text || "")}</div>
+        </div>`).join("");
+      return `<div class="dlv-pop-head">Comments</div><div class="dlv-pop-hist-list">${rows || '<div class="dlv-pop-empty">No comments yet.</div>'}</div>`;
+    }
+
     const leftHtml = rows.map(r => {
       if (r.kind === "gate") {
         const open = state.gateExpanded[r.gi] !== false;
-        return `<div class="gc2-gate-header-row gc2-gate-${r.status.toLowerCase()}" data-gate-idx="${r.gi}" style="height:${r.height}px">
+        const riskCount = openRiskCountByGate[r.gd.stage] || 0;
+        return `<div class="gc2-gate-header-row gc2-gate-${r.status.toLowerCase()}" data-gate-idx="${r.gi}" style="height:${r.height}px" title="Gate ${r.gi + 1} — ${esc(r.gd.stage)}">
           ${chevronSvg(open)}
-          <span>Gate ${r.gi + 1} — ${esc(r.gd.stage)}</span>
+          <span>G${r.gi + 1}</span>
           ${r.status === "Active" ? '<span class="gc2-gate-current-tag">(CURRENT)</span>' : ""}
+          
         </div>`;
       }
       if (r.kind === "ms") {
@@ -1614,13 +1686,15 @@
       const sD = parseDisp(x.plannedDate), eD = parseDisp(x.plannedEndDate);
       const days = (sD && eD) ? diffDaysG(sD, eD) : "-";
       const varVal = r.e.isFutureGate ? 0 : (x.delayDays || 0);
+      const respFull = (x.responsible || []).join(", ") || "Unassigned";
       return `<div class="gc2-deliv-row" style="height:${r.height}px">
         <div class="gc2-dc gc2-dc-no">${r.e.no}</div>
         <div class="gc2-dc gc2-dc-deliv">
-          <div class="gc2-dc-name" title="${esc(x.name)}">${esc(x.name)}</div>
-          <div class="gc2-dc-resp">${USER_ICON}<span>${esc(respText(x))}</span></div>
+          <div class="gc2-dc-name gc2-dc-name-link" data-jump-gi="${r.gi}" data-jump-aid="${esc(x.assignmentId || "")}" title="${esc(x.name)} — click to open in Deliverables">${esc(x.name)}</div>
         </div>
-        <div class="gc2-dc gc2-dc-date"><span class="p">P: ${esc(x.plannedDate)}</span><span class="a">A: —</span></div>
+        <div class="gc2-dc gc2-dc-sd" title="Standard Duration">${x.standardDurationDays ? x.standardDurationDays + "d" : "-"}</div>
+        <div class="gc2-dc gc2-dc-resp" title="${esc(respFull)}">${USER_ICON}<span>${esc(respText(x))}</span></div>
+        <div class="gc2-dc gc2-dc-date"><span class="p">P: ${esc(x.plannedDate)}</span><span class="a">A: ${esc(x.actualStartDate)}</span></div>
         <div class="gc2-dc gc2-dc-date"><span class="p">P: ${esc(x.plannedEndDate)}</span><span class="a">A: ${esc(x.actualDate)}</span></div>
         <div class="gc2-dc gc2-dc-days">${days}</div>
         <div class="gc2-dc gc2-dc-var gc2-var-${r.e.rag}">${varVal > 0 ? "+" + varVal : "0"}</div>
@@ -1628,18 +1702,30 @@
       </div>`;
     }).join("");
     leftScroll.innerHTML = leftHtml;
+    leftScroll.querySelectorAll("[data-jump-aid]").forEach(el => {
+      el.addEventListener("click", () => jumpToDeliverable(parseInt(el.dataset.jumpGi, 10), el.dataset.jumpAid));
+    });
 
     // ── Right pane — date-scaled timeline ──
+    // WEEK_W/7 is the single source of truth for px-per-day — every width (week cell, month
+    // cell, bar) is derived from real day counts through this one constant, so a month's cell
+    // width and the sum of its week cells' widths can never drift apart (the previous version
+    // rounded totalWeeks up separately from totalDays, which is what caused Week 5 to render
+    // short/missing on some months — the two numbers silently disagreed by a few px each month).
     const chartStart = new Date(overallMin.getFullYear(), overallMin.getMonth(), 1);
     const chartEnd   = new Date(overallMax.getFullYear(), overallMax.getMonth() + 1, 0);
     const totalDays  = Math.max(1, diffDaysG(chartStart, chartEnd) + 1);
-    const WEEK_W = 26;
-    const totalWeeks = Math.ceil(totalDays / 7);
-    const chartW = totalWeeks * WEEK_W;
-    const daysPx = days => (days / totalDays) * chartW;
+    const WEEK_W = 28;
+    const PX_PER_DAY = WEEK_W / 7;
+    const chartW = totalDays * PX_PER_DAY;
+    const daysPx = days => days * PX_PER_DAY;
     const datePx = dt => daysPx(diffDaysG(chartStart, dt));
 
-    // Per-gate span (for the gate-band header + milestone diamond x-position)
+    // Per-gate span (for the gate-band header + milestone diamond x-position). A Skipped gate has
+    // no deliverables and no real gate-instance dates ("-"), so it has no real span of its own —
+    // rather than defaulting to chartStart (position 0, which would render it before every earlier
+    // gate and break the seamless band layout below), it inherits the position right after the
+    // PREVIOUS gate ends, so it renders as a thin marker in its correct chronological slot.
     const gateSpans = gateDetails.map((gd, gi) => {
       const ents = allEntries.filter(e => e.gi === gi);
       const starts = ents.map(e => parseDisp(e.x.plannedDate)).filter(Boolean);
@@ -1648,19 +1734,33 @@
       const gEnd   = parseDisp(gatesArr[gi] && gatesArr[gi].target);
       const allS = gStart ? starts.concat([gStart]) : starts;
       const allE = gEnd ? ends.concat([gEnd]) : ends;
-      const s = allS.length ? new Date(Math.min.apply(null, allS.map(t => t.getTime()))) : chartStart;
+      const hasRealSpan = allS.length > 0;
+      const s = hasRealSpan ? new Date(Math.min.apply(null, allS.map(t => t.getTime()))) : null;
       const e2 = allE.length ? new Date(Math.max.apply(null, allE.map(t => t.getTime()))) : s;
-      return { start: s, end: e2 < s ? s : e2 };
+      return { start: s, end: e2 && s && e2 < s ? s : e2, hasRealSpan };
     });
+    for (let gi = 0; gi < gateSpans.length; gi++) {
+      if (!gateSpans[gi].hasRealSpan) {
+        const prevEnd = gi > 0 ? gateSpans[gi - 1].end : chartStart;
+        gateSpans[gi].start = prevEnd || chartStart;
+        gateSpans[gi].end = gateSpans[gi].start;
+      }
+    }
 
     if (gateRowEl) {
+      // Each band's left edge is its own gate's real date span, but its WIDTH is stretched to meet
+      // the NEXT gate's left edge (not just its own end date) — the small ~1-week real calendar
+      // gap between gates should still read as one seamless, connected header strip, not tiles
+      // with a visible background gap between them. Only the last gate keeps its own natural end.
+      const bandLefts = gateSpans.map(sp => Math.max(0, datePx(sp.start)));
       gateRowEl.innerHTML = gateSpans.map((sp, gi) => {
         const status = gateStatusOf(gi);
-        const left = Math.max(0, datePx(sp.start));
-        const width = Math.max(34, datePx(sp.end) - left);
+        const left = bandLefts[gi];
+        const nextLeft = gi < bandLefts.length - 1 ? bandLefts[gi + 1] : (datePx(sp.end));
+        const width = Math.max(34, nextLeft - left);
         const open = state.gateExpanded[gi] !== false;
-        return `<div class="gc2-gate-band gc2-gate-${status.toLowerCase()}" data-gate-idx="${gi}" style="position:absolute;left:${left}px;width:${width}px;height:100%;top:0">
-          <span>Gate ${gi + 1}${status === "Active" ? " (CURRENT)" : ""}</span><span style="font-weight:400">${open ? "−" : "+"}</span>
+        return `<div class="gc2-gate-band gc2-gate-${status.toLowerCase()}" data-gate-idx="${gi}" style="position:absolute;left:${left}px;width:${width}px;height:100%;top:0" title="Gate ${gi + 1} — ${esc(gateDetails[gi].stage)}${status === "Active" ? " (CURRENT)" : ""}">
+          <span>G${gi + 1}${status === "Active" ? " •" : ""}</span><span class="gc2-gate-band-collapse">${open ? "−" : "+"}</span>
         </div>`;
       }).join("");
     }
@@ -1677,12 +1777,30 @@
       }
       monthRowEl.innerHTML = html;
     }
+    // Week cells — each week's width is its REAL day count (7, except a trailing short week
+    // when the month doesn't end on a 7-day boundary) run through the exact same daysPx() the
+    // month row uses, so a month's cell width and the sum of its own week cells always agree —
+    // this is what makes Week 5 show up correctly (previously a flat WEEK_W per cell silently
+    // drifted from the real day-based month width). weekBoundaries is reused below to paint the
+    // alternating column backdrop in the bars area at the identical x-positions.
+    const weekBoundaries = [];
     if (weekRowEl) {
       let html = "", cur = new Date(chartStart), weekNum = 1, lastMonth = cur.getMonth();
       while (cur <= chartEnd) {
         if (cur.getMonth() !== lastMonth) { weekNum = 1; lastMonth = cur.getMonth(); }
-        html += `<div class="gc2-week-cell${weekNum === 1 ? " gc2-month-start" : ""}" style="width:${WEEK_W}px">W${weekNum}</div>`;
-        cur = new Date(cur.getTime() + 7 * 86400000);
+        const monthEnd = new Date(cur.getFullYear(), cur.getMonth() + 1, 0);
+        const cellEndMs = Math.min(cur.getTime() + 6 * 86400000, monthEnd.getTime());
+        const cellDays = diffDaysG(cur, new Date(cellEndMs)) + 1;
+        const left = datePx(cur);
+        const w = daysPx(cellDays);
+        const alt = weekNum % 2 === 0;
+        weekBoundaries.push({ left, width: w, alt });
+        html += `<div class="gc2-week-cell${weekNum === 1 ? " gc2-month-start" : ""}${alt ? " gc2-week-alt" : ""}" style="width:${w}px">W${weekNum}</div>`;
+        // Advance from this cell's REAL end (not a flat +7) — a trailing week clipped to the
+        // month boundary is shorter than 7 days, and jumping +7 from its start would overshoot
+        // into the next month, silently skipping the days in between (the root cause of the
+        // week row's total width falling short of the month row's).
+        cur = new Date(cellEndMs + 86400000);
         weekNum++;
       }
       weekRowEl.innerHTML = html;
@@ -1699,9 +1817,22 @@
       }
     }
 
+    // Alternating week-column backdrop, at the exact x-positions the week header row above uses.
+    const altcolHtml = weekBoundaries.filter(w => w.alt).map(w =>
+      `<div class="gc2-altcol" style="left:${w.left}px;width:${w.width}px"></div>`
+    ).join("");
+
     // Bar rows — same order/heights as the left pane
     const rowByName = {};
     rows.forEach(r => { if (r.kind === "deliv") rowByName[r.e.x.name] = r; });
+    // A label always renders — this heuristic just decides whether it fits INSIDE the bar or
+    // needs to spill OUTSIDE it (gc2-bar-label-outside, styled in CSS), so text is never clipped
+    // or silently dropped on a narrow bar.
+    function fitsInside(text, widthPx) { return text.length * 5.6 + 12 <= widthPx; }
+    function barLabelHtml(text, widthPx) {
+      const outside = !fitsInside(text, widthPx);
+      return `<span class="gc2-bar-label${outside ? " gc2-bar-label-outside" : ""}">${esc(text)}</span>`;
+    }
     let depSvg = "";
     const barRowsHtml = rows.map(r => {
       if (r.kind === "gate") {
@@ -1718,25 +1849,49 @@
       const x = r.e.x;
       const sD = parseDisp(x.plannedDate), eD = parseDisp(x.plannedEndDate);
       let bars = "";
+      let furthestRight = 0;
       if (sD && eD) {
-        const left = datePx(sD), width = Math.max(10, datePx(eD) - left);
-        bars += `<div class="gc2-bar gc2-bar-planned" style="left:${left}px;width:${width}px" title="Planned: ${esc(x.plannedDate)} – ${esc(x.plannedEndDate)}">${width > 70 ? `<span class="gc2-bar-label">${esc(x.plannedDate)} – ${esc(x.plannedEndDate)}</span>` : ""}</div>`;
+        const left = datePx(sD), width = Math.max(14, datePx(eD) - left);
+        bars += `<div class="gc2-bar gc2-bar-planned" style="left:${left}px;width:${width}px" title="Planned: ${esc(x.plannedDate)} – ${esc(x.plannedEndDate)}">${barLabelHtml(`${x.plannedDate} – ${x.plannedEndDate}`, width)}</div>`;
+        furthestRight = Math.max(furthestRight, left + width);
       }
-      if (x.status === "Completed" && x.actualDate && x.actualDate !== "-" && sD) {
+      // Actual End is shown whenever a real Actual End date exists — not gated on the current
+      // status label, since a completed-then-reworked item can carry a real historical actualEnd
+      // while its status has since moved off "Completed"; hiding it in that case would silently
+      // drop real data. The bar's left edge is the real actualStartDate (d.actualStart in the raw
+      // record) — falls back to the planned start only for the rare record missing it.
+      const actualStartD = (x.actualStartDate && x.actualStartDate !== "-") ? parseDisp(x.actualStartDate) : sD;
+      if (x.actualDate && x.actualDate !== "-" && actualStartD) {
         const actualEndD = parseDisp(x.actualDate);
         if (actualEndD) {
-          const left = datePx(sD), width = Math.max(8, datePx(actualEndD) - left);
-          bars += `<div class="gc2-bar gc2-bar-actual" style="left:${left}px;width:${width}px" title="Actual: ${esc(x.plannedDate)} – ${esc(x.actualDate)}"></div>`;
+          const left = datePx(actualStartD), width = Math.max(12, datePx(actualEndD) - left);
+          bars += `<div class="gc2-bar gc2-bar-actual" style="left:${left}px;width:${width}px" title="Actual: ${esc(x.actualStartDate)} – ${esc(x.actualDate)}">${barLabelHtml(`${x.actualStartDate} – ${x.actualDate}`, width)}</div>`;
+          furthestRight = Math.max(furthestRight, left + width);
         }
       }
+      // Bubble indicators — real, data-driven signals only, stacked left-to-right just past the
+      // bars so none overlap each other or the bar text.
+      let bubbleX = furthestRight + 4;
       if (r.e.rag === "red") {
-        const alertLeft = (eD ? datePx(eD) : (sD ? datePx(sD) : 0)) + 4;
-        bars += `<div class="gc2-bar-alert" title="${x.delayDays} day(s) delay" style="left:${alertLeft}px">!</div>`;
+        bars += `<div class="gc2-bar-alert" title="${x.delayDays} day(s) delay" style="left:${bubbleX}px">!</div>`;
+        bubbleX += 19;
       }
-      // Dependency connector — only real dependencies (x.dependency names another real deliverable)
+      if (x.status === "Blocked") {
+        bars += `<div class="gc2-bubble gc2-bubble-blocked" style="left:${bubbleX}px;top:21px" title="Blocked">${BLOCK_ICON}</div>`;
+        bubbleX += 19;
+      }
+      const commentCount = commentCountByAssignment[x.assignmentId] || 0;
+      if (commentCount > 0) {
+        bars += `<div class="gc2-bubble gc2-bubble-comment" data-comment-aid="${esc(x.assignmentId)}" style="left:${bubbleX}px;top:21px" title="${commentCount} comment${commentCount === 1 ? "" : "s"} — click to view">${commentCount}</div>`;
+        bubbleX += 19;
+      }
+      // Dependency connector + a small discoverable badge (the arrow alone is easy to miss on a
+      // long, busy timeline) — only for real dependencies (x.dependency names another real row).
       if (x.dependency && x.dependency !== "-") {
         const depRow = rowByName[x.dependency];
         if (depRow) {
+          bars += `<div class="gc2-bubble gc2-bubble-dep" style="left:${bubbleX}px;top:21px" title="Depends on: ${esc(x.dependency)}">${LINK_ICON}</div>`;
+          bubbleX += 19;
           const depX = parseDisp(depRow.e.x.plannedEndDate) || parseDisp(depRow.e.x.plannedDate);
           if (depX && sD) {
             const x1 = datePx(depX), y1 = depRow.top + depRow.height / 2;
@@ -1754,6 +1909,7 @@
       barsInnerEl.style.height = totalHeight + "px";
       const todayX = datePx(TODAY_G);
       barsInnerEl.innerHTML = `
+        <div class="gc2-altcol-overlay">${altcolHtml}</div>
         <div class="gc2-vgrid-overlay">${vgridHtml}</div>
         <svg class="gc2-dep-svg" width="${chartW}" height="${totalHeight}">
           <defs><marker id="gc2ArrowHead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
@@ -1762,6 +1918,13 @@
         ${barRowsHtml}
         ${todayX >= 0 && todayX <= chartW ? `<div class="gc2-today-line" style="left:${todayX}px;height:${totalHeight}px"></div><div class="gc2-today-flag" style="left:${todayX}px">Today</div>` : ""}
       `;
+      barsInnerEl.querySelectorAll("[data-comment-aid]").forEach(el => {
+        el.addEventListener("click", e => {
+          e.stopPropagation();
+          const list = commentsByAssignmentMap[el.dataset.commentAid] || [];
+          openPopover(el, buildCommentsPopoverHtml(list));
+        });
+      });
     }
 
     // ── Scroll sync: vertical (left ↔ right), horizontal (right bars → sticky head via transform) ──
@@ -1776,10 +1939,18 @@
       if (headInner) headInner.style.transform = `translateX(-${rightScroll.scrollLeft}px)`;
     };
 
-    // ── Gate accordion toggle — both left header and right band open/close the same gate ──
+    // ── Gate accordion toggle — both left header and right band open/close the same gate.
+    // Expanding a gate (from either side) also brings its own timeline span into view, so
+    // clicking a gate in the sidebar never requires a separate manual horizontal scroll. ──
     function toggleGate(gi) {
-      state.gateExpanded[gi] = state.gateExpanded[gi] === false ? true : false;
+      const wasCollapsed = state.gateExpanded[gi] === false;
+      state.gateExpanded[gi] = wasCollapsed ? true : false;
       renderGantt(d);
+      if (wasCollapsed && gateSpans[gi] && rightScroll) {
+        const target = Math.max(0, datePx(gateSpans[gi].start) - 40);
+        rightScroll.scrollLeft = target;
+        if (headInner) headInner.style.transform = `translateX(-${target}px)`;
+      }
     }
     leftScroll.querySelectorAll(".gc2-gate-header-row").forEach(el => {
       el.addEventListener("click", () => toggleGate(parseInt(el.dataset.gateIdx, 10)));
@@ -1792,12 +1963,20 @@
     if (catFilterEl) {
       catFilterEl.value = state.category;
       catFilterEl.classList.toggle("gc2-filter-active", !!state.category);
-      catFilterEl.onchange = () => { state.category = catFilterEl.value; renderGantt(d); };
+      catFilterEl.onchange = () => {
+        state.category = catFilterEl.value;
+        if (state.category) expandGatesMatching(e => e.x.department === state.category);
+        renderGantt(d);
+      };
     }
     if (statusFilterEl) {
       statusFilterEl.value = state.status;
       statusFilterEl.classList.toggle("gc2-filter-active", !!state.status);
-      statusFilterEl.onchange = () => { state.status = statusFilterEl.value; renderGantt(d); };
+      statusFilterEl.onchange = () => {
+        state.status = statusFilterEl.value;
+        if (state.status) expandGatesMatching(e => e.rag === state.status);
+        renderGantt(d);
+      };
     }
     const critCard = $("gcKpiCritical");
     if (critCard) {
@@ -1805,6 +1984,17 @@
       critCard.title = "Click to filter the table to Critical (>60 day delay) deliverables";
       critCard.addEventListener("click", () => {
         state.status = state.status === "red" ? "" : "red";
+        if (state.status === "red") expandGatesMatching(e => e.rag === "red");
+        renderGantt(d);
+      });
+    }
+    // "Total Deliverables" doubles as the explicit "show all" reset — clears both the Critical
+    // filter and the Category dropdown, so there's always an obvious way back to the full list.
+    const totalCard = $("gcKpiTotal");
+    if (totalCard) {
+      totalCard.classList.toggle("gc2-kpi-active-neutral", !state.status && !state.category);
+      totalCard.addEventListener("click", () => {
+        state.status = ""; state.category = "";
         renderGantt(d);
       });
     }
@@ -1830,6 +2020,104 @@
       if (headInner) headInner.style.transform = `translateX(-${target}px)`;
     };
     requestAnimationFrame(renderGantt._scrollToToday);
+
+    // ── Click a deliverable name → jump to the Deliverables tab, select its gate, and briefly
+    // highlight the matching row (same array position, since both tabs read gateDetails). ──
+    function jumpToDeliverable(gi, assignmentId) {
+      const gd2 = gateDetails[gi];
+      if (!gd2) return;
+      const idx = (gd2.deliverables || []).findIndex(dd => dd.assignmentId === assignmentId);
+      if (idx === -1) return;
+      document.querySelector('[data-tab="deliverables"]')?.click();
+      requestAnimationFrame(() => {
+        const gateBtn = document.querySelector(`#dlvGateBar .dlv-gate-btn[data-gate-idx="${gi}"]`);
+        if (gateBtn && !gateBtn.classList.contains("dlv-gate-selected")) gateBtn.click();
+        setTimeout(() => {
+          const row = document.querySelector(`#deliverableTable tbody tr[data-idx="${idx}"]`);
+          if (!row) return;
+          row.scrollIntoView({ behavior: "smooth", block: "center" });
+          row.classList.add("gc2-row-flash");
+          setTimeout(() => row.classList.remove("gc2-row-flash"), 1600);
+        }, 150);
+      });
+    }
+
+    // ── Resizer + timeline nav are persistent controls (not re-rendered per call) — wire once. ──
+    if (!renderGantt._wired) {
+      renderGantt._wired = true;
+
+      if (resizerEl && leftPaneEl && tabGanttEl) {
+        const WIDTH_KEY = "spd.ganttLeftWidth.v1";
+        const MIN_LEFT = 540, MAX_LEFT = 940;
+        const saved = parseInt(sessionStorage.getItem(WIDTH_KEY), 10);
+        if (saved && saved >= MIN_LEFT && saved <= MAX_LEFT) {
+          tabGanttEl.style.setProperty("--gc2-left-w", saved + "px");
+        }
+        function setLeftWidth(w) {
+          const clamped = Math.min(MAX_LEFT, Math.max(MIN_LEFT, w));
+          tabGanttEl.style.setProperty("--gc2-left-w", clamped + "px");
+          return clamped;
+        }
+        resizerEl.addEventListener("mousedown", e => {
+          e.preventDefault();
+          resizerEl.classList.add("gc2-resizing");
+          const startX = e.clientX;
+          const startW = leftPaneEl.getBoundingClientRect().width;
+          function onMove(ev) { setLeftWidth(startW + (ev.clientX - startX)); }
+          function onUp() {
+            document.removeEventListener("mousemove", onMove);
+            document.removeEventListener("mouseup", onUp);
+            resizerEl.classList.remove("gc2-resizing");
+            sessionStorage.setItem(WIDTH_KEY, String(Math.round(leftPaneEl.getBoundingClientRect().width)));
+          }
+          document.addEventListener("mousemove", onMove);
+          document.addEventListener("mouseup", onUp);
+        });
+        resizerEl.addEventListener("keydown", e => {
+          if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+          e.preventDefault();
+          const cur = leftPaneEl.getBoundingClientRect().width;
+          const next = setLeftWidth(cur + (e.key === "ArrowRight" ? 24 : -24));
+          sessionStorage.setItem(WIDTH_KEY, String(Math.round(next)));
+        });
+      }
+
+      if (navPrevEl && navNextEl && rightScroll) {
+        // Single click = step one week; press-and-hold = smooth continuous scroll until release
+        // (mouse or touch), matching an enterprise Gantt tool's timeline nav.
+        const stepPx = () => (typeof renderGantt._weekW === "number" ? renderGantt._weekW : 28);
+        function wireHold(btn, dir) {
+          let holdTimer = null, continuous = false, rafId = null;
+          function tick() {
+            if (!continuous) return;
+            rightScroll.scrollLeft += dir * 8;
+            rafId = requestAnimationFrame(tick);
+          }
+          function start() {
+            holdTimer = setTimeout(() => {
+              continuous = true;
+              btn.classList.add("gc2-nav-pressed");
+              rafId = requestAnimationFrame(tick);
+            }, 350);
+          }
+          function end() {
+            clearTimeout(holdTimer);
+            const wasContinuous = continuous;
+            continuous = false;
+            if (rafId) cancelAnimationFrame(rafId);
+            btn.classList.remove("gc2-nav-pressed");
+            document.removeEventListener("mouseup", end);
+            document.removeEventListener("touchend", end);
+            if (!wasContinuous) rightScroll.scrollBy({ left: dir * stepPx(), behavior: "smooth" });
+          }
+          btn.addEventListener("mousedown", e => { e.preventDefault(); start(); document.addEventListener("mouseup", end); });
+          btn.addEventListener("touchstart", () => { start(); document.addEventListener("touchend", end); }, { passive: true });
+        }
+        wireHold(navPrevEl, -1);
+        wireHold(navNextEl, 1);
+      }
+    }
+    renderGantt._weekW = WEEK_W;
   }
 
   // ── Gate Checklist init ──
@@ -1878,6 +2166,20 @@
   // ── Boot ──
   function init() {
     renderTopNav("dashboard");
+
+    // Context-aware Back — returns to wherever the project was actually opened from (Dashboard,
+    // Portfolio Tracker, Admin Console → Projects, search, a notification, …) instead of a
+    // hardcoded page. See goBack()/recordNavEntry() in assets/js/auth.js; both links keep their
+    // real href so a no-JS load, right-click "open in new tab", or middle-click still work.
+    [$("pdBackBtn"), $("pdNotFoundBackBtn")].forEach(btn => {
+      if (!btn) return;
+      btn.addEventListener("click", (e) => {
+        if (typeof goBack !== "function") return; // real href still navigates
+        e.preventDefault();
+        goBack("index.html");
+      });
+    });
+
     const params = new URLSearchParams(location.search);
     const id = params.get("id") || "Tractor 2";
     const d = (typeof getProjectDetail === "function") ? getProjectDetail(id) : null;
@@ -1888,6 +2190,13 @@
       return;
     }
     window.__pd = d;
+    // Exposed so timeline.js (a separate classic-script closure) can trigger a live refresh of
+    // this tab after an Outlook edit made from the Timeline — same cross-file pattern as
+    // window.PDPopover/window.PDTimeline. renderDeliverables is now safe to re-invoke anytime
+    // (its selected-gate state persists on the function itself, see renderDeliverables above).
+    window.PDRenderDeliverables = renderDeliverables;
+    window.PDRenderTimeline = renderTimeline;
+    window.PDShowToast = showToast;
     document.title = d.projectName + " — Project Detail";
 
     renderOverview(d);

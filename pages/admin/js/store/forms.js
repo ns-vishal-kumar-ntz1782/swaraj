@@ -7,6 +7,7 @@ import { load, save, seedOnce, ENTITY_KEYS, loadJsonSync } from "./db.js";
 import { uid, nowIso, parseCsv } from "../utils.js";
 import { addAuditEntry } from "./audit.js";
 import { listGates } from "./gateMasterAdmin.js";
+import { listDeliverables } from "./deliverables.js";
 
 export const FIELD_TYPES = [
   "text", "textarea", "number", "date", "select", "checkbox", "radio",
@@ -63,8 +64,10 @@ export function getForm(code) {
   return listAllForms().find((f) => f.formCode === code) || null;
 }
 
+// Delegates to the Deliverable Library's own live store (rather than a one-time raw JSON
+// snapshot) so a link changed in that view's own Linked Form picker is reflected here immediately.
 export function linkedDeliverablesFor(formCode) {
-  return loadJsonSync("deliverableLibrary.json").filter((d) => d.linkedFormCode === formCode);
+  return listDeliverables({ linkedFormCode: formCode });
 }
 
 function nextFormCode(list) {

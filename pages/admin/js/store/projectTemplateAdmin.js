@@ -6,26 +6,46 @@ import { load, save, seedOnce, ENTITY_KEYS, loadJsonSync } from "./db.js";
 import { addAuditEntry } from "./audit.js";
 import { uid } from "../utils.js";
 import { listGates } from "./gateMasterAdmin.js";
+import { listDeliverables, getDeliverable } from "./deliverables.js";
+import { listAllForms, getForm } from "./forms.js";
 
-const _deliverableLibrary = loadJsonSync("deliverableLibrary.json");
-const _formsLibrary = loadJsonSync("formsLibrary.json");
 const _projectMembers = loadJsonSync("projectMembers.json");
 
 // Every project-team role slot that actually exists in the org data — used to populate the
 // Approval Rules "required roles" picker without hardcoding a role list.
 export const PROJECT_ROLE_SLOTS = [...new Set(_projectMembers.map((m) => m.projectRole))].sort();
 
+// Delegates to the same live, localStorage-backed stores every other admin view reads (rather
+// than a separate one-time raw JSON snapshot) — so a deliverable/form created, renamed, relinked,
+// or deactivated anywhere in the console shows up here immediately, and so these rows carry the
+// normalized `deliverableNo` field (deliverables.js's normalize()) the Deliverables sub-tab keys
+// its per-row radio groups off. Previously this read the raw seed file directly, which only ever
+// exposed the legacy `no` field — every row's `.deliverableNo` was silently `undefined`, which
+// collapsed every deliverable's None/Optional/Mandatory radio into one shared group (they all
+// shared the literal name "dstat-undefined") and made Save write to a bogus "undefined" key.
 export function deliverablesForGate(gateCode) {
-  return _deliverableLibrary.filter((d) => d.gateCode === gateCode && d.active);
+  return listDeliverables({ gateCode, active: true });
 }
 export function formsForGate(gateCode) {
-  return _formsLibrary.filter((f) => f.gateCode === gateCode && f.active);
+  return listAllForms({ gateCode, active: true });
 }
 export function getDeliverableMeta(no) {
-  return _deliverableLibrary.find((d) => d.deliverableNo === no) || null;
+  return getDeliverable(no);
 }
 export function getFormMeta(code) {
-  return _formsLibrary.find((f) => f.formCode === code) || null;
+  return getForm(code);
+}
+
+// Distinct non-null forms linked (via the Deliverable Library's own linkedFormCode) to whichever
+// deliverables are actually included in this gate config — the single source of truth for "which
+// forms does this gate use," now that a template's Forms sub-tab is read-only and derived rather
+// than independently selected (see gc.linkedForms — kept in the data shape but no longer written
+// to or read from for display).
+export function linkedFormCodesForGate(gc) {
+  const codes = gc.defaultDeliverables
+    .map((no) => getDeliverable(no)?.linkedFormCode)
+    .filter(Boolean);
+  return [...new Set(codes)];
 }
 
 // Reads through to Gate Master's own live (localStorage-backed) list, not a static JSON snapshot

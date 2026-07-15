@@ -265,7 +265,8 @@ export async function renderFormBuilder(params, query) {
 
   const catalogEntry = getForm(query.code);
   if (!catalogEntry) {
-    contentEl().innerHTML = `<div class="sg-empty-state">Form not found in the library. <a href="#/forms">Back to Forms Library</a></div>`;
+    contentEl().innerHTML = `<div class="sg-empty-state">Form not found in the library. <button type="button" class="sg-link-text" id="btnFormBuilderBack">Go back</button></div>`;
+    document.getElementById("btnFormBuilderBack")?.addEventListener("click", () => goBack("#/forms"));
     return;
   }
   const existingSchema = getFormSchema(catalogEntry.formCode);
@@ -324,7 +325,7 @@ export async function renderFormBuilder(params, query) {
       ${state.preview ? renderPreview() : renderEditor()}
     `;
 
-    document.getElementById("btnBackToForms").addEventListener("click", () => navigate("/forms"));
+    document.getElementById("btnBackToForms").addEventListener("click", () => goBack("#/forms"));
     document.getElementById("fbStatus").addEventListener("change", (e) => { state.status = e.target.value; });
     document.getElementById("fbChangeSummary").addEventListener("input", (e) => { state.changeSummary = e.target.value; });
     document.getElementById("btnTogglePreview").addEventListener("click", () => { state.preview = !state.preview; draw(); });
@@ -696,7 +697,8 @@ export async function renderFormFill(params, query) {
 
   const form = getForm(params.code);
   if (!form || !form.sections.length) {
-    contentEl().innerHTML = `<div class="sg-empty-state">Form not found or not yet built. <a href="#/forms">Back to Forms Library</a></div>`;
+    contentEl().innerHTML = `<div class="sg-empty-state">Form not found or not yet built. <button type="button" class="sg-link-text" id="btnFormFillNotFoundBack">Go back</button></div>`;
+    document.getElementById("btnFormFillNotFoundBack")?.addEventListener("click", () => goBack("#/forms"));
     return;
   }
   setBreadcrumb(`Forms Library / ${form.formCode} / Fill`);
@@ -748,7 +750,7 @@ export async function renderFormFill(params, query) {
     </form>
   `;
 
-  document.getElementById("btnBackFill").addEventListener("click", () => navigate("/forms"));
+  document.getElementById("btnBackFill").addEventListener("click", () => goBack("#/forms"));
 
   const formEl = document.getElementById("fillForm");
   wireConditionalVisibility(formEl);
@@ -812,7 +814,8 @@ export async function renderSubmissionDetail(params) {
   function draw() {
     const submission = getSubmission(params.id);
     if (!submission) {
-      contentEl().innerHTML = `<div class="sg-empty-state">Submission not found. <a href="#/forms">Back to Forms Library</a></div>`;
+      contentEl().innerHTML = `<div class="sg-empty-state">Submission not found. <button type="button" class="sg-link-text" id="btnSubmissionNotFoundBack">Go back</button></div>`;
+      document.getElementById("btnSubmissionNotFoundBack")?.addEventListener("click", () => goBack("#/forms"));
       return;
     }
     const form = getForm(submission.formCode);
@@ -866,7 +869,7 @@ export async function renderSubmissionDetail(params) {
       </div>
     `;
 
-    document.getElementById("btnBackSubmission").addEventListener("click", () => navigate("/forms"));
+    document.getElementById("btnBackSubmission").addEventListener("click", () => goBack("#/forms"));
     document.querySelectorAll("#subActions button[data-act]").forEach((btn) => {
       btn.addEventListener("click", async () => {
         try {

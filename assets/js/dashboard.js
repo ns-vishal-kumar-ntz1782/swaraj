@@ -40,45 +40,136 @@ function computeComplianceStatusData() {
 }
 const complianceStatusData = computeComplianceStatusData();
 
-// ── Compliance Rate data (Chart 4) — FY27 (the current-year actual line) is computed with
-//    Compliance % = (Actual ÷ Planned) × 100, grouping projectPortfolioData by its reporting
-//    month; this is the same formula and the same source data as the "month" drill-down table,
-//    so the chart and its drill-down can never disagree. An INTERIOR month with no reporting
-//    project is left as a real gap (spanGaps handles the visual join) rather than a fabricated
-//    0%; a LEADING month (before the portfolio's first real data point) is backfilled with the
-//    portfolio average instead, since spanGaps can't bridge a gap with nothing before it — see
-//    firstKnown below. There's no independent prior-year dataset in this app, so FY26
-//    (comparison) is derived deterministically from the real FY27 series (a fixed offset, not a
-//    random/static array) — clearly distinct, reproducible, and never independent of the real
-//    numbers. Figma's design shows exactly two lines (FY26, FY27) — no AI-predicted 3rd line. ──
-function computeComplianceRateData() {
-  const FY27raw = monthOrder.map(mon => {
-    const ps = projectPortfolioData.filter(p => p.month === mon);
-    if (!ps.length) return null;
-    const planned = ps.reduce((s,p) => s + p.planned, 0);
-    const actual  = ps.reduce((s,p) => s + p.actual, 0);
+// ── Classification × Stage matrix ("Project Classification Stage Mapping" table) — computed
+// fresh from projectPortfolioData on every load, the same source and the same p.type/p.gate
+// fields the "typeGate" drill-down filter (filterProjects) reads, so a cell's count and what you
+// see after clicking it can never disagree. This table used to be static hardcoded HTML whose
+// numbers had drifted out of sync with the real project data (e.g. showing a "VV" column that no
+// real project is currently at, and undercounting a fully-completed project whose gate had
+// resolved to null — see _effectiveGate in app-config.js). ──
+const CLASSIFICATION_TYPES = ["M2", "M4", "M6"];
+const CLASSIFICATION_STAGES = ["Pre-KO", "CVPA", "VV", "PC", "PR", "PPO"];
+
+function buildClassificationMatrix() {
+  // Any type beyond the 3 known ones (e.g. a future "EXP") still gets its own row, appended
+  // after — so a project can never be silently left out of the grand total.
+  const types = CLASSIFICATION_TYPES.concat(
+    [...new Set(projectPortfolioData.map(p => p.type))].filter(t => !CLASSIFICATION_TYPES.includes(t)).sort()
+  );
+  const rows = types.map(type => {
+    const cells = {};
+    let rowTotal = 0;
+    CLASSIFICATION_STAGES.forEach(stage => {
+      const count = projectPortfolioData.filter(p => p.type === type && p.gate === stage).length;
+      cells[stage] = count;
+      rowTotal += count;
+    });
+    return { type, cells, rowTotal };
+  });
+  const colTotals = {};
+  let grandTotal = 0;
+  CLASSIFICATION_STAGES.forEach(stage => {
+    colTotals[stage] = rows.reduce((s, r) => s + r.cells[stage], 0);
+    grandTotal += colTotals[stage];
+  });
+  return { rows, colTotals, grandTotal };
+}
+
+function renderClassificationTable() {
+  const tbody = document.querySelector(".classification-table tbody");
+  if (!tbody) return;
+  const { rows, colTotals, grandTotal } = buildClassificationMatrix();
+
+  const cellHTML = (type, stage, count) => count
+    ? "<td class='td-val'><button class='matrix-btn' data-type='" + type + "' data-stage='" + stage + "' type='button'>" + count + "</button></td>"
+    : "<td class='td-dash'>-</td>";
+
+  tbody.innerHTML = rows.map((r, i) =>
+    "<tr class='" + (i % 2 === 0 ? "tr-odd" : "tr-even") + "'>" +
+      "<td class='td-label'>" + esc(r.type) + "</td>" +
+      CLASSIFICATION_STAGES.map(stage => cellHTML(r.type, stage, r.cells[stage])).join("") +
+      "<td class='td-total'>" + r.rowTotal + "</td>" +
+    "</tr>"
+  ).join("") +
+  "<tr class='tr-total-row'>" +
+    "<td class='td-total-label'>Total</td>" +
+    CLASSIFICATION_STAGES.map(stage => {
+      const v = colTotals[stage];
+      return "<td class='" + (v ? "td-total-val" : "td-total-muted") + "'>" + (v || "-") + "</td>";
+    }).join("") +
+    "<td class='td-grand-total'>" + grandTotal + "</td>" +
+  "</tr>";
+}
+
+// ── Fiscal-year helpers — Apr(Y)..Mar(Y+1) is "FY(Y+1)" throughout this app (same convention as
+// currentFYQuarters/Gate Status). Used to bucket the Compliance Rate chart by REAL deliverable
+// dates instead of projectPortfolioData's single un-anchored "month" field, which has no year and
+// so can't tell "last April" from "this April" — the reason the chart used to show the previous
+// FY as a fixed -4 offset of the current one rather than its own real, complete data. ──
+function fyEndYearOf(iso) { const [y, m] = iso.split("-").map(Number); return m >= 4 ? y + 1 : y; }
+function fyMonthIndexOf(iso) { return (Number(iso.split("-")[1]) - 4 + 12) % 12; } // 0=Apr..11=Mar
+
+const CUR_FY_END   = fyEndYearOf(new Date().toISOString().slice(0, 10));
+const PREV_FY_END  = CUR_FY_END - 1;
+const CUR_FY_LABEL  = "FY" + String(CUR_FY_END).slice(-2);
+const PREV_FY_LABEL = "FY" + String(PREV_FY_END).slice(-2);
+// How many months of the current FY have actually fully elapsed as of today — the in-progress
+// month itself, and everything after it, hasn't closed yet and gets no rate at all (not a partial
+// or forecasted one), matching how the previous, fully-elapsed FY reports on every month.
+const CUR_FY_ELAPSED_MONTHS = fyMonthIndexOf(new Date().toISOString().slice(0, 10));
+
+// ── Compliance Rate data (Chart 4) — every month's Planned/Actual is a real count of
+// _deliverables whose own targetDate falls in that exact (fiscal year, month) bucket — the same
+// records and the same formula (Actual ÷ Planned × 100) the "month" drill-down (monthDrillRows)
+// reads, so the chart and its drill-down can never disagree. The previous FY is fully elapsed, so
+// every one of its months can show a real rate (or a real gap if literally 0 deliverables were
+// ever due that month); the current FY only ever shows real, closed months — never the
+// in-progress month or a fabricated/forecasted one, so "0 records" can never render a percentage
+// on either line. ──
+function computeComplianceRateBucket(fyEnd) {
+  return monthOrder.map((mon, idx) => {
+    const ds = _deliverables.filter(d => d.targetDate && fyEndYearOf(d.targetDate) === fyEnd && fyMonthIndexOf(d.targetDate) === idx);
+    const planned = ds.length;
+    const actual  = ds.filter(d => d.status === "Completed").length;
     return planned ? Math.round(actual / planned * 100) : null;
   });
-  const known   = FY27raw.filter(v => v != null);
-  const fallback = known.length ? Math.round(known.reduce((a,b) => a + b, 0) / known.length) : 60;
-  // Leading FY months with no reporting project yet (before the portfolio's first real data
-  // point) would otherwise start the line with a blank gap — spanGaps only bridges a gap
-  // BETWEEN two known points, not one with nothing before it. Backfill those leading months
-  // with the portfolio's own average rate so the line always starts at the first FY month;
-  // interior gaps (a month with no reporting project between two real ones) are untouched and
-  // still bridged visually by spanGaps.
-  const firstKnown = FY27raw.findIndex(v => v != null);
-  const FY27 = FY27raw.map((v, i) => (v == null && firstKnown > i) ? fallback : v);
-  const clamp   = v => Math.max(0, Math.min(100, v));
-  const FY26    = FY27.map(v => clamp((v ?? fallback) - 4));
-  return { FY27, FY26 };
+}
+function computeComplianceRateData() {
+  const prev   = computeComplianceRateBucket(PREV_FY_END);
+  const curRaw = computeComplianceRateBucket(CUR_FY_END);
+  const cur    = curRaw.map((v, i) => (i < CUR_FY_ELAPSED_MONTHS ? v : null));
+  return { prev, cur };
 }
 const complianceRateData = computeComplianceRateData();
+
+// Same (fiscal year, month) bucket the chart itself sums, grouped down to one row per project —
+// so the drill-down's own PLANNED/ACTUAL/COMPLIANCE % always foots back to the exact bar/point
+// that was clicked, and the projects listed are always the real ones with a deliverable due then.
+function monthDrillRows(mon, fyLabel) {
+  const idx = monthOrder.indexOf(mon);
+  const fyEnd = fyLabel === CUR_FY_LABEL ? CUR_FY_END : PREV_FY_END;
+  const ds = _deliverables.filter(d => d.targetDate && fyEndYearOf(d.targetDate) === fyEnd && fyMonthIndexOf(d.targetDate) === idx);
+  const byProject = {};
+  ds.forEach(d => (byProject[d.projectCode] = byProject[d.projectCode] || []).push(d));
+  const byCode = Object.fromEntries(projectPortfolioData.map(p => [p.projectCode, p]));
+  return Object.keys(byProject).map(code => {
+    const rows = byProject[code];
+    const p = byCode[code];
+    return {
+      projectCode: code, projectName: p ? p.projectName : code,
+      gate: p ? p.gate : "-", type: p ? p.type : "-", classification: p ? p.classification : "-",
+      month: mon + " " + fyLabel,
+      planned: rows.length, actual: rows.filter(d => d.status === "Completed").length,
+      status: p ? p.status : "-", riskScore: p ? p.riskScore : 0,
+    };
+  });
+}
 
 // ==========================================================
 //  STATE
 // ==========================================================
 let fsWidgetId = null; // ID of the currently fullscreened widget
+let ddFsInstId = null; // instId of the currently fullscreened drill-down panel (only one at a time)
 // Drill-down panels are now persistent + unlimited-per-row (only the ✕ closes one) so two can
 // sit side-by-side for comparison — each row's zone can hold any number of independent panel
 // instances, tracked here by a generated id rather than a single fixed panelId per row.
@@ -111,13 +202,13 @@ function fitViewport() {
   // We do NOT temporarily remove the transform here — that causes a reflow flash.
   // The initial baseline (672) matches the CSS exactly; subsequent measurements
   // happen naturally when layout is stable.
-  if (!anyPanelOpen() && !fsWidgetId && root.scrollHeight > 0) {
+  if (!anyPanelOpen() && !fsWidgetId && !ddFsInstId && root.scrollHeight > 0) {
     baselineContentHeight = root.scrollHeight;
   }
 
   const scale = Math.min(MAX_SCALE, window.innerWidth / DASHBOARD_WIDTH, availH / baselineContentHeight);
 
-  if (fsWidgetId) {
+  if (fsWidgetId || ddFsInstId) {
     root.style.transform = "";
     root.style.transformOrigin = "";
   } else {
@@ -187,8 +278,8 @@ function filterProjects(type, value) {
       return projectPortfolioData.filter(p => p.type === typeFilter);
     }
     case "month": {
-      const [mon] = value.split("-");
-      return projectPortfolioData.filter(p => p.month === mon);
+      const [mon, fyLabel] = value.split("-");
+      return monthDrillRows(mon, fyLabel);
     }
     case "quarter": {
       const months = QUARTER_MONTHS[value] || [];
@@ -748,6 +839,7 @@ function showDrillDown(row, type, value) {
 // content renders from that stale offset instead of the top, reading as "the page jumped and
 // half the content is missing". Reset scroll position back to the top once nothing is open.
 function closeDrillDownInstance(row, instId) {
+  if (ddFsInstId === instId) closeDrillDownFullscreen(); // don't leave a stale backdrop/overlay behind
   document.querySelector(".dd-panel[data-inst='" + instId + "']")?.remove();
   panelInstances[row] = panelInstances[row].filter(p => p.id !== instId);
   syncZoneWidths(row);
@@ -757,6 +849,7 @@ function closeDrillDownInstance(row, instId) {
 }
 
 function closeAllDrillDowns() {
+  if (ddFsInstId) closeDrillDownFullscreen();
   [1, 2].forEach(row => {
     document.getElementById(row === 1 ? "drillDownRow1" : "drillDownRow2").innerHTML = "";
     panelInstances[row] = [];
@@ -775,11 +868,46 @@ function refreshDrillDownInstance(row, instId) {
 }
 
 function toggleDrillDownExpandInstance(instId) {
+  if (ddFsInstId === instId) closeDrillDownFullscreen();
+  else openDrillDownFullscreen(instId);
+}
+
+// Genuine fullscreen for a drill-down table — reuses the exact same position:fixed overlay
+// mechanism (and backdrop, Escape handling, viewport-scale drop) the chart widgets' own
+// fullscreen button already uses, just applied to the panel instead of a widget by ID. Only one
+// drill-down (or widget) can be fullscreen at a time.
+function openDrillDownFullscreen(instId) {
   const panelEl = document.querySelector(".dd-panel[data-inst='" + instId + "']");
   if (!panelEl) return;
+  if (fsWidgetId) closeWidgetFullscreen();
+  if (ddFsInstId) closeDrillDownFullscreen();
+
+  const bd = document.createElement("div");
+  bd.id = "ddFsBackdrop";
+  bd.className = "fs-backdrop";
+  document.body.appendChild(bd);
+
+  panelEl.classList.add("widget-fullscreen", "dd-fullscreen");
   const btn = panelEl.querySelector(".dd-expand-toggle");
-  const expanded = panelEl.classList.toggle("dd-expanded");
-  if (btn) btn.setAttribute("title", expanded ? "Restore" : "Expand");
+  if (btn) btn.setAttribute("title", "Restore");
+  bd.addEventListener("click", closeDrillDownFullscreen);
+  ddFsInstId = instId;
+  fitViewport(); // drop the dashboard-wide scale transform so fixed positioning uses the real viewport
+}
+
+// Escape is handled by the one top-level keydown listener below (not a per-open listener here,
+// like closeWidgetFullscreen's own — that would double-fire alongside it and race on state).
+function closeDrillDownFullscreen() {
+  if (!ddFsInstId) return;
+  const panelEl = document.querySelector(".dd-panel[data-inst='" + ddFsInstId + "']");
+  if (panelEl) {
+    panelEl.classList.remove("widget-fullscreen", "dd-fullscreen");
+    const btn = panelEl.querySelector(".dd-expand-toggle");
+    if (btn) btn.setAttribute("title", "Expand");
+  }
+  document.getElementById("ddFsBackdrop")?.remove();
+  ddFsInstId = null;
+  fitViewport(); // restore the dashboard-wide scale transform
 }
 
 function exportDrillDownCsvInstance(row, instId) {
@@ -840,6 +968,7 @@ function updateChartSelection() {
 // ==========================================================
 function openWidgetFullscreen(widgetId) {
   if (fsWidgetId) closeWidgetFullscreen();
+  if (ddFsInstId) closeDrillDownFullscreen();
 
   const widget = document.getElementById(widgetId);
   if (!widget) return;
@@ -1064,7 +1193,9 @@ const pctBelowAxisPlugin = {
     ctx.save();
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    ctx.fillStyle = "#1e3a5f";
+    // Same color as the Percentage line/markers it labels (#f0ad4e) — this text IS that line's
+    // value, so it must never read as a different series.
+    ctx.fillStyle = "#f0ad4e";
     ctx.font = "700 11px Inter, sans-serif";
     complianceStatusData.forEach((row, i) => {
       ctx.fillText(row.pct + "%", x.getPixelForTick(i), chartArea.bottom + 6);
@@ -1112,7 +1243,10 @@ function buildComplianceStatusChart() {
           data: complianceStatusData.map(r => r.pct),
           yAxisID:"yRight", borderColor:"#f0ad4e", backgroundColor:"#f0ad4e",
           borderWidth:2, tension:.3, pointRadius:4,
-          pointBackgroundColor:"#1e3a5f", pointBorderColor:"#1e3a5f",
+          // Square markers (matches the Gate Status legend's square swatches — see the legend
+          // labels.pointStyle option below) colored the same as the line itself, so the dots and
+          // the "%" text pctBelowAxisPlugin prints beneath the axis both read as one series.
+          pointStyle:"rect", pointBackgroundColor:"#f0ad4e", pointBorderColor:"#f0ad4e",
           datalabels: { display:false }
         }
       ]
@@ -1120,7 +1254,10 @@ function buildComplianceStatusChart() {
     options: {
       responsive: true, maintainAspectRatio: false, animation: false,
       plugins: {
-        legend: { position:"bottom", labels:{ boxWidth:12, boxHeight:12, color:"#6b7280", usePointStyle:true, font:{family:"Inter",size:11} } },
+        // Square swatches (pointStyle "rect"), sized/rounded to match the Gate Status legend's
+        // 11px, 2px-radius squares right below this chart's own widget — the two legends were
+        // previously inconsistent (this one defaulted to circles).
+        legend: { position:"bottom", labels:{ boxWidth:11, boxHeight:11, useBorderRadius:true, borderRadius:2, pointStyle:"rect", color:"#6b7280", usePointStyle:true, font:{family:"Inter",size:11} } },
         tooltip: { enabled: false },
         datalabels: {}
       },
@@ -1150,8 +1287,12 @@ function buildComplianceStatusChart() {
 }
 
 // ==========================================================
-//  CHART 4 — Process Compliance Rate (2-line, matches Figma exactly)
-//  FY26 dashed green | FY27 solid blue (real, computed)
+//  CHART 4 — Process Compliance Rate
+//  Previous FY (dashed green) | Current FY (solid navy) — labels and data both computed from the
+//  real current date (see CUR_FY_LABEL/PREV_FY_LABEL above), not hardcoded, so this stays correct
+//  in any year the app is run. The previous FY plots all 12 months (fully elapsed); the current FY
+//  only plots months that have actually closed — deliberately deviates from the Figma mock's
+//  y-axis floor of 10% (starts at 0% here instead, per explicit request).
 //  Callout point is computed from the data (first known month) rather than a
 //  hardcoded index, so it stays correct if the underlying project data changes.
 // ==========================================================
@@ -1161,7 +1302,12 @@ function firstValidIndex(data) {
 }
 
 function buildComplianceRateChart() {
-  const firstFY  = firstValidIndex(complianceRateData.FY27);
+  // The previous FY is fully elapsed, so its first real point is always Apr (index 0) unless it
+  // somehow has zero deliverables all year; the current FY's is wherever CUR_FY_ELAPSED_MONTHS
+  // starts producing real values (also normally Apr) — either way this is where each line's
+  // one callout label is drawn.
+  const firstPrev = firstValidIndex(complianceRateData.prev);
+  const firstCur  = firstValidIndex(complianceRateData.cur);
 
   const ctx = document.getElementById("complianceRateChart").getContext("2d");
   charts.complianceRate = new Chart(ctx, {
@@ -1170,25 +1316,30 @@ function buildComplianceRateChart() {
       labels: monthOrder,
       datasets: [
         {
-          label: "FY26",
-          data: complianceRateData.FY26,
+          label: PREV_FY_LABEL,
+          data: complianceRateData.prev,
           borderColor:"#16a34a", backgroundColor:"rgba(22,163,74,.08)",
           borderWidth:2, borderDash:[5,4], spanGaps:true,
           pointStyle:"circle", pointRadius:3, pointBackgroundColor:"#fff", pointBorderColor:"#16a34a", pointBorderWidth:1.5, tension:.35,
           datalabels: {
-            display(ctx) { return ctx.dataIndex === firstFY; },
+            display(ctx) { return ctx.dataIndex === firstPrev; },
             color:"#16a34a", anchor:"end", align:"top", offset:4,
             font:{ size:10, weight:"700" }, formatter:v => v + "%"
           }
         },
         {
-          label: "FY27",
-          data: complianceRateData.FY27,
-          borderColor:"#1e3a5f", backgroundColor:"rgba(30,58,95,.10)",
-          borderWidth:2.5, spanGaps:true, fill:true,
+          label: CUR_FY_LABEL,
+          data: complianceRateData.cur,
+          // No area fill: the current FY only ever plots real, fully-elapsed months (see
+          // computeComplianceRateData) — everything from the in-progress month on is a real gap,
+          // and a filled area next to a gap draws a hard vertical wall straight down to 0 right at
+          // the edge of real data, reading as a rendering glitch rather than "not reported yet".
+          // A plain line has no such artifact.
+          borderColor:"#1e3a5f",
+          borderWidth:2.5, spanGaps:true,
           pointStyle:"circle", pointRadius:3, pointBackgroundColor:"#1e3a5f", tension:.35,
           datalabels: {
-            display(ctx) { return ctx.dataIndex === firstFY; },
+            display(ctx) { return ctx.dataIndex === firstCur; },
             color:"#1e3a5f", anchor:"end", align:"top", offset:4,
             font:{ size:10, weight:"700" }, formatter:v => v + "%"
           }
@@ -1207,13 +1358,18 @@ function buildComplianceRateChart() {
       },
       scales: {
         x: { grid:{display:false}, ticks:{color:"#6b7280",font:{size:11}} },
+        // Starts the axis at 0% (not Figma's 10% floor — per explicit request, correctness of the
+        // full range matters more here than matching the mock exactly).
         y: { min:0, max:100, ticks:{ stepSize:10, callback:v => v + "%", color:"#666", font:{size:10} }, grid:{color:"#e5e7eb"} }
       },
       onClick(_e, els) {
-        if (!els.length) { showDrillDown(2,"month","Apr-FY27"); return; }
+        // Clicking blank chart area (no point under the cursor) opens the current FY's first real
+        // month — not a hardcoded "Apr-FY27", which may itself be a real gap and would open an
+        // empty drill-down that disagrees with nothing being shown.
+        if (!els.length) { showDrillDown(2,"month", monthOrder[firstCur] + "-" + CUR_FY_LABEL); return; }
         const { datasetIndex, index } = els[0];
         const mon = monthOrder[index];
-        const fy  = ["FY26","FY27"][datasetIndex] || "FY27";
+        const fy  = [PREV_FY_LABEL, CUR_FY_LABEL][datasetIndex] || CUR_FY_LABEL;
         showDrillDown(2,"month", mon + "-" + fy);
       }
     },
@@ -1374,10 +1530,13 @@ function wireEvents() {
   // once by shared.js's renderTopNav() — every page uses that same component now, so none of
   // that wiring lives here anymore.
 
-  // ── Escape: close drill-downs or exit widget fullscreen ──
+  // ── Escape: exit fullscreen (widget or drill-down) first, only close all drill-downs if
+  // neither is fullscreen — otherwise Escape-ing out of a fullscreen table would also blow away
+  // every other open drill-down panel behind it. ──
   window.addEventListener("keydown", e => {
     if (e.key === "Escape") {
       if (fsWidgetId) closeWidgetFullscreen();
+      else if (ddFsInstId) closeDrillDownFullscreen();
       else closeAllDrillDowns();
     }
   });
@@ -1462,6 +1621,7 @@ function init() {
   renderTopNav("dashboard");
   applyAsOfDates();
   applyWidgetVisibility();
+  renderClassificationTable(); // before wireEvents() so its freshly-built .matrix-btn cells get bound
   buildOverallHealthChart();
   buildGateStatusRing("Q1");
   buildGateStatusRing("Q2");

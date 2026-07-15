@@ -137,7 +137,7 @@ button#navAiBtn {
 /* Avatar */
 .avatar-wrap { position: relative; }
 .avatar {
-  width: 36px; height: 36px; border-radius: var(--radius-18); background: var(--teal);
+  width: 39px; height: 39px; border-radius: var(--radius-18); background: var(--teal);
   display: grid; place-items: center; color: var(--panel); font-size: var(--fs-12); font-weight: var(--fw-700);
   border: 0; cursor: pointer; font-family: inherit;
 }

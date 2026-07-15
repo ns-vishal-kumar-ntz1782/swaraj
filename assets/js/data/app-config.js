@@ -137,6 +137,18 @@ const _MON3 = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov"
 function _parseISO(s) { if (!s) return null; const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); }
 function _monthLabelOf(iso) { const d = _parseISO(iso); return d ? _MON3[d.getMonth()] : null; }
 
+// currentGate is null once a project has completed every gate (nothing left to be "current") —
+// leaving that null here would make every downstream consumer (the Dashboard's Classification ×
+// Stage matrix, and any drill-down table's GATE column) show a blank/literal "null" instead of
+// where the project actually sits. Fall back to the highest-sequence gate instance it has (its
+// last/final real stage) so a fully-completed project still maps to exactly one real stage.
+function _effectiveGate(p) {
+  if (p.currentGate) return p.currentGate;
+  const gates = _gateInstances.filter(g => g.projectCode === p.code);
+  if (!gates.length) return null;
+  return gates.reduce((latest, g) => (!latest || g.sequence > latest.sequence ? g : latest), null).gateCode;
+}
+
 function _buildPortfolioRow(p) {
   const type = p.projectTypeCode === "Exploration" ? "EXP" : p.projectTypeCode;
   const classification = p.projectTypeCode === "M6" ? "BB" : "N-BB";
@@ -180,7 +192,7 @@ function _buildPortfolioRow(p) {
 
   return {
     projectName: p.name, projectCode: p.code, platform: p.platform,
-    gate: p.currentGate, type, classification,
+    gate: _effectiveGate(p), type, classification,
     riskScore, delayDays, reason, correctiveAction,
     month, planned, actual,
     deliverablesCompleted, deliverablesTotal, aiActions,

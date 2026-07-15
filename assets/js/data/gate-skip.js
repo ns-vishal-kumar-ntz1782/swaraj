@@ -45,3 +45,13 @@ function skipGate(projectCode, gateCode, actor, actorRole, reason) {
 function getSkipDetail(projectCode, gateCode) {
   return _loadSkippedGates().find(s => s.projectCode === projectCode && s.gateCode === gateCode) || null;
 }
+
+// Reverses skipGate — removes the registry entry only, same "never mutate the underlying gate
+// instance" contract skipGate itself follows, so the gate instantly resolves back to whatever
+// real status its own records already say.
+function unskipGate(projectCode, gateCode) {
+  const all = _loadSkippedGates();
+  const next = all.filter(s => !(s.projectCode === projectCode && s.gateCode === gateCode));
+  _saveSkippedGates(next);
+  return next;
+}

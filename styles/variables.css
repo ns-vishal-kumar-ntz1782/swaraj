@@ -67,9 +67,11 @@
   --color-blue-130: #eef3fb;
   --color-blue-170: #f0f4f8;
   --color-blue-210: #edebfc;
+  --color-blue-220: #e9f3ff; /* Gantt gate header/band — Completed gate background */
   --color-blue-250: #dbeafe;
   --color-blue-300: #e2eaf5;
   --color-blue-340: #e2e8f0;
+  --color-blue-360: #c6defc; /* Gantt gate header/band — Active/current gate background */
   --color-blue-380: #bfdbfe;
   --color-blue-420: #93c5fd;
   --color-blue-460: #3878ed;

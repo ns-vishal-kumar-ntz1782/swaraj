@@ -6,7 +6,7 @@ import { getActiveUser } from "../store/users.js";
 import { can } from "../rbac.js";
 import { ensureShell, contentEl, setBreadcrumb, setActiveMenu } from "./shell.js";
 import { listProjects, createProject, cloneProject, archiveProject, planProjectFromTemplate, skipGate } from "../store/projectExecution.js";
-import { listTemplates, getTemplate } from "../store/projectTemplateAdmin.js";
+import { listTemplates, getTemplate, linkedFormCodesForGate } from "../store/projectTemplateAdmin.js";
 import { getGate as getGateMasterRecord } from "../store/gateMasterAdmin.js";
 import { getForm } from "../store/forms.js";
 import { listAllUsers, displayFor } from "../store/orgDirectory.js";
@@ -257,7 +257,7 @@ function openCreateWizard(user, onCreated) {
           ${templates.map((t) => {
             const gateCount = t.defaultGateSequence.length;
             const delivCount = t.gates.reduce((s, g) => s + (g.defaultDeliverables || []).length, 0);
-            const formCount = t.gates.reduce((s, g) => s + (g.linkedForms || []).length, 0);
+            const formCount = t.gates.reduce((s, g) => s + linkedFormCodesForGate(g).length, 0);
             const checklistCount = t.gates.reduce((s, g) => s + (g.checklistDocuments || []).length, 0);
             const weeks = t.defaultGateSequence.reduce((s, gc) => {
               const gcfg = t.gates.find((g) => g.gateCode === gc);

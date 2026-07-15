@@ -29,6 +29,18 @@ function renderTopNav(activePageKey, opts = {}) {
   const root = document.getElementById("topnav-root");
   if (!root) return;
 
+  // Every page that renders the shared header this way is a valid "Back" destination EXCEPT
+  // Project Detail — which also calls renderTopNav("dashboard") purely to highlight the
+  // Dashboard tab, not because it IS the Dashboard. Recording here (rather than once per hub
+  // page's own script) means any future page that adopts this same header automatically
+  // becomes a valid fallback target with no extra wiring — see goBack()/recordNavEntry() in
+  // auth.js for the mechanism this feeds. Also skip #/forbidden — a transient error state (can
+  // even be the very first Admin route in a session, if a deep link turns out disallowed) that
+  // would otherwise make Back a no-op the next time it's needed.
+  if (typeof recordNavEntry === "function" && !/\/project-detail\//.test(location.pathname) && location.hash !== "#/forbidden") {
+    recordNavEntry();
+  }
+
   const role     = getCurrentRole();
   const roleInfo = roleDirectory[role] || roleDirectory.CEO;
   const tabs     = opts.customTabs || accessiblePages(role);

@@ -92,7 +92,8 @@ export async function renderGateWorkspace(params) {
 
   const project = getProject(params.projectCode);
   if (!project) {
-    contentEl().innerHTML = `<div class="sg-empty-state">Project not found. <a href="#/gates">Back to Gate Checklist</a></div>`;
+    contentEl().innerHTML = `<div class="sg-empty-state">Project not found. <button type="button" class="sg-link-text" id="btnGateWorkspaceBack">Go back</button></div>`;
+    document.getElementById("btnGateWorkspaceBack")?.addEventListener("click", () => goBack("#/gate-master"));
     return;
   }
   setBreadcrumb(`Gate Checklist / ${project.code}`);

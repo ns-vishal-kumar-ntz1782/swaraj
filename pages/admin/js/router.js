@@ -103,6 +103,13 @@ export async function handleRoute() {
   lastRenderedPath = path;
   if (onNavigateCallback) onNavigateCallback(route.path, route.pageId);
   await route.view(params, query);
+  // Deliberately NOT re-recording the shared "last visited hub page" fallback (auth.js:
+  // recordNavEntry/goBack) on every hash change here — a route can render an internal
+  // not-found/error sub-state (bad form code, missing project, …) that the router has no
+  // visibility into, and recording THAT as a fallback destination would make Back a no-op the
+  // next time it's needed. renderTopNav() already records once per session when the Admin
+  // shell first mounts; goBack()'s primary path (history.back()) is what tracks the CURRENT
+  // sub-route accurately in the common case, since every hash change is its own history entry.
 }
 
 export function startRouter() {

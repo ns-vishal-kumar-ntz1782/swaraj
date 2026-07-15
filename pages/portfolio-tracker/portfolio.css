@@ -192,12 +192,12 @@ button#navAiBtn {
   transition: opacity 0.15s ease, box-shadow 0.15s ease;
 }
 .pt-card:hover { box-shadow: 0 2px 8px 0 rgba(0,0,0,0.18); }
-/* display:none (not just opacity:0) so unrelated cards stop reserving flex space — otherwise
-   the visible parent/child cards stay squeezed into their original narrow share of the row
-   and look left-anchored instead of filling/centering in the now-empty space. */
+/* display:none (not just opacity:0) so unrelated cards stop reserving flex space, letting the
+   remaining parent/child cards sit flush left — consistent with every category row's normal
+   (all-projects) alignment instead of drifting to the middle of the now-emptier row. */
 .pt-card.dimmed { display: none; }
 .pt-more-badge.dimmed, .pt-less-badge.dimmed { display: none; }
-.pt-cat-cell.relationship-mode { justify-content: center; }
+.pt-cat-cell.relationship-mode { justify-content: flex-start; }
 .pt-card.relationship-active {
   box-shadow: 0 0 0 2px #fb923c, 0 2px 8px 0 rgba(0,0,0,0.18);
   z-index: 6;
@@ -209,7 +209,7 @@ button#navAiBtn {
   width: 13px; height: 13px;
   border-radius: 3px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 9px; font-weight: 700; color: #000000;
+  font-size: 9px; font-weight: 700; color: #ffffff;
   flex-shrink: 0;
 }
 .pt-card-cat-pill {

@@ -57,9 +57,32 @@
     }
   }
 
+  // Field-level edits made through the real workspace bridge (pd-workspace-bridge.js ->
+  // pages/admin/js/store/projectExecution.js's updateAssignmentFields/updateAssignmentStatus —
+  // used by both the Deliverables tab and the Timeline tab's Outlook editor) persist into that
+  // store's own localStorage-backed copy of this SAME entity, keyed by assignmentId — but until
+  // now nothing here ever read that copy back for an EXISTING (statically-seeded) project, only
+  // for brand-new ones created via the Admin Console (see mergeLiveProjects below). That meant an
+  // edit was visible only within the same page session (via the in-memory object each editor
+  // mutates directly) and silently reverted to the pristine seed on the next reload. Overlaying
+  // every matching record here — same "seed once, mutate in localStorage" pattern used
+  // everywhere else in this app — makes edits genuinely persistent, not just session-deep.
+  function applyAssignmentFieldEdits(staticAssignments) {
+    try {
+      const raw = localStorage.getItem("spd.project_deliverable_assignments.v1");
+      if (!raw) return staticAssignments;
+      const overlay = JSON.parse(raw);
+      if (!Array.isArray(overlay) || !overlay.length) return staticAssignments;
+      const overlayById = new Map(overlay.map(a => [a.assignmentId, a]));
+      return staticAssignments.map(a => overlayById.get(a.assignmentId) || a);
+    } catch (e) {
+      return staticAssignments;
+    }
+  }
+
   const gateMasterList        = loadJsonSync("gateMaster.json").slice().sort((a, b) => a.displayOrder - b.displayOrder);
   const { projects, gateInstances, deliverableAssignments } = mergeLiveProjects(
-    loadJsonSync("projects.json"), loadJsonSync("projectGateInstances.json"), loadJsonSync("projectDeliverableAssignments.json")
+    loadJsonSync("projects.json"), loadJsonSync("projectGateInstances.json"), applyAssignmentFieldEdits(loadJsonSync("projectDeliverableAssignments.json"))
   );
 
   // Gate Skip Registry resolution — same in-memory-only stamp-and-filter as app-config.js's
@@ -89,10 +112,35 @@
   const projectMembersAll     = loadJsonSync("projectMembers.json");
   const orgUsers              = loadJsonSync("orgUsers.json");
   const actionRegisterAll     = loadJsonSync("actionRegister.json");
+  const deliverableLibraryAll = loadJsonSync("deliverableLibrary.json");
 
   const STAGES = gateMasterList.map(g => g.gateCode); // ["Pre-KO","CVPA","VV","PC","PR","PPO"]
   const userById = Object.fromEntries(orgUsers.map(u => [u.id, u]));
   function userName(id) { return (userById[id] && userById[id].fullName) || "Unassigned"; }
+
+  // Standard Duration (days) per deliverable — Admin Console's Deliverable Library page is the
+  // one place this is ever set (admin-only), stored under its own store's exact localStorage key
+  // (pages/admin/js/store/db.js: `spd.deliverables.v1`). This plain script can't import that
+  // store directly, so it reads the same key, same as the checklist-templates pattern above —
+  // falling back to the static data/deliverableLibrary.json seed when the admin hasn't opened
+  // that page yet in this browser. Never fabricated: always the one real governed value.
+  const standardDurationByCode = (function () {
+    const map = {};
+    deliverableLibraryAll.forEach(lib => { map[lib.deliverableCode] = lib.estimatedDurationDays || null; });
+    try {
+      const raw = (typeof localStorage !== "undefined") ? localStorage.getItem("spd.deliverables.v1") : null;
+      if (raw) {
+        const overlay = JSON.parse(raw);
+        if (Array.isArray(overlay)) {
+          overlay.forEach(lib => {
+            const m = String(lib.estimatedDuration || "").match(/\d+/);
+            if (m) map[lib.deliverableCode] = parseInt(m[0], 10);
+          });
+        }
+      }
+    } catch (e) { /* fall through to static-only values */ }
+    return map;
+  })();
 
   // Raw projectDeliverableAssignments.json record -> Deliverables-tab display row. Single source
   // of truth for this transform: used both to build the initial static gateDetails below, AND
@@ -109,6 +157,9 @@
       if (gap > 60) plannedEndD = new Date(plannedStartD.getTime() + 60 * 86400000);
     }
     const actualD = d.actualEnd ? parseISO(d.actualEnd) : null;
+    // Real actual-start date — the raw record has always carried this (d.actualStart), it just
+    // wasn't exposed here before; every non-"Not Started" record has a real value.
+    const actualStartD = d.actualStart ? parseISO(d.actualStart) : null;
     // Real delay is actual-vs-plan against this same (now-corrected) planned end, not a
     // stale precomputed figure — so the Status pill's RAG color and the two visible dates can
     // never disagree.
@@ -130,8 +181,10 @@
       department: d.department,
       plannedDate: plannedStartD ? fmtDate(plannedStartD) : "-",
       plannedEndDate: plannedEndD ? fmtDate(plannedEndD) : "-",
+      actualStartDate: actualStartD ? fmtDate(actualStartD) : "-",
       actualDate: actualD ? fmtDate(actualD) : "-",
       outlookDate: outlookD ? fmtDate(outlookD) : "-",
+      standardDurationDays: standardDurationByCode[d.deliverableCode] || null,
       // Raw status (Not Started/Assigned/In Progress/Ready for Review/Completed/Rejected/Rework),
       // NOT the collapsed on-time/delayed "legacy" vocabulary used elsewhere in this file (activities/
       // gates) — the Deliverables tab has its own purpose-built status-pill system (statusClass/
@@ -437,6 +490,7 @@
       mitigation: r.mitigationPlan,
       correctiveAction: (projActions.find(a => a.gateCode === r.gateCode) || {}).title || r.mitigationPlan,
       status: r.status,
+      gateCode: r.gateCode, // real per-gate scope — used by the Gantt tab's risk-count bubble
     }));
 
     // ── Documents / comments / milestones / approvals — real generated records ──
@@ -447,6 +501,16 @@
       .sort((a, b) => (a.timestamp || "").localeCompare(b.timestamp || ""))
       .slice(-6)
       .map(c => ({ author: userName(c.userId), role: (userById[c.userId] || {}).businessRole || "-", date: fmtDate(parseISO(c.timestamp)), text: c.comment }));
+    // Full (unsliced) comment list, real deliverableAssignmentId preserved AND author/date resolved
+    // — used by the Gantt tab's per-deliverable comment bubble (both its count and its click-to-view
+    // popover). The "last 6" list above is for a different, project-wide activity view and
+    // intentionally drops the assignment linkage.
+    const commentsByAssignment = commentsAll.filter(c => c.projectCode === code && c.deliverableAssignmentId)
+      .sort((a, b) => (a.timestamp || "").localeCompare(b.timestamp || ""))
+      .map(c => ({
+        deliverableAssignmentId: c.deliverableAssignmentId,
+        author: userName(c.userId), date: fmtDate(parseISO(c.timestamp)), text: c.comment,
+      }));
     const milestones = milestonesAll.filter(m => m.projectCode === code).map(m => ({
       name: m.name, date: m.plannedDate ? fmtDate(parseISO(m.plannedDate)) : "-", status: m.status,
     }));
@@ -510,7 +574,7 @@
       // Risk
       risks,
       // Meta
-      documents, comments, milestones, approvals,
+      documents, comments, commentsByAssignment, milestones, approvals,
     };
   }
 

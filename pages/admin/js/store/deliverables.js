@@ -7,8 +7,7 @@ import { load, save, seedOnce, ENTITY_KEYS, loadJsonSync } from "./db.js";
 import { nowIso, parseCsv } from "../utils.js";
 import { addAuditEntry } from "./audit.js";
 import { listGates } from "./gateMasterAdmin.js";
-
-const _formsLibrary = loadJsonSync("formsLibrary.json");
+import { listAllForms } from "./forms.js";
 
 // Reads Gate Master's own live (localStorage-backed) list every call — a gate created or
 // deactivated there must be reflected here immediately, with no hardcoded gate list anywhere.
@@ -18,8 +17,11 @@ export function stages() {
 export const CATEGORIES = [...new Set(loadJsonSync("deliverableLibrary.json").map((d) => d.category))].sort();
 export const DEPARTMENTS = [...new Set(loadJsonSync("deliverableLibrary.json").map((d) => d.department))].sort();
 
+// Delegates to the Forms Library's own live store (rather than a one-time raw JSON snapshot) so a
+// form created/renamed/deactivated in the Forms Library admin view shows up in this Linked Form
+// picker immediately, with no page reload needed.
 export function listFormOptions() {
-  return _formsLibrary.filter((f) => f.active);
+  return listAllForms({ active: true });
 }
 
 // data/deliverableLibrary.json ships with legacy field names (`no`, `estimatedDurationDays`)

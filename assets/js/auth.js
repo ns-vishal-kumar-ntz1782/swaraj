@@ -131,3 +131,43 @@ function logoutAndRedirect() {
   sessionStorage.removeItem("snpdRole");
   window.location.href = appUrl("login.html");
 }
+
+// ── Context-aware "Back" navigation — the one mechanism every Back button in the app should
+// use instead of a hardcoded destination (a project can be opened from the Dashboard, Portfolio
+// Tracker, Admin Console → Projects, search, a notification, or any future entry point; a
+// single fixed href can only ever be right for one of those). Two layers:
+//   1. Real browser history (history.back()) — the source of truth whenever it's usable, since
+//      it returns to the previous page's exact URL/hash (and, when the browser's bfcache kicks
+//      in, its in-memory scroll/filter/tab state too) for free — this is also exactly what
+//      "works correctly with browser Back/Forward" means.
+//   2. A sessionStorage-recorded "last visited hub page" fallback — covers what native history
+//      can't: the detail page was opened in a new tab, reached via a bookmarked/typed URL, or
+//      refreshed with no prior entry left in this tab's history.
+const NAV_HISTORY_KEY = "spd.navHistory.v1";
+
+// Call once, on load, from every "hub" page a Back button might reasonably return to (Dashboard,
+// Portfolio Tracker, Overall Budget, Admin Console, …) — never from a detail/leaf page itself,
+// so a chain of detail-page visits (or a refresh of one) can't overwrite the hub page the user
+// actually started from. path defaults to the current URL (path + query + hash).
+function recordNavEntry(path) {
+  try { sessionStorage.setItem(NAV_HISTORY_KEY, path || (location.pathname + location.search + location.hash)); }
+  catch (e) { /* sessionStorage unavailable (private mode, etc.) — history.back() still works */ }
+}
+
+// goBack(fallbackPath) — call from every Back button's click handler. Used only when there's
+// genuinely nowhere else to return to:
+//   - a "#/…" fallbackPath (Admin Console's own internal "Back to X" buttons) just changes the
+//     hash in place — no full page reload, since we're already on the one Admin document.
+//   - anything else is passed through appUrl() (callers just pass e.g. "index.html") for a
+//     real cross-page fallback.
+function goBack(fallbackPath) {
+  const cameFromThisApp = document.referrer && document.referrer.indexOf(location.origin) === 0;
+  if (window.history.length > 1 && cameFromThisApp) {
+    window.history.back();
+    return;
+  }
+  let fallback = null;
+  try { fallback = sessionStorage.getItem(NAV_HISTORY_KEY); } catch (e) { /* ignore */ }
+  if (!fallback && fallbackPath && fallbackPath.charAt(0) === "#") { location.hash = fallbackPath; return; }
+  window.location.href = fallback || appUrl(fallbackPath);
+}

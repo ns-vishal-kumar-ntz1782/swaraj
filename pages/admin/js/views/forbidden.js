@@ -14,7 +14,8 @@ export async function renderForbidden() {
       <h2>You don't have access to this page</h2>
       <p>Your role (<strong>${escapeHtml(user.businessRole)}</strong>) is not permitted to open this route.
       Ask a System Administrator to update the RBAC matrix if you believe this is incorrect.</p>
-      <a class="btn btn-primary" href="#/gates">Back to Gate Master</a>
+      <button class="btn btn-primary" type="button" id="btnForbiddenBack">Go Back</button>
     </div>
   `;
+  document.getElementById("btnForbiddenBack")?.addEventListener("click", () => goBack("#/gate-master"));
 }

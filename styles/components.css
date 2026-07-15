@@ -124,19 +124,23 @@
 }
 
 /* ═══════════════════════════════════════════
-   AI CHAT WIDGET — sticky bottom-right icon + draggable panel, mounted by assets/js/chatbot.js
+   AI CHAT WIDGET — sticky launcher icon + draggable panel, mounted by assets/js/chatbot.js
    on every page. Same navy/teal/brand-blue language the header's own AI button uses.
-═══════════════════════════════════════════ */
+
+   The panel is intentionally NOT a flex child of .aichat-dock — it's independently
+   `position: fixed`, placed every time it opens (and on resize/scroll/drag) by
+   positionPanel() in chatbot.js, which measures the launcher's real on-screen position and
+   picks whichever direction (up/down, left/right-aligned) keeps it fully inside the
+   viewport. That JS is the source of truth for placement; this stylesheet only owns the
+   enter/exit animation (aichat-panel-up / aichat-panel-down + aichat-panel-visible). ═══════════════════════════════════════════ */
 .aichat-dock {
   position: fixed; right: var(--space-24); bottom: var(--space-24); z-index: 9400;
-  display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-12);
 }
 .aichat-dragging { cursor: grabbing; }
 .aichat-dragging .aichat-toggle,
 .aichat-dragging .aichat-head { cursor: grabbing; }
 
 .aichat-toggle {
-  order: 2;
   width: 56px; height: 56px; border-radius: 50%; border: 0; cursor: grab;
   background: linear-gradient(135deg, var(--navy), var(--brand-blue));
   color: #fff; box-shadow: 0 10px 24px rgba(0,59,136,.35), 0 2px 6px rgba(0,0,0,.15);
@@ -152,18 +156,26 @@
 .aichat-open .aichat-toggle-close { display: block; position: static; }
 
 .aichat-panel {
-  order: 1;
+  position: fixed; z-index: 9400;
   width: 360px; max-width: calc(100vw - 32px); height: 480px; max-height: calc(100vh - 120px);
   background: var(--panel); border-radius: var(--radius-16);
   box-shadow: 0 20px 50px rgba(15,23,42,.22), 0 0 0 1px var(--border);
   display: flex; flex-direction: column; overflow: hidden;
+  opacity: 0; pointer-events: none; transform: translateY(0);
+  transition: opacity .16s ease, transform .16s ease;
 }
 /* An author stylesheet's `display` always beats the browser's default `[hidden] { display:none }`
-   UA rule, regardless of source order — so the unconditional `display:flex` above silently
-   cancelled out `.hidden = true`, leaving the panel visually shown at all times even though the
-   JS property correctly toggled. This selector's extra attribute bumps its specificity above the
+   UA rule, regardless of source order — so an unconditional `display:flex` above would silently
+   cancel out `.hidden = true`, leaving the panel visually shown at all times even though the JS
+   property correctly toggled. This selector's extra attribute bumps its specificity above the
    bare class rule so [hidden] actually hides it again. */
 .aichat-panel[hidden] { display: none; }
+/* Pre-reveal offset — set by chatbot.js (aichat-panel-down/-up) BEFORE the visible class is
+   added a frame later, so the panel always slides in FROM the launcher's side, matching
+   whichever direction positionPanel() just chose. */
+.aichat-panel-down:not(.aichat-panel-visible) { transform: translateY(-10px); }
+.aichat-panel-up:not(.aichat-panel-visible)   { transform: translateY(10px); }
+.aichat-panel-visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
 
 .aichat-head {
   flex-shrink: 0; display: flex; align-items: center; gap: var(--space-8);
